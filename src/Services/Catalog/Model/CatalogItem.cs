@@ -2,7 +2,10 @@ namespace Catalog.Model
 {
     public class CatalogItem
     {
+        // local id of catalog item
         public int Id { get; set; }
+        // global product id, used across services to identify the same object
+        public string ProductId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public decimal Price { get; set; }
