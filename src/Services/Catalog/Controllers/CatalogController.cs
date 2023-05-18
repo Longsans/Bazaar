@@ -1,25 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
-using Catalog.Model;
+using Bazaar.Catalog.Model;
 
-namespace Catalog.Controllers
+namespace Bazaar.Catalog.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class CatalogController : ControllerBase
     {
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        private readonly ICatalogRepository _catalogRepo;
+
+        public CatalogController(ICatalogRepository catalogRepo)
         {
-            var item = new CatalogItem
-            {
-                Id = id,
-                Name = "The Winds of Winter",
-                Description = "Book 6 of ASOIAF",
-                Price = 34.99m,
-                AvailableStock = 32,
-                RestockThreshold = 30,
-                MaxStockThreshold = 1000,
-            };
+            _catalogRepo = catalogRepo;
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var item = _catalogRepo.GetItemById(id);
+            if (item == null)
+                return NotFound();
             return Ok(item);
         }
     }
