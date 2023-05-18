@@ -1,4 +1,4 @@
-namespace Contracting.Model;
+namespace Bazaar.Contracting.Model;
 
 public class SellingPlan
 {

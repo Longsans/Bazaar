@@ -1,6 +1,6 @@
 using System.Linq;
-using Catalog.Model;
-namespace Catalog.Repositories;
+using Bazaar.Catalog.Model;
+namespace Bazaar.Catalog.Repositories;
 
 public class CatalogRepository : ICatalogRepository
 {

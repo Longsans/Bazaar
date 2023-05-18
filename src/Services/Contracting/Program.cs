@@ -1,5 +1,5 @@
-using Contracting.Model;
-using Contracting.Repositories;
+using Bazaar.Contracting.Model;
+using Bazaar.Contracting.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 

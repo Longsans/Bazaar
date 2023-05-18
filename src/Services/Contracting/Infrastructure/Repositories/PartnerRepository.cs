@@ -1,7 +1,6 @@
-using System.Linq;
-using Contracting.Model;
+using Bazaar.Contracting.Model;
 
-namespace Contracting.Repositories;
+namespace Bazaar.Contracting.Repositories;
 
 public class PartnerRepository : IPartnerRepository
 {

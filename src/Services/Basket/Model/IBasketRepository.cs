@@ -1,4 +1,4 @@
-namespace Basket.Model;
+namespace Bazaar.Basket.Model;
 
 public interface IBasketRepository
 {

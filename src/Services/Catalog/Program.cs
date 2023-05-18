@@ -1,5 +1,5 @@
-using Catalog.Model;
-using Catalog.Repositories;
+using Bazaar.Catalog.Model;
+using Bazaar.Catalog.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 

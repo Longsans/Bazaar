@@ -1,4 +1,4 @@
-namespace Catalog.Model
+namespace Bazaar.Catalog.Model
 {
     public class CatalogItem
     {

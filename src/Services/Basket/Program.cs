@@ -1,5 +1,5 @@
-using Basket.Model;
-using Basket.Repositories;
+using Bazaar.Basket.Model;
+using Bazaar.Basket.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 

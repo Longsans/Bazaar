@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Basket.Model;
+using Bazaar.Basket.Model;
 
-namespace Basket.Controllers
+namespace Bazaar.Basket.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

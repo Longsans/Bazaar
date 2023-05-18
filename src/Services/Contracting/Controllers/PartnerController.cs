@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Contracting.Model;
-using Contracting.Dto;
+using Bazaar.Contracting.Model;
+using Bazaar.Contracting.Dto;
 
-namespace Contracting.Controllers
+namespace Bazaar.Contracting.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

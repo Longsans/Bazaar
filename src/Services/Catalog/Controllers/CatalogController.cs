@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Catalog.Model;
+using Bazaar.Catalog.Model;
 
-namespace Catalog.Controllers
+namespace Bazaar.Catalog.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

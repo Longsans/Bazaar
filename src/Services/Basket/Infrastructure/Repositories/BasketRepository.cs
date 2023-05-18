@@ -1,5 +1,5 @@
-using Basket.Model;
-namespace Basket.Repositories;
+using Bazaar.Basket.Model;
+namespace Bazaar.Basket.Repositories;
 
 public class BasketRepository : IBasketRepository
 {
@@ -26,7 +26,7 @@ public class BasketRepository : IBasketRepository
                 }
             };
         _baskets = new CustomerBasket[] {
-            new CustomerBasket("Long", items)
+            new CustomerBasket("CUST-1", items)
         };
     }
 

@@ -1,6 +1,6 @@
-using Contracting.Model;
+using Bazaar.Contracting.Model;
 
-namespace Contracting.Dto;
+namespace Bazaar.Contracting.Dto;
 
 public class ContractQuery
 {
