@@ -1,0 +1,55 @@
+{
+  "products": [
+    {
+      "ProductId": "PROD-1",
+      "Name": "The Winds of Winter",
+      "Description": "Book 6 of ASOIAF",
+      "Price": "34.99m",
+      "AvailableStock": 32,
+      "RestockThreshold": 30,
+      "MaxStockThreshold": 1000
+    },
+    {
+      "ProductId": "PROD-2",
+      "Name": "A Dream of Spring",
+      "Description": "Last book in ASOIAF",
+      "Price": "45.99m",
+      "AvailableStock": 45,
+      "RestockThreshold": 30,
+      "MaxStockThreshold": 1000
+    }
+  ],
+  "partners": [
+    {
+      "ExternalId": "PNER-1",
+      "FirstName": "Long",
+      "LastName": "Do",
+      "Email": "philongdo01@gmail.com",
+      "PhoneNumber": "0901234567"
+    }
+  ],
+  "sellingPlans": [
+    {
+      "Name": "Individual",
+      "MonthlyFee": "0.0m",
+      "PerSaleFee": "0.99m",
+      "RegularPerSaleFeePercent": "0.1f"
+    }
+  ],
+  "orderItems": [
+    {
+      "ProductExternalId": "PROD-1",
+      "ProductName": "The Winds of Winter",
+      "ProductUnitPrice": "34.99m",
+      "Quantity": 1,
+      "OrderId": 1
+    },
+    {
+      "ProductExternalId": "PROD-2",
+      "ProductName": "A Dream of Spring",
+      "ProductUnitPrice": "45.99m",
+      "Quantity": 2,
+      "OrderId": 1
+    }
+  ]
+}

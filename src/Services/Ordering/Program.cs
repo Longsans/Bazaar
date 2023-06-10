@@ -7,6 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
+builder.Services.AddSingleton<JsonDataAdapter>();
 builder.Services.RegisterEventBus(builder.Configuration);
 
 var app = builder.Build();

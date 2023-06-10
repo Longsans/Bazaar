@@ -4,36 +4,21 @@ public class OrderRepository : IOrderRepository
 {
     private List<Order> _orders;
     private int _nextOrderId => _orders.Count + 1;
+    private const string ORDER_ITEMS_SECTION = "orderItems";
 
-    public OrderRepository()
+    public OrderRepository(JsonDataAdapter adapter)
     {
-        var items = new OrderItem[] {
-            new OrderItem {
-                Id = 1,
-                ProductExternalId = "PROD-1",
-                ProductName = "The Winds of Winter",
-                ProductUnitPrice = 34.99m,
-                Quantity = 1,
-                OrderId = 1,
-            },
-            new OrderItem {
-                Id = 2,
-                ProductExternalId = "PROD-2",
-                ProductName = "A Dream of Spring",
-                ProductUnitPrice = 45.99m,
-                Quantity = 2,
-                OrderId = 1,
-            },
-        };
+        var items = adapter.ReadToObjects<OrderItem>(ORDER_ITEMS_SECTION, (item, id) => item.Id = id);
+
         _orders = new()
         {
             new Order {
-                Id = 1,
                 BuyerExternalId = "CUST-1",
                 Items = items.ToList(),
                 Status = OrderStatus.Postponed,
             }
         };
+        _orders = adapter.GenerateId(_orders, (o, id) => o.Id = id).ToList();
     }
 
     public Order CreateProcessingPayment(Order order)
