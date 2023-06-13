@@ -1,0 +1,54 @@
+version: "3.4"
+name: "bazaar"
+services:
+  webapigw:
+    image: envoyproxy/envoy:v1.26-latest
+
+  internallb:
+    image: envoyproxy/envoy:v1.26-latest
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+
+  catalog-api:
+    image: ${DOCKER_REGISTRY-}catalog-api
+    build:
+      context: .
+      dockerfile: Services/Catalog/Dockerfile
+    depends_on:
+      - rabbitmq
+  customer-api:
+    image: ${DOCKER_REGISTRY-}customer-api
+    build:
+      context: .
+      dockerfile: Services/Customer/Dockerfile
+    depends_on:
+      - rabbitmq
+  contracting-api:
+    image: ${DOCKER_REGISTRY-}contracting-api
+    build:
+      context: .
+      dockerfile: Services/Contracting/Dockerfile
+    depends_on:
+      - rabbitmq
+  basket-api:
+    image: ${DOCKER_REGISTRY-}basket-api
+    build:
+      context: .
+      dockerfile: Services/Basket/Dockerfile
+    depends_on:
+      - rabbitmq
+  ordering-api:
+    image: ${DOCKER_REGISTRY-}ordering-api
+    build:
+      context: .
+      dockerfile: Services/Ordering/Dockerfile
+    depends_on:
+      - rabbitmq
+  payment-api:
+    image: ${DOCKER_REGISTRY-}payment-api
+    build:
+      context: .
+      dockerfile: Services/Payment/Dockerfile
+    depends_on:
+      - rabbitmq
