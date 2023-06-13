@@ -16,5 +16,18 @@ namespace Bazaar.Catalog.Model
 
         // Maximum number of units that can be in-stock at any time (due to physicial/logistical constraints in warehouses)
         public int MaxStockThreshold { get; set; }
+
+        public CatalogItem() { }
+        public CatalogItem(CatalogItem original)
+        {
+            Id = original.Id;
+            ProductId = original.ProductId;
+            Name = original.Name;
+            Description = original.Description;
+            Price = original.Price;
+            AvailableStock = original.AvailableStock;
+            RestockThreshold = original.RestockThreshold;
+            MaxStockThreshold = original.MaxStockThreshold;
+        }
     }
 }

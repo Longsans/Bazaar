@@ -26,7 +26,7 @@ static_resources:
                       routes:
                         - name: "cat-short"
                           match:
-                            prefix: "/cat/"
+                            prefix: "/ca/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
@@ -47,14 +47,14 @@ static_resources:
                             cluster: basket
                         - name: "cus-short"
                           match:
-                            prefix: "/cus/"
+                            prefix: "/cs/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: customer
                         - name: "con-short"
                           match:
-                            prefix: "/con/"
+                            prefix: "/ct/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"

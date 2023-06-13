@@ -7,6 +7,12 @@ services:
     ports:
       - "5200:80"
       - "15200:8001"
+  internallb:
+    volumes:
+      - ./ApiGateways/Envoy/web:/etc/envoy
+    ports:
+      - "5201:80"
+      - "15201:8001"
   rabbitmq:
     ports:
       - "15672:15672"
@@ -17,7 +23,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
+      - CatalogServiceUri=http://internallb/ca/api/catalog
+      - CustomerServiceUri=http://internallb/cs/api/customer
+      - PartnerServiceUri=http://internallb/ct/api/partner
+      - DataStorePath=/root/Data/data.json
     volumes:
+      - ./Data:/root/Data
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     ports:
@@ -27,6 +38,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
+      - DataStorePath=/root/Data/data.json
+    volumes:
+      - ./Data:/root/Data
     ports:
       - "5242:80"
   contracting-api:
@@ -34,6 +48,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
+      - DataStorePath=/root/Data/data.json
+    volumes:
+      - ./Data:/root/Data
     ports:
       - "5244:80"
   basket-api:
@@ -48,6 +65,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
+      - ClusterId=1
+      - CoordinatorUri=http://internallb/ca/api/coordinator
+      - CatalogServiceUri=http://internallb/ca/api/catalog
+      - DataStorePath=/root/Data/data.json
+    volumes:
+      - ./Data:/root/Data
     ports:
       - "5248:80"
   payment-api:

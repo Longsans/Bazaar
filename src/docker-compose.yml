@@ -4,6 +4,9 @@ services:
   webapigw:
     image: envoyproxy/envoy:v1.26-latest
 
+  internallb:
+    image: envoyproxy/envoy:v1.26-latest
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
 

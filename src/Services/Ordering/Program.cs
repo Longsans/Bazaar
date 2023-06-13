@@ -1,3 +1,6 @@
+using Bazaar.BuildingBlocks.Transactions.Abstractions;
+using Bazaar.Ordering.Infrastructure.Transactional;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -7,6 +10,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
+builder.Services.AddSingleton<JsonDataAdapter>();
+builder.Services.AddSingleton<OrderingTransactionClient>();
+builder.Services.AddSingleton<LockManager<int>>();
+builder.Services.AddSingleton<IResourceManager<Order, int>, OrderTransactionalResourceManager>(sp =>
+{
+    var orderRepo = sp.GetRequiredService<IOrderRepository>();
+    var lockManager = sp.GetRequiredService<LockManager<int>>();
+    return new OrderTransactionalResourceManager(orderRepo, lockManager, o => o.Id);
+});
+builder.Services.AddSingleton(sp => new HttpClient { Timeout = TimeSpan.FromSeconds(20) });
 builder.Services.RegisterEventBus(builder.Configuration);
 
 var app = builder.Build();
