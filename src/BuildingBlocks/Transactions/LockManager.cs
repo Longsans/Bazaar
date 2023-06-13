@@ -8,12 +8,16 @@ public class LockManager<TIndex> where TIndex : IEquatable<TIndex>
 
     public void Aquire(TIndex index, TransactionRef txn, LockMode requestedMode)
     {
-        if (_indexLocks.ContainsKey(index) && !_indexLocks[index].IsCompatible(txn, requestedMode))
-            throw new InvalidOperationException("Requested lock violates existing locks.");
-        else
-            _indexLocks.Add(index, new Lock(requestedMode));
+        if (_indexLocks.ContainsKey(index))
+        {
+            if (!_indexLocks[index].IsCompatible(txn, requestedMode))
+                throw new InvalidOperationException("Requested lock violates existing locks.");
+            _indexLocks[index].CurrentMode = requestedMode;
+        }
+        else _indexLocks.Add(index, new Lock(requestedMode));
 
-        _indexLocks[index].AddOwner(txn, requestedMode);
+        if (!_indexLocks[index].HasOwner(txn))
+            _indexLocks[index].AddOwner(txn, requestedMode);
     }
 
     public void Aquire(IEnumerable<TIndex> indexes, TransactionRef txn, LockMode requestedMode)

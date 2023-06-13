@@ -3,7 +3,7 @@ namespace Bazaar.BuildingBlocks.Transactions
     public class Lock
     {
         private List<TransactionRef> _owners = new();
-        private LockMode CurrentMode;
+        public LockMode CurrentMode;
 
         public Lock()
         {

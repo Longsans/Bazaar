@@ -30,9 +30,9 @@ namespace Bazaar.Catalog.Controllers
                 _coordinator.AddIndexToTransaction(txn, index);
                 return Ok();
             }
-            catch (InvalidOperationException)
+            catch (KeyNotFoundException e)
             {
-                return NotFound();
+                return NotFound(e.Message);
             }
         }
 

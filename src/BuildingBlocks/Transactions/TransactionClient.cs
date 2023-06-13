@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+﻿using Bazaar.BuildingBlocks.Transactions.Utility;
 
 namespace Bazaar.BuildingBlocks.Transactions
 {
@@ -7,7 +7,7 @@ namespace Bazaar.BuildingBlocks.Transactions
         public TransactionRef? TransactionRef => _txnRef;
         protected TransactionRef? _txnRef;
         protected readonly HttpClient _httpClient;
-        protected string _coordinatorUri;
+        protected readonly string COORDINATOR_URI;
 
         protected int _requestId = 1;
         protected int _clusterId;
@@ -15,7 +15,7 @@ namespace Bazaar.BuildingBlocks.Transactions
         public TransactionClient(int clusterId, string coordinatorUri, HttpClient client)
         {
             _clusterId = clusterId;
-            _coordinatorUri = coordinatorUri;
+            COORDINATOR_URI = coordinatorUri;
             _httpClient = client;
         }
 
@@ -25,28 +25,28 @@ namespace Bazaar.BuildingBlocks.Transactions
                 return;
 
             _txnRef = new TransactionRef(_requestId++, _clusterId);
-            _httpClient.BaseAddress = new Uri(_coordinatorUri);
             var response = await SendPostRequestToCoordinator("transactions", _txnRef);
-            Console.WriteLine(_coordinatorUri);
-            Console.WriteLine(response.StatusCode);
             response.EnsureSuccessStatusCode();
         }
 
         public async Task Commit()
         {
             // commit transaction, coordinator handles both prepare and commit
-            var response = await SendPostRequestToCoordinator($"transactions/{_txnRef}", new { prepare = true });
+            var response = await SendPutRequestToCoordinator($"transactions/{_txnRef}", true);
             response.EnsureSuccessStatusCode();
             _txnRef = null;
         }
 
         protected async Task<HttpResponseMessage> SendPostRequestToCoordinator(string endpoint, object content)
         {
-            var jsonContent = SerializeToJson(content);
-            return await _httpClient.PostAsync(endpoint, jsonContent);
+            var jsonContent = TransmissionUtil.SerializeToJson(content);
+            return await _httpClient.PostAsync($"{COORDINATOR_URI}/{endpoint}", jsonContent);
         }
 
-        protected static StringContent SerializeToJson(object content)
-            => new(JsonSerializer.Serialize(content), System.Text.Encoding.UTF8, "application/json");
+        protected async Task<HttpResponseMessage> SendPutRequestToCoordinator(string endpoint, object content)
+        {
+            var jsonContent = TransmissionUtil.SerializeToJson(content);
+            return await _httpClient.PutAsync($"{COORDINATOR_URI}/{endpoint}", jsonContent);
+        }
     }
 }

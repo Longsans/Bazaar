@@ -1,4 +1,5 @@
 ﻿using Bazaar.BuildingBlocks.Transactions.Abstractions;
+using Bazaar.BuildingBlocks.Transactions.Utility;
 
 namespace Bazaar.BuildingBlocks.Transactions
 {
@@ -33,33 +34,32 @@ namespace Bazaar.BuildingBlocks.Transactions
                 return true; // no-op, since nothing was done in txn
 
             // prepare
-            var responses = await SendCommandToParticipants(nodes, "prepare", txn);
+            var responses = await SendCommandToParticipants(nodes, "txn/prepare", txn);
             if (responses.Any(r => !r.IsSuccessStatusCode))
                 return false;
 
             // commit - commit guarantees to always succeed
             // we resort to trust the commit phase for now
             // in more robust systems, methods like retry should be adopted
-            responses = await SendCommandToParticipants(nodes, "commit", txn);
+            responses = await SendCommandToParticipants(nodes, "txn/commit", txn);
             return true;
         }
 
         public void AddIndexToTransaction(TransactionRef txn, string index)
         {
             if (!_transactions.ContainsKey(txn))
-                throw new InvalidOperationException("Transaction does not exist");
+                throw new KeyNotFoundException("Transaction does not exist");
             var metadata = _transactions[txn];
             if (!metadata.Indexes.Contains(index))
                 metadata.Indexes.Add(index);
         }
 
-        private async Task<HttpResponseMessage[]> SendCommandToParticipants(IList<string> nodes, string command, TransactionRef txn)
+        private async Task<IEnumerable<HttpResponseMessage>> SendCommandToParticipants(IList<string> nodes, string command, TransactionRef txn)
         {
-            var responseTasks = new Task<HttpResponseMessage>[3];
-            for (int i = 0; i < nodes.Count; i++)
+            var responseTasks = new List<Task<HttpResponseMessage>>();
+            foreach (var node in nodes)
             {
-                _httpClient.BaseAddress = new Uri(nodes[i]);
-                responseTasks[i] = _httpClient.PostAsync($"{command}/{txn}", null);
+                responseTasks.Add(_httpClient.PostAsync($"{node}/{command}", TransmissionUtil.SerializeToJson(txn)));
             }
             return await Task.WhenAll(responseTasks);
         }

@@ -23,9 +23,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - CatalogServiceUri=http://internallb:80/ca/api/catalog
-      - CustomerServiceUri=http://internallb:80/cs/api/customer
-      - PartnerServiceUri=http://internallb:80/ct/api/partner
+      - CatalogServiceUri=http://internallb/ca/api/catalog
+      - CustomerServiceUri=http://internallb/cs/api/customer
+      - PartnerServiceUri=http://internallb/ct/api/partner
       - DataStorePath=/root/Data/data.json
     volumes:
       - ./Data:/root/Data
@@ -66,8 +66,8 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       - ClusterId=1
-      - CoordinatorUri=http://internallb:80/ca/api/coordinator
-      - CatalogServiceUri=http://internallb:80/ca/api/catalog
+      - CoordinatorUri=http://internallb/ca/api/coordinator
+      - CatalogServiceUri=http://internallb/ca/api/catalog
       - DataStorePath=/root/Data/data.json
     volumes:
       - ./Data:/root/Data

@@ -25,7 +25,7 @@
                     "CUST" => CUSTOMER_SERVICE_URI,
                     "PNER" => PARTNER_SERVICE_URI,
                     // other index types + service addresses
-                    _ => throw new Exception("Unhandled index type")
+                    _ => throw new Exception($"Unhandled index type: {indexType}")
                 });
             }
             return nodes;

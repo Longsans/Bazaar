@@ -26,14 +26,14 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpGet("txn/{txn}/{productId}")]
-        public IActionResult GetInTransaction(string productId, [FromRoute] TransactionRef txn)
+        public ActionResult<int> GetAvailableStockInTransaction(string productId, [FromRoute] TransactionRef txn)
         {
             var item = _catalogRepo.GetItemByProductId(productId);
             if (item == null)
                 return NotFound();
 
             _catalogRm.LockReadIndex(txn, item.Id);
-            return Ok(item);
+            return Ok(item.AvailableStock);
         }
 
         [HttpPatch("txn/{txn}/{productId}")]
@@ -50,6 +50,20 @@ namespace Bazaar.Catalog.Controllers
             };
             txnState.PendingUpdates.Add(update);
             return Ok(update);
+        }
+
+        [HttpPost("txn/prepare")]
+        public IActionResult PrepareToCommitTransaction([FromBody] TransactionRef txn)
+        {
+            _catalogRm.HandlePrepare(txn);
+            return Ok();
+        }
+
+        [HttpPost("txn/commit")]
+        public IActionResult CommitTransaction([FromBody] TransactionRef txn)
+        {
+            _catalogRm.HandleCommit(txn);
+            return Ok();
         }
     }
 }

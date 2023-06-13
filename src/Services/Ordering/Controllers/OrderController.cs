@@ -1,4 +1,5 @@
 using Bazaar.BuildingBlocks.Transactions.Abstractions;
+using Bazaar.Ordering.DTOs;
 using Bazaar.Ordering.Infrastructure.Transactional;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,16 +30,16 @@ namespace Bazaar.Ordering.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public ActionResult<OrderQuery> Get(int id)
         {
             var order = _orderRepo.GetById(id);
             if (order == null)
                 return NotFound();
-            return Ok(order);
+            return Ok(new OrderQuery(order));
         }
 
         [HttpPost]
-        public async Task<ActionResult<Order>> PostAsync([FromBody] OrderCreateCommand createOrderCommand)
+        public async Task<ActionResult<OrderQuery>> PostAsync([FromBody] OrderCreateCommand createOrderCommand)
         {
             try
             {
@@ -71,7 +72,7 @@ namespace Bazaar.Ordering.Controllers
                 txnState.PendingInserts.Add(createdOrder);
                 await _txnClient.Commit();
                 _logger.LogWarning("--ORD_CTRL: transaction committed.");
-                return Ok(createdOrder);
+                return Ok(new OrderQuery(createdOrder));
             }
             catch (KeyNotFoundException e)
             {
