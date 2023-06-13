@@ -7,5 +7,7 @@
         void HandlePrepare(TransactionRef txn);
         void HandleCommit(TransactionRef txn);
         void HandleRollback(TransactionRef txn);
+        void LockReadIndex(TransactionRef txn, TIndex index);
+        TransactionState<TResource, TIndex> GetOrCreateTransactionState(TransactionRef txn);
     }
 }

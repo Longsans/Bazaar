@@ -17,6 +17,11 @@ public class CatalogRepository : ICatalogRepository
         return _items.FirstOrDefault(item => item.Id == id);
     }
 
+    public CatalogItem? GetItemByProductId(string productId)
+    {
+        return _items.FirstOrDefault(item => item.ProductId == productId);
+    }
+
     public CatalogItem Create(CatalogItem item)
     {
         item.Id = _nextId;

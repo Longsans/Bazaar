@@ -20,13 +20,11 @@
             _indexSelector = indexSelector;
         }
 
-        public IEnumerable<TIndex> GetParticipatingIndexes()
-        {
-            var indexes = PendingUpdates
-                        .Select(_indexSelector)
-                        .Union(ReadIndexes)
-                        .Union(PendingDeletes);
-            return indexes;
-        }
+        public IEnumerable<TIndex> GetWriteIndexes()
+            => PendingUpdates
+                .Select(_indexSelector)
+                .Union(PendingDeletes);
+
+        public IEnumerable<TIndex> GetParticipatingIndexes() => GetWriteIndexes().Union(ReadIndexes);
     }
 }

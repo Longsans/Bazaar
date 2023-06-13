@@ -25,35 +25,31 @@ namespace Bazaar.Catalog.Controllers
             return Ok(item);
         }
 
-        [HttpGet("txn/{txn}")]
-        public IActionResult GetInTransaction(int id, TransactionRef txn)
+        [HttpGet("txn/{txn}/{productId}")]
+        public IActionResult GetInTransaction(string productId, [FromRoute] TransactionRef txn)
         {
-            var item = _catalogRepo.GetItemById(id);
+            var item = _catalogRepo.GetItemByProductId(productId);
             if (item == null)
                 return NotFound();
 
-            var txnState = GetOrCreateState(txn);
-            txnState.ReadIndexes.Add(id);
+            _catalogRm.LockReadIndex(txn, item.Id);
             return Ok(item);
         }
 
-        [HttpPost("txn/{txn}")]
-        public IActionResult UpdateInTransaction(CatalogItem item, TransactionRef txn)
+        [HttpPatch("txn/{txn}/{productId}")]
+        public IActionResult UpdateStockInTransaction(string productId, [FromBody] int availableStock, [FromRoute] TransactionRef txn)
         {
-            var txnState = GetOrCreateState(txn);
-            txnState.PendingUpdates.Add(item);
-            return Ok(txnState);
-        }
+            var item = _catalogRepo.GetItemByProductId(productId);
+            if (item == null)
+                return NotFound();
 
-        private TransactionState<CatalogItem, int> GetOrCreateState(TransactionRef txn)
-        {
-            var state = _catalogRm.OngoingTransactions[txn];
-            if (state == null)
+            var txnState = _catalogRm.GetOrCreateTransactionState(txn);
+            var update = new CatalogItem(item)
             {
-                state = new TransactionState<CatalogItem, int>(item => item.Id);
-                _catalogRm.OngoingTransactions.Add(txn, state);
-            }
-            return state;
+                AvailableStock = availableStock,
+            };
+            txnState.PendingUpdates.Add(update);
+            return Ok(update);
         }
     }
 }

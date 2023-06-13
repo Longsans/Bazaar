@@ -3,8 +3,8 @@ namespace Bazaar.Ordering.Repositories;
 public class OrderRepository : IOrderRepository
 {
     private List<Order> _orders;
-    private int _nextOrderId => _orders.Count + 1;
     private const string ORDER_ITEMS_SECTION = "orderItems";
+    public int NextOrderId => _orders.Count + 1;
 
     public OrderRepository(JsonDataAdapter adapter)
     {
@@ -25,8 +25,18 @@ public class OrderRepository : IOrderRepository
     {
         if (_orders.Any(o => o.Id == order.Id))
             throw new ArgumentException("Order already created");
-        order.Id = _nextOrderId;
+        order.Id = NextOrderId;
         order.Status = OrderStatus.ProcessingPayment;
+        _orders.Add(order);
+        return order;
+    }
+
+    public Order CreateShippingOrder(Order order)
+    {
+        if (_orders.Any(o => o.Id == order.Id))
+            throw new ArgumentException("Order already created");
+        order.Id = NextOrderId;
+        order.Status = OrderStatus.Shipping;
         _orders.Add(order);
         return order;
     }
