@@ -40,9 +40,9 @@ namespace Bazaar.Catalog.Infrastructure.Transactional
                 return;
 
             var txnState = OngoingTransactions[txn];
-            foreach (var newItem in txnState.Inserts) _catalogRepo.Create(newItem);
-            foreach (var updatedItem in txnState.Updates) _catalogRepo.Update(updatedItem);
-            foreach (var deletedIndex in txnState.Deletes) _catalogRepo.Delete(deletedIndex);
+            foreach (var newItem in txnState.PendingInserts) _catalogRepo.Create(newItem);
+            foreach (var updatedItem in txnState.PendingUpdates) _catalogRepo.Update(updatedItem);
+            foreach (var deletedIndex in txnState.PendingDeletes) _catalogRepo.Delete(deletedIndex);
 
             var participatingIndexes = txnState.GetParticipatingIndexes();
             _lockManager.Release(participatingIndexes, txn);

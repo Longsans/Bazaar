@@ -3,26 +3,29 @@
     public class TransactionState<TResource, TIndex> where TResource : class
     {
         public TransactionStatus Status { get; set; }
-        public List<TResource> Updates { get; }
-        public List<TResource> Inserts { get; }
-        public List<TIndex> Deletes { get; }
-        public bool IsWrite => Updates.Count > 0 || Deletes.Count > 0 || Inserts.Count > 0;
+        public List<TIndex> ReadIndexes { get; }
+        public List<TResource> PendingUpdates { get; }
+        public List<TResource> PendingInserts { get; }
+        public List<TIndex> PendingDeletes { get; }
+        public bool IsWrite => PendingUpdates.Count > 0 || PendingDeletes.Count > 0 || PendingInserts.Count > 0;
         private readonly Func<TResource, TIndex> _indexSelector;
 
         public TransactionState(Func<TResource, TIndex> indexSelector)
         {
             Status = TransactionStatus.Started;
-            Updates = new();
-            Inserts = new();
-            Deletes = new();
+            ReadIndexes = new();
+            PendingUpdates = new();
+            PendingInserts = new();
+            PendingDeletes = new();
             _indexSelector = indexSelector;
         }
 
         public IEnumerable<TIndex> GetParticipatingIndexes()
         {
-            var indexes = Updates
+            var indexes = PendingUpdates
                         .Select(_indexSelector)
-                        .Union(Deletes);
+                        .Union(ReadIndexes)
+                        .Union(PendingDeletes);
             return indexes;
         }
     }
