@@ -10,6 +10,19 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
 
+  webbff:
+    image: ${DOCKER_REGISTRY-}webbff
+    build:
+      context: .
+      dockerfile: ApiGateways/WebBff/Dockerfile
+    depends_on:
+      - payment-api
+      - ordering-api
+      - basket-api
+      - contracting-api
+      - customer-api
+      - catalog-api
+      - rabbitmq
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api
     build:

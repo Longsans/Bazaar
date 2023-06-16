@@ -17,7 +17,16 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
-
+  webbff:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ClusterId=1
+      - CoordinatorUri=http://internallb/ca/api/coordinator
+      - CatalogServiceUri=http://internallb/ca/api/catalog
+      - OrderServiceUri=http://internallb/o/api/order
+    ports:
+      - "5210:80"
   catalog-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -26,6 +35,8 @@ services:
       - CatalogServiceUri=http://internallb/ca/api/catalog
       - CustomerServiceUri=http://internallb/cs/api/customer
       - PartnerServiceUri=http://internallb/ct/api/partner
+      - OrderServiceUri=http://internallb/o/api/order
+      - BasketServiceUri=http://internallb/ba/api/basket
       - DataStorePath=/root/Data/data.json
     volumes:
       - ./Data:/root/Data
@@ -65,9 +76,6 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - ClusterId=1
-      - CoordinatorUri=http://internallb/ca/api/coordinator
-      - CatalogServiceUri=http://internallb/ca/api/catalog
       - DataStorePath=/root/Data/data.json
     volumes:
       - ./Data:/root/Data

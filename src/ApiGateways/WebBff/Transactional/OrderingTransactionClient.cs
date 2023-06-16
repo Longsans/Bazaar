@@ -1,16 +1,18 @@
 ﻿using Bazaar.BuildingBlocks.Transactions.Utility;
-using System.Text.Json;
+using Newtonsoft.Json.Linq;
 
-namespace Bazaar.Ordering.Infrastructure.Transactional
+namespace Bazaar.ApiGateways.WebBff.Transactional
 {
     public class OrderingTransactionClient : TransactionClient
     {
         private readonly string CATALOG_SERVICE_URI;
+        private readonly string ORDER_SERVICE_URI;
 
         public OrderingTransactionClient(IConfiguration config, HttpClient client)
             : base(int.Parse(config["ClusterId"]), config["CoordinatorUri"], client)
         {
             CATALOG_SERVICE_URI = config["CatalogServiceUri"];
+            ORDER_SERVICE_URI = config["OrderServiceUri"];
         }
 
         public async Task<int?> RetrieveProductAvailableStock(string extProductId)
@@ -23,13 +25,11 @@ namespace Bazaar.Ordering.Infrastructure.Transactional
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var availableStock = JsonSerializer.Deserialize<int>(await response.Content.ReadAsStringAsync());
+            var availableStock = System.Text.Json.JsonSerializer.Deserialize<int>(await response.Content.ReadAsStringAsync());
 
             // add indexes to transaction
-            response = await _httpClient.PostAsync(
-                $"{COORDINATOR_URI}/transactions/{_txnRef}/indexes",
-                TransmissionUtil.SerializeToJson(extProductId));
-            if (!response.IsSuccessStatusCode)
+            var addIndexResult = await SendIndexToCoordinator(extProductId);
+            if (!addIndexResult)
                 throw new KeyNotFoundException($"Transaction could not be found by coordinator.");
             return availableStock;
         }
@@ -42,6 +42,18 @@ namespace Bazaar.Ordering.Infrastructure.Transactional
                 TransmissionUtil.SerializeToJson(availableStock));
             if (!response.IsSuccessStatusCode)
                 throw new KeyNotFoundException($"Product with index {extProductId} does not exist.");
+        }
+
+        public async Task<OrderQuery> CreateProcessingOrder(OrderCreateCommand command)
+        {
+            await BeginTransactionIfNotInOne();
+            var response = await _httpClient.PostAsync($"{ORDER_SERVICE_URI}/txn/{_txnRef}", TransmissionUtil.SerializeToJson(command));
+            var contentJson = JObject.Parse(await response.Content.ReadAsStringAsync());
+            var orderQuery = contentJson.ToObject<OrderQuery>();
+            var addIndexResult = await SendIndexToCoordinator(orderQuery.ExternalId);
+            if (!addIndexResult)
+                throw new KeyNotFoundException($"Transaction could not be found by coordinator.");
+            return orderQuery;
         }
     }
 }

@@ -11,7 +11,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
 builder.Services.AddSingleton<JsonDataAdapter>();
-builder.Services.AddSingleton<OrderingTransactionClient>();
 builder.Services.AddSingleton<LockManager<int>>();
 builder.Services.AddSingleton<IResourceManager<Order, int>, OrderTransactionalResourceManager>(sp =>
 {

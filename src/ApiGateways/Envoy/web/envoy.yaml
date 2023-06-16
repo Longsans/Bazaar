@@ -38,27 +38,34 @@ static_resources:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: ordering
-                        - name: "b-short"
+                        - name: "ba-short"
                           match:
-                            prefix: "/b/"
+                            prefix: "/ba/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: basket
-                        - name: "cus-short"
+                        - name: "cs-short"
                           match:
                             prefix: "/cs/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: customer
-                        - name: "con-short"
+                        - name: "ct-short"
                           match:
                             prefix: "/ct/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: contracting
+                        - name: "gw-short"
+                          match:
+                            prefix: "/gw/"
+                          route:
+                            auto_host_rewrite: true
+                            prefix_rewrite: "/"
+                            cluster: webbff
                 http_filters:
                   - name: envoy.filters.http.router
                     typed_config:
@@ -83,6 +90,18 @@ static_resources:
                           upstream_cluster: "%UPSTREAM_CLUSTER%"
                           upstream_local_address: "%UPSTREAM_LOCAL_ADDRESS%"
   clusters:
+    - name: webbff
+      connect_timeout: 0.25s
+      type: LOGICAL_DNS
+      load_assignment:
+        cluster_name: webbff
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: webbff
+                      port_value: 80
     - name: customer
       connect_timeout: 0.25s
       type: LOGICAL_DNS

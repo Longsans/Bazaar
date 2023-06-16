@@ -1,6 +1,4 @@
 using Bazaar.BuildingBlocks.Transactions.Abstractions;
-using Bazaar.Ordering.DTOs;
-using Bazaar.Ordering.Infrastructure.Transactional;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bazaar.Ordering.Controllers
@@ -11,22 +9,16 @@ namespace Bazaar.Ordering.Controllers
     {
         private readonly IOrderRepository _orderRepo;
         private readonly IEventBus _eventBus;
-        private readonly OrderingTransactionClient _txnClient;
         private readonly IResourceManager<Order, int> _orderRm;
-        private readonly ILogger<OrderController> _logger;
 
         public OrderController(
             IOrderRepository orderRepository,
             IEventBus eventBus,
-            OrderingTransactionClient transactionClient,
-            IResourceManager<Order, int> orderRm,
-            ILogger<OrderController> logger)
+            IResourceManager<Order, int> orderRm)
         {
             _orderRepo = orderRepository;
             _eventBus = eventBus;
-            _txnClient = transactionClient;
             _orderRm = orderRm;
-            _logger = logger;
         }
 
         [HttpGet("{id}")]
@@ -35,48 +27,39 @@ namespace Bazaar.Ordering.Controllers
             var order = _orderRepo.GetById(id);
             if (order == null)
                 return NotFound();
-            return Ok(new OrderQuery(order));
+            return new OrderQuery(order);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<OrderQuery>> PostAsync([FromBody] OrderCreateCommand createOrderCommand)
+        [HttpGet("latest")]
+        public ActionResult<OrderQuery> GetLatest()
+        {
+            var order = _orderRepo.GetLatest();
+            if (order == null)
+                return NotFound();
+            return new OrderQuery(order);
+        }
+
+        [HttpPut]
+        public IActionResult Put([FromBody] Order order)
+        {
+            _orderRepo.Update(order);
+            return Ok();
+        }
+
+        [HttpPost("txn/{txn}")]
+        public ActionResult<OrderQuery> Post([FromRoute] TransactionRef txn, [FromBody] OrderCreateCommand createOrderCommand)
         {
             try
             {
-                foreach (var item in createOrderCommand.Items)
-                {
-                    _logger.LogWarning("--ORD_CTRL: executing stock retrieval.");
-                    var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductExternalId);
-                    _logger.LogWarning($"--ORD_CTRL: retrieved avail stock: {availableStock}.");
-                    if (availableStock == null)
-                        return NotFound(new { error = $"Product {item.ProductExternalId} does not exist." });
-                    if (availableStock < item.Quantity)
-                        return Conflict(new { error = $"Product {item.ProductExternalId} does not have enough stock to satisfy order." });
-                    await _txnClient.AdjustProductAvailableStock(item.ProductExternalId, (int)availableStock - item.Quantity);
-                }
-
-                Order createdOrder;
-                if (_txnClient.TransactionRef == null)
-                {
-                    _logger.LogWarning("--ORD_CTRL: no transaction created, default to local transaction.");
-                    createdOrder = _orderRepo.CreateProcessingPayment(new Order(createOrderCommand));
-                    _eventBus.Publish(new OrderStatusChangedToProcessingPaymentIntegrationEvent(createdOrder.Id));
-                    return Ok(createdOrder);
-                }
-                var txnState = _orderRm.GetOrCreateTransactionState(_txnClient.TransactionRef);
-                createdOrder = new Order(createOrderCommand)
+                var txnState = _orderRm.GetOrCreateTransactionState(txn);
+                var createdOrder = new Order(createOrderCommand)
                 {
                     Id = _orderRepo.NextOrderId,
                     Status = OrderStatus.ProcessingPayment
                 };
+                createdOrder.AssignExternalId();
                 txnState.PendingInserts.Add(createdOrder);
-                await _txnClient.Commit();
-                _logger.LogWarning("--ORD_CTRL: transaction committed.");
-                return Ok(new OrderQuery(createdOrder));
-            }
-            catch (KeyNotFoundException e)
-            {
-                return Conflict(new { error = e.Message });
+                return new OrderQuery(createdOrder);
             }
             catch (Exception e)
             {
@@ -84,10 +67,21 @@ namespace Bazaar.Ordering.Controllers
             }
         }
 
-        [HttpPut]
-        public IActionResult PutAsync([FromBody] Order order)
+        [HttpPost("txn/prepare")]
+        public IActionResult PrepareToCommitTransaction([FromBody] TransactionRef txn)
         {
-            _orderRepo.Update(order);
+            _orderRm.HandlePrepare(txn);
+            return Ok();
+        }
+
+        [HttpPost("txn/commit")]
+        public IActionResult CommitTransaction([FromBody] TransactionRef txn)
+        {
+            var txnState = _orderRm.GetOrCreateTransactionState(txn);
+            var createdOrders = new List<Order>(txnState.PendingInserts);
+            _orderRm.HandleCommit(txn);
+            createdOrders.ForEach(
+                o => _eventBus.Publish(new OrderStatusChangedToProcessingPaymentIntegrationEvent(o.Id)));
             return Ok();
         }
     }
