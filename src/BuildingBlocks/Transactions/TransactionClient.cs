@@ -48,5 +48,13 @@ namespace Bazaar.BuildingBlocks.Transactions
             var jsonContent = TransmissionUtil.SerializeToJson(content);
             return await _httpClient.PutAsync($"{COORDINATOR_URI}/{endpoint}", jsonContent);
         }
+
+        protected async Task<bool> SendIndexToCoordinator(string index)
+        {
+            var response = await _httpClient.PostAsync(
+                $"{COORDINATOR_URI}/transactions/{_txnRef}/indexes",
+                TransmissionUtil.SerializeToJson(index));
+            return response.IsSuccessStatusCode;
+        }
     }
 }

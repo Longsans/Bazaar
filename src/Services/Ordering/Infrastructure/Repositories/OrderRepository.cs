@@ -2,7 +2,7 @@ namespace Bazaar.Ordering.Repositories;
 
 public class OrderRepository : IOrderRepository
 {
-    private List<Order> _orders;
+    private readonly List<Order> _orders;
     private const string ORDER_ITEMS_SECTION = "orderItems";
     public int NextOrderId => _orders.Count + 1;
 
@@ -19,6 +19,7 @@ public class OrderRepository : IOrderRepository
             }
         };
         _orders = adapter.GenerateId(_orders, (o, id) => o.Id = id).ToList();
+        _orders.ForEach(o => o.AssignExternalId());
     }
 
     public Order CreateProcessingPayment(Order order)
@@ -26,6 +27,7 @@ public class OrderRepository : IOrderRepository
         if (_orders.Any(o => o.Id == order.Id))
             throw new ArgumentException("Order already created");
         order.Id = NextOrderId;
+        order.AssignExternalId();
         order.Status = OrderStatus.ProcessingPayment;
         _orders.Add(order);
         return order;
@@ -36,6 +38,7 @@ public class OrderRepository : IOrderRepository
         if (_orders.Any(o => o.Id == order.Id))
             throw new ArgumentException("Order already created");
         order.Id = NextOrderId;
+        order.AssignExternalId();
         order.Status = OrderStatus.Shipping;
         _orders.Add(order);
         return order;
@@ -46,13 +49,18 @@ public class OrderRepository : IOrderRepository
         return _orders.FirstOrDefault(o => o.Id == id);
     }
 
+    public Order? GetLatest()
+    {
+        return _orders.Count > 0 ? _orders[_orders.Count - 1] : null;
+    }
+
     public void Update(Order order)
     {
         var existing = _orders.FirstOrDefault(o => o.Id == order.Id);
         if (existing == null)
             return;
-        _orders.Remove(existing);
-        _orders.Add(order);
+        existing.Items = order.Items;
+        existing.Status = order.Status;
     }
 
     public void UpdateStatus(int orderId, OrderStatus status)

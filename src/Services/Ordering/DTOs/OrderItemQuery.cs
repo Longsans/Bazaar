@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Ordering.DTOs
+﻿namespace Bazaar.Ordering.Dto
 {
     public class OrderItemQuery
     {
