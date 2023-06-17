@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bazaar.Ordering.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     public class OrderController : ControllerBase
     {
@@ -21,7 +20,7 @@ namespace Bazaar.Ordering.Controllers
             _orderRm = orderRm;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("api/order/{id}")]
         public ActionResult<OrderQuery> Get(int id)
         {
             var order = _orderRepo.GetById(id);
@@ -30,23 +29,7 @@ namespace Bazaar.Ordering.Controllers
             return new OrderQuery(order);
         }
 
-        [HttpGet("latest")]
-        public ActionResult<OrderQuery> GetLatest()
-        {
-            var order = _orderRepo.GetLatest();
-            if (order == null)
-                return NotFound();
-            return new OrderQuery(order);
-        }
-
-        [HttpPut]
-        public IActionResult Put([FromBody] Order order)
-        {
-            _orderRepo.Update(order);
-            return Ok();
-        }
-
-        [HttpPost("txn/{txn}")]
+        [HttpPost("api/txn/{txn}/orders")]
         public ActionResult<OrderQuery> Post([FromRoute] TransactionRef txn, [FromBody] OrderCreateCommand createOrderCommand)
         {
             try
@@ -67,16 +50,21 @@ namespace Bazaar.Ordering.Controllers
             }
         }
 
-        [HttpPost("txn/prepare")]
+        [HttpPost("api/txn")]
         public IActionResult PrepareToCommitTransaction([FromBody] TransactionRef txn)
         {
             _orderRm.HandlePrepare(txn);
             return Ok();
         }
 
-        [HttpPost("txn/commit")]
-        public IActionResult CommitTransaction([FromBody] TransactionRef txn)
+        [HttpPut("api/txn/{txn}")]
+        public IActionResult CommitOrRollbackTransaction([FromRoute] TransactionRef txn, [FromBody] bool commit)
         {
+            if (!commit)
+            {
+                _orderRm.HandleRollback(txn);
+                return Ok();
+            }
             var txnState = _orderRm.GetOrCreateTransactionState(txn);
             var createdOrders = new List<Order>(txnState.PendingInserts);
             _orderRm.HandleCommit(txn);

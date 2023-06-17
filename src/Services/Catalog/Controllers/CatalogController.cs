@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bazaar.Catalog.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     public class CatalogController : ControllerBase
     {
@@ -16,7 +15,7 @@ namespace Bazaar.Catalog.Controllers
             _catalogRm = catalogRm;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("api/catalog/{id}")]
         public IActionResult GetById(int id)
         {
             var item = _catalogRepo.GetItemById(id);
@@ -25,8 +24,8 @@ namespace Bazaar.Catalog.Controllers
             return Ok(item);
         }
 
-        [HttpGet("txn/{txn}/{productId}")]
-        public ActionResult<int> GetAvailableStockInTransaction(string productId, [FromRoute] TransactionRef txn)
+        [HttpGet("api/catalog/{productId}/stock")]
+        public ActionResult<int> GetAvailableStockInTransaction(string productId, [FromQuery] TransactionRef txn)
         {
             var item = _catalogRepo.GetItemByProductId(productId);
             if (item == null)
@@ -36,8 +35,8 @@ namespace Bazaar.Catalog.Controllers
             return Ok(item.AvailableStock);
         }
 
-        [HttpPatch("txn/{txn}/{productId}")]
-        public IActionResult UpdateStockInTransaction(string productId, [FromBody] int availableStock, [FromRoute] TransactionRef txn)
+        [HttpPatch("api/txn/{txn}/catalog/{productId}")]
+        public IActionResult UpdateStockInTransaction(string productId, [FromRoute] TransactionRef txn, [FromBody] int availableStock)
         {
             var item = _catalogRepo.GetItemByProductId(productId);
             if (item == null)
@@ -52,16 +51,21 @@ namespace Bazaar.Catalog.Controllers
             return Ok(update);
         }
 
-        [HttpPost("txn/prepare")]
+        [HttpPost("api/txn")]
         public IActionResult PrepareToCommitTransaction([FromBody] TransactionRef txn)
         {
             _catalogRm.HandlePrepare(txn);
             return Ok();
         }
 
-        [HttpPost("txn/commit")]
-        public IActionResult CommitTransaction([FromBody] TransactionRef txn)
+        [HttpPut("api/txn/{txn}")]
+        public IActionResult CommitTransaction([FromRoute] TransactionRef txn, [FromBody] bool commit)
         {
+            if (!commit)
+            {
+                _catalogRm.HandleRollback(txn);
+                return Ok();
+            }
             _catalogRm.HandleCommit(txn);
             return Ok();
         }

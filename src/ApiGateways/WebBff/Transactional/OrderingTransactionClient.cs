@@ -15,22 +15,26 @@ namespace Bazaar.ApiGateways.WebBff.Transactional
             ORDER_SERVICE_URI = config["OrderServiceUri"];
         }
 
-        public async Task<int?> RetrieveProductAvailableStock(string extProductId)
+        public async Task<int> RetrieveProductAvailableStock(string extProductId)
         {
             // retrieve stock
             await BeginTransactionIfNotInOne();
             Console.WriteLine("--ORD_CLI: transaction began.");
-            var response = await _httpClient.GetAsync($"{CATALOG_SERVICE_URI}/txn/{_txnRef}/{extProductId}");
+            var response = await _httpClient.GetAsync(StockRetrievalUrl(extProductId));
             Console.WriteLine("--ORD_CLI: stock response received.");
             if (!response.IsSuccessStatusCode)
-                return null;
+            {
+                throw new KeyNotFoundException($"Product with index {extProductId} does not exist.");
+            }
 
             var availableStock = System.Text.Json.JsonSerializer.Deserialize<int>(await response.Content.ReadAsStringAsync());
 
             // add indexes to transaction
             var addIndexResult = await SendIndexToCoordinator(extProductId);
             if (!addIndexResult)
-                throw new KeyNotFoundException($"Transaction could not be found by coordinator.");
+            {
+                throw new InvalidOperationException("Transaction does not exist in coordinator.");
+            }
             return availableStock;
         }
 
@@ -38,22 +42,34 @@ namespace Bazaar.ApiGateways.WebBff.Transactional
         {
             await BeginTransactionIfNotInOne();
             var response = await _httpClient.PatchAsync(
-                $"{CATALOG_SERVICE_URI}/txn/{_txnRef}/{extProductId}",
+                StockUpdateUrl(extProductId),
                 TransmissionUtil.SerializeToJson(availableStock));
             if (!response.IsSuccessStatusCode)
-                throw new KeyNotFoundException($"Product with index {extProductId} does not exist.");
+            {
+                throw new InvalidOperationException($"Product with index {extProductId} does not exist.");
+            }
         }
 
         public async Task<OrderQuery> CreateProcessingOrder(OrderCreateCommand command)
         {
             await BeginTransactionIfNotInOne();
-            var response = await _httpClient.PostAsync($"{ORDER_SERVICE_URI}/txn/{_txnRef}", TransmissionUtil.SerializeToJson(command));
+            var response = await _httpClient.PostAsync(OrderCreateUrl, TransmissionUtil.SerializeToJson(command));
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ArgumentException("Order not valid.");
+            }
             var contentJson = JObject.Parse(await response.Content.ReadAsStringAsync());
             var orderQuery = contentJson.ToObject<OrderQuery>();
-            var addIndexResult = await SendIndexToCoordinator(orderQuery.ExternalId);
+            var addIndexResult = await SendIndexToCoordinator(orderQuery!.ExternalId);
             if (!addIndexResult)
-                throw new KeyNotFoundException($"Transaction could not be found by coordinator.");
+            {
+                throw new InvalidOperationException($"Transaction does not exist in coordinator.");
+            }
             return orderQuery;
         }
+
+        private string StockRetrievalUrl(string extProductId) => $"{CATALOG_SERVICE_URI}/catalog/{extProductId}/stock?txn={_txnRef}";
+        private string StockUpdateUrl(string extProductId) => $"{CATALOG_SERVICE_URI}/txn/{_txnRef}/catalog/{extProductId}";
+        private string OrderCreateUrl => $"{ORDER_SERVICE_URI}/txn/{_txnRef}/orders";
     }
 }
