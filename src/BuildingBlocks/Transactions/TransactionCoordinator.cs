@@ -23,6 +23,15 @@ namespace Bazaar.BuildingBlocks.Transactions
             _transactions.Add(txn, metadata);
         }
 
+        public void AddIndexToTransaction(TransactionRef txn, string index)
+        {
+            if (!_transactions.ContainsKey(txn))
+                throw new KeyNotFoundException("Transaction does not exist");
+            var metadata = _transactions[txn];
+            if (!metadata.Indexes.Contains(index))
+                metadata.Indexes.Add(index);
+        }
+
         public async Task<bool> CommitTransaction(TransactionRef txn)
         {
             var metadata = _transactions[txn];
@@ -34,32 +43,52 @@ namespace Bazaar.BuildingBlocks.Transactions
                 return true; // no-op, since nothing was done in txn
 
             // prepare
-            var responses = await SendCommandToParticipants(nodes, "txn/prepare", txn);
+            var responses = await SendPrepareRequestToParticipants(nodes, "txn", txn);
             if (responses.Any(r => !r.IsSuccessStatusCode))
                 return false;
 
             // commit - commit guarantees to always succeed
             // we resort to trust the commit phase for now
             // in more robust systems, methods like retry should be adopted
-            responses = await SendCommandToParticipants(nodes, "txn/commit", txn);
+            responses = await SendCommitOrRollbackRequestToParticipants(nodes, $"txn/{txn}", true);
             return true;
         }
 
-        public void AddIndexToTransaction(TransactionRef txn, string index)
+        public async Task RollbackTransaction(TransactionRef txn)
         {
-            if (!_transactions.ContainsKey(txn))
-                throw new KeyNotFoundException("Transaction does not exist");
             var metadata = _transactions[txn];
-            if (!metadata.Indexes.Contains(index))
-                metadata.Indexes.Add(index);
+            if (metadata == null)
+                return; // transaction perhaps has already been rolled-back
+
+            var nodes = _uriResolver.GetResourceNodesFromIndexes(metadata.Indexes);
+            if (nodes.Count == 0)
+                return; // no-op, since nothing was done in txn
+
+            var responses = await SendCommitOrRollbackRequestToParticipants(nodes, $"txn/{txn}", false);
+            foreach (var r in responses)
+                r.EnsureSuccessStatusCode();
         }
 
-        private async Task<IEnumerable<HttpResponseMessage>> SendCommandToParticipants(IList<string> nodes, string command, TransactionRef txn)
+        private async Task<IEnumerable<HttpResponseMessage>> SendPrepareRequestToParticipants(IList<string> nodes, string endpoint, object data)
+        {
+            return await SendCommandToParticipants(nodes, _httpClient.PostAsync, endpoint, data);
+        }
+
+        private async Task<IEnumerable<HttpResponseMessage>> SendCommitOrRollbackRequestToParticipants(IList<string> nodes, string endpoint, bool commit)
+        {
+            return await SendCommandToParticipants(nodes, _httpClient.PutAsync, endpoint, commit);
+        }
+
+        private static async Task<IEnumerable<HttpResponseMessage>> SendCommandToParticipants(
+            IList<string> nodes,
+            Func<string, HttpContent, Task<HttpResponseMessage>> method,
+            string commandEndpoint,
+            object data)
         {
             var responseTasks = new List<Task<HttpResponseMessage>>();
             foreach (var node in nodes)
             {
-                responseTasks.Add(_httpClient.PostAsync($"{node}/{command}", TransmissionUtil.SerializeToJson(txn)));
+                responseTasks.Add(method($"{node}/{commandEndpoint}", TransmissionUtil.SerializeToJson(data)));
             }
             return await Task.WhenAll(responseTasks);
         }

@@ -2,7 +2,6 @@
 
 namespace Bazaar.ApiGateways.WebBff.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     public class OrderingController : ControllerBase
     {
@@ -17,41 +16,87 @@ namespace Bazaar.ApiGateways.WebBff.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
+        [HttpPost("api/orders")]
         public async Task<ActionResult<OrderQuery>> PostAsync([FromBody] OrderCreateCommand createOrderCommand)
         {
+            if (createOrderCommand.Items.Count == 0)
+                return BadRequest(new { error = "Order has no items." });
+
             try
             {
                 foreach (var item in createOrderCommand.Items)
                 {
                     _logger.LogWarning("--ORDGW_CTRL: executing stock retrieval.");
                     var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductExternalId);
-                    _logger.LogWarning($"--ORDGW_CTRL: retrieved avail stock: {availableStock}.");
-                    if (availableStock == null)
-                        return NotFound(new { error = $"Product {item.ProductExternalId} does not exist." });
-                    if (availableStock < item.Quantity)
-                        return Conflict(new { error = $"Product {item.ProductExternalId} does not have enough stock to satisfy order." });
-                    await _txnClient.AdjustProductAvailableStock(item.ProductExternalId, (int)availableStock - item.Quantity);
-                }
+                    _logger.LogWarning($"--ORDGW_CTRL: retrieved available stock: {availableStock}.");
 
-                if (_txnClient.TransactionRef == null)
-                {
-                    _logger.LogWarning("--ORDGW_CTRL: retrieved no items info for order, creating new transaction.");
-                    await _txnClient.BeginTransactionIfNotInOne();
+                    if (availableStock < item.Quantity)
+                    {
+                        throw new InvalidOperationException(
+                            $"Product {item.ProductExternalId} does not have enough stock to satisfy order.");
+                    }
+                    await _txnClient.AdjustProductAvailableStock(item.ProductExternalId, (int)availableStock - item.Quantity);
                 }
 
                 var createdOrder = await _txnClient.CreateProcessingOrder(createOrderCommand);
                 await _txnClient.Commit();
-                _logger.LogWarning("--ORDGW_CTRL: transaction committed.");
-                return createdOrder != null ?
-                    Ok(createdOrder) : StatusCode(500, new { error = "Server exception: Transaction failed." });
+                _logger.LogWarning("--ORDGW_CTRL: transaction commit executed.");
+                return Ok(createdOrder);
             }
             catch (KeyNotFoundException e)
             {
+                await _txnClient.Rollback();
+                return NotFound(new { error = e.Message });
+            }
+            catch (InvalidOperationException e)
+            {
+                await _txnClient.Rollback();
                 return Conflict(new { error = e.Message });
             }
             catch (Exception e)
             {
+                await _txnClient.Rollback();
+                return BadRequest(new { error = e.Message });
+            }
+        }
+
+        [HttpPost("api/orders-fail")]
+        public async Task<ActionResult<OrderQuery>> PostAsyncFail([FromBody] OrderCreateCommand createOrderCommand)
+        {
+            if (createOrderCommand.Items.Count == 0)
+                return BadRequest(new { error = "Order has no items." });
+
+            try
+            {
+                foreach (var item in createOrderCommand.Items)
+                {
+                    _logger.LogWarning("--ORDGW_CTRL: executing stock retrieval.");
+                    var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductExternalId);
+                    _logger.LogWarning($"--ORDGW_CTRL: retrieved available stock: {availableStock}.");
+
+                    if (availableStock < item.Quantity)
+                    {
+                        throw new InvalidOperationException(
+                            $"Product {item.ProductExternalId} does not have enough stock to satisfy order.");
+                    }
+                    await _txnClient.AdjustProductAvailableStock(item.ProductExternalId, (int)availableStock - item.Quantity);
+                }
+
+                throw new InvalidOperationException("This operation failed and catalog item's stock has been rolled-back.");
+            }
+            catch (KeyNotFoundException e)
+            {
+                await _txnClient.Rollback();
+                return NotFound(new { error = e.Message });
+            }
+            catch (InvalidOperationException e)
+            {
+                await _txnClient.Rollback();
+                return Conflict(new { error = e.Message });
+            }
+            catch (Exception e)
+            {
+                await _txnClient.Rollback();
                 return BadRequest(new { error = e.Message });
             }
         }

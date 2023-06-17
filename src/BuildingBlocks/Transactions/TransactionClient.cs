@@ -37,6 +37,13 @@ namespace Bazaar.BuildingBlocks.Transactions
             _txnRef = null;
         }
 
+        public async Task Rollback()
+        {
+            var response = await SendPutRequestToCoordinator($"transactions/{_txnRef}", false);
+            response.EnsureSuccessStatusCode();
+            _txnRef = null;
+        }
+
         protected async Task<HttpResponseMessage> SendPostRequestToCoordinator(string endpoint, object content)
         {
             var jsonContent = TransmissionUtil.SerializeToJson(content);

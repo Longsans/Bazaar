@@ -23,8 +23,8 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - ClusterId=1
       - CoordinatorUri=http://internallb/ca/api/coordinator
-      - CatalogServiceUri=http://internallb/ca/api/catalog
-      - OrderServiceUri=http://internallb/o/api/order
+      - CatalogServiceUri=http://internallb/ca/api
+      - OrderServiceUri=http://internallb/o/api
     ports:
       - "5210:80"
   catalog-api:
@@ -32,11 +32,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - CatalogServiceUri=http://internallb/ca/api/catalog
-      - CustomerServiceUri=http://internallb/cs/api/customer
-      - PartnerServiceUri=http://internallb/ct/api/partner
-      - OrderServiceUri=http://internallb/o/api/order
-      - BasketServiceUri=http://internallb/ba/api/basket
+      - CatalogServiceUri=http://internallb/ca/api
+      - CustomerServiceUri=http://internallb/cs/api
+      - PartnerServiceUri=http://internallb/ct/api
+      - OrderServiceUri=http://internallb/o/api
+      - BasketServiceUri=http://internallb/ba/api
       - DataStorePath=/root/Data/data.json
     volumes:
       - ./Data:/root/Data
