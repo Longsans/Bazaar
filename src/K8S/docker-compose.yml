@@ -1,0 +1,88 @@
+version: "3.4"
+name: "bazaar"
+services:
+  webapigw:
+    image: envoyproxy/envoy:v1.26-latest
+
+  internallb:
+    image: envoyproxy/envoy:v1.26-latest
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+
+  webbff:
+    image: ${DOCKER_REGISTRY-}bazaar-webbff
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfile-dotnet
+      args:
+        - project_name=WebBff
+        - service_path=ApiGateways
+    depends_on:
+      - payment-api
+      - ordering-api
+      - basket-api
+      - contracting-api
+      - customer-api
+      - catalog-api
+      - rabbitmq
+
+  catalog-api:
+    image: ${DOCKER_REGISTRY-}bazaar-catalog-api
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfile-dotnet
+      args:
+        - project_name=Catalog
+    depends_on:
+      - rabbitmq
+
+  customer-api:
+    image: ${DOCKER_REGISTRY-}bazaar-customer-api
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfile-dotnet
+      args:
+        - project_name=Customer
+    depends_on:
+      - rabbitmq
+
+  contracting-api:
+    image: ${DOCKER_REGISTRY-}bazaar-contracting-api
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfile-dotnet
+      args:
+        - project_name=Contracting
+    depends_on:
+      - rabbitmq
+    
+  basket-api:
+    image: ${DOCKER_REGISTRY-}bazaar-basket-api
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfile-dotnet
+      args:
+        - project_name=Basket
+    depends_on:
+      - rabbitmq
+
+  ordering-api:
+    image: ${DOCKER_REGISTRY-}bazaar-ordering-api
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfile-dotnet
+      args:
+        - project_name=Ordering
+    depends_on:
+      - rabbitmq
+
+  payment-api:
+    image: ${DOCKER_REGISTRY-}bazaar-payment-api
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfile-dotnet
+      args:
+        - project_name=Payment
+    depends_on:
+      - rabbitmq
