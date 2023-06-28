@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ .Values.app }}{{ .Values.deplMeta }}"
+  name: "{{ .Values.app }}"
 spec:
   replicas: {{ int .Values.replicas }}
   selector:
@@ -11,7 +11,7 @@ spec:
     metadata:
       labels:
         app: "{{ .Values.app }}"
-        type: microservice
+        type: apigateway
     spec:
       containers:
       - name: "{{ .Values.app }}"
@@ -21,13 +21,10 @@ spec:
             memory: "{{ int .Values.memory }}Mi"
             cpu: "{{ int .Values.cpu }}m"
         ports:
-        - containerPort: {{ int .Values.containerPort }}
+        - name: admin-port
+          containerPort: {{ int .Values.adminPort }}
+        - name: http-port
+          containerPort: {{ int .Values.httpPort }}
         env:
-        - name: PROJECT
-          value: "{{ .Values.projectName }}"
-        - name: ASPNETCORE_ENVIRONMENT
-          value: "{{ .Values.aspEnv }}"
-        - name: EventBusConnection
-          value: "{{ .Values.eventBus }}"
-        - name: ASPNETCORE_URLS
-          value: "{{ .Values.aspUrls }}"
+        - name: ENVOY_UID # Without this it can't start since envoy 1.15
+          value: "0" # Alternative is to set the correct permission for envoy, lol like hell I'm gonna do that.

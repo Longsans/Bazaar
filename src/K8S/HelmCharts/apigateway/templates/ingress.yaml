@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "{{ .Values.app }}-ingress"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/{{ .Values.app }}/admin(/|$)(.*)"
+        backend:
+          service:
+            name: "{{ .Values.app }}-srv-admin"
+            port:
+              number: {{ .Values.adminPort }}
+      - pathType: Prefix
+        path: "/{{ .Values.app }}/http(/|$)(.*)"
+        backend:
+          service:
+            name: "{{ .Values.app }}-srv-http"
+            port:
+              number: {{ .Values.httpPort }}

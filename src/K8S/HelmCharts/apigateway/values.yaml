@@ -1,0 +1,10 @@
+app: "gateway"
+replicas: 1
+registry: cornycodingcorn
+image: gateway
+
+memory: "512" 
+cpu: "2000" # DON'T SET IT TOO LOW, envoy will crash without telling you anything, which is weird because .Net app stall instead of crash
+
+adminPort: 8001
+httpPort: 80

@@ -1,4 +1,3 @@
 app: "catalog"
 image: "catalog-api"
 projectName: "Catalog"
-externalPort: 30240
