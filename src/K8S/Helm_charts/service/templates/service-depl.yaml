@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ .Values.app }}{{ .Values.deplMeta }}"
+  name: "{{ .Values.app }}"
 spec:
   replicas: {{ int .Values.replicas }}
   selector:
@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: "{{ .Values.app }}"
+        type: microservice
     spec:
       containers:
       - name: "{{ .Values.app }}"
