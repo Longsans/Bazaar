@@ -1,0 +1,4 @@
+app: "basket"
+image: "basket-api"
+projectName: "Basket"
+externalPort: 30240

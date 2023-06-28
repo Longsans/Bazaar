@@ -6,7 +6,7 @@ spec:
   replicas: {{ int .Values.replicas }}
   selector:
     matchLabels:
-      app: {{ .Values.app }}
+      app: "{{ .Values.app }}"
   template:
     metadata:
       labels:
@@ -15,10 +15,13 @@ spec:
     spec:
       containers:
       - name: "{{ .Values.app }}"
-        image: "{{ .Values.registry }}/{{ .Values.image }}"
+        image: "{{ .Values.registry }}/bazaar-{{ .Values.image }}"
         resources:
           limits:
             memory: "{{ int .Values.memory }}Mi"
             cpu: "{{ int .Values.cpu }}m"
         ports:
         - containerPort: {{ int .Values.containerPort }}
+        env:
+          - name: PROJECT
+            value: "{{ .Values.projectName }}"

@@ -3,6 +3,7 @@ npMeta: "-srv-np" #e.g: template-srv-np
 
 registry: "cornycodingcorn"
 image: "template"
+projectName: "template" #Name of the dll file
 replicas: 2
 
 memory: "256"
