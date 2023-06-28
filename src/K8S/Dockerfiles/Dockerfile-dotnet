@@ -13,7 +13,8 @@ ARG project_name
 COPY $service_path/$project_name/$project_name.csproj $service_path/$project_name/
 RUN dotnet restore "$service_path/$project_name/$project_name.csproj"
 
-COPY . .
+COPY ./BuildingBlocks ./BuildingBlocks
+COPY ./$service_path/$project_name/ ./$service_path/$project_name/ 
 WORKDIR /src/$service_path/$project_name/
 RUN dotnet build "$project_name.csproj" -c Release -o /app/build
 

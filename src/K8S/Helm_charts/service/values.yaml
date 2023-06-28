@@ -1,0 +1,13 @@
+app: "template"
+deplMeta: "-depl" #append the app name e.g: template-depl
+npMeta: "-srv-np" #e.g: template-srv-np
+
+registry: "cornycodingcorn"
+image: "template"
+replicas: 2
+
+memory: "128"
+cpu: "100"
+
+containerPort: 80
+externalPort: 5200

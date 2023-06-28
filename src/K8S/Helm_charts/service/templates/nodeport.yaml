@@ -1,0 +1,20 @@
+# Connect to the outside
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Values.app }}{{ .Values.npMeta }}"
+  namespace: default
+spec:
+  selector:
+    app: {{ .Values.app }}
+  type: NodePort
+  sessionAffinity: None
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  ports:
+  - name: {{ .Values.app }}
+    protocol: TCP
+    port: {{ int .Values.containerPort }}
+    targetPort: {{ int .Values.containerPort }}
+    nodePort: {{ int .Values.externalPort }}

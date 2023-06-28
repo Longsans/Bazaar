@@ -2,10 +2,16 @@ version: "3.4"
 name: "bazaar"
 services:
   webapigw:
-    image: envoyproxy/envoy:v1.26-latest
+    image: ${DOCKER_REGISTRY-}bazaar-webapigw
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfiles/Dockerfile-envoy
 
   internallb:
-    image: envoyproxy/envoy:v1.26-latest
+    image: ${DOCKER_REGISTRY-}bazaar-internallb
+    build:
+      context: ../
+      dockerfile: K8S/Dockerfiles/Dockerfile-envoy
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -14,7 +20,7 @@ services:
     image: ${DOCKER_REGISTRY-}bazaar-webbff
     build:
       context: ../
-      dockerfile: K8S/Dockerfile-dotnet
+      dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=WebBff
         - service_path=ApiGateways
@@ -31,7 +37,7 @@ services:
     image: ${DOCKER_REGISTRY-}bazaar-catalog-api
     build:
       context: ../
-      dockerfile: K8S/Dockerfile-dotnet
+      dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Catalog
     depends_on:
@@ -41,7 +47,7 @@ services:
     image: ${DOCKER_REGISTRY-}bazaar-customer-api
     build:
       context: ../
-      dockerfile: K8S/Dockerfile-dotnet
+      dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Customer
     depends_on:
@@ -51,7 +57,7 @@ services:
     image: ${DOCKER_REGISTRY-}bazaar-contracting-api
     build:
       context: ../
-      dockerfile: K8S/Dockerfile-dotnet
+      dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Contracting
     depends_on:
@@ -61,7 +67,7 @@ services:
     image: ${DOCKER_REGISTRY-}bazaar-basket-api
     build:
       context: ../
-      dockerfile: K8S/Dockerfile-dotnet
+      dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Basket
     depends_on:
@@ -71,7 +77,7 @@ services:
     image: ${DOCKER_REGISTRY-}bazaar-ordering-api
     build:
       context: ../
-      dockerfile: K8S/Dockerfile-dotnet
+      dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Ordering
     depends_on:
@@ -81,7 +87,7 @@ services:
     image: ${DOCKER_REGISTRY-}bazaar-payment-api
     build:
       context: ../
-      dockerfile: K8S/Dockerfile-dotnet
+      dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Payment
     depends_on:
