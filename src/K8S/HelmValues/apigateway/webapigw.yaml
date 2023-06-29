@@ -1,4 +1,3 @@
 app: "webapigw"
 image: "webapigw"
-extHttpPort: 30200
-extAdminPort: 31200
+expose: true

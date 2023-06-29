@@ -29,8 +29,12 @@ if [ -n "$input" ] && [ "${input,,}" != "n" ]; then
     command=install;
     existingInstall=$(helm list | grep "$name");
     if [ -n "$existingInstall" ]; then
-        delete="";
-        read -r -p "There is an installation with the same name do you want to delete it? [y/N]: " delete;
+        delete="$5";
+
+        if [ -z "$delete" ]; then
+            read -r -p "There is an installation with the same name do you want to delete it? [y/N]: " delete;
+        fi
+
         if [ -n "$delete" ] && [ "${delete,,}" != "n" ]; then
             helm uninstall "$name";
         fi

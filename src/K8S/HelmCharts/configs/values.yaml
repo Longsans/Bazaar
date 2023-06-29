@@ -1,0 +1,6 @@
+loadBalancer: "http://internallb-srv-http"
+catalogPath: "/ca/api"
+customerPath: "/cs/api"
+partnerPath: "/ct/api"
+orderPath: "/o/api"
+basketPath: "/ba/api"

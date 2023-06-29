@@ -1,2 +1,3 @@
 app: "payment"
 image: "payment-api"
+projectName: "Payment"

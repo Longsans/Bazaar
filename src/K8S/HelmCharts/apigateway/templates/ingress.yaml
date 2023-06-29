@@ -1,3 +1,4 @@
+{{ if (default .Values.expose) }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -22,3 +23,4 @@ spec:
             name: "{{ .Values.app }}-srv-http"
             port:
               number: {{ .Values.httpPort }}
+{{ end }}
