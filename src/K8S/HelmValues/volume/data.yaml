@@ -1,0 +1,3 @@
+storage: "1Gi"
+name: "data"
+path: "/data/"

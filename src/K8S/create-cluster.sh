@@ -12,11 +12,6 @@ if [ -n "$input" ]; then
 fi
 
 kind create cluster -n "$clusterName" --config "$workDir"/Kind/cluster.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
 
 printf "\n󰳟  Change default cluster to %s? [Y/n]\n" "$clusterName"
 
@@ -27,3 +22,4 @@ if [ -n "$input" ] && [ "${input,,}" != 'y' ]; then
 fi
 
 kubectl cluster-info --context "kind-$clusterName";
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml

@@ -13,9 +13,16 @@ spec:
         app: "{{ .Values.app }}"
         type: microservice
     spec:
+      volumes:
+      - name: {{ .Values.pvName }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvcName }}
       containers:
       - name: "{{ .Values.app }}"
         image: "{{ .Values.registry }}/bazaar-{{ .Values.image }}"
+        volumeMounts:
+        - name: "{{ .Values.pvName }}"
+          mountPath: "{{ .Values.pvMountPath }}"
         resources:
           limits:
             memory: "{{ int .Values.memory }}Mi"
@@ -28,6 +35,13 @@ spec:
         - name: ASPNETCORE_ENVIRONMENT
           value: "{{ .Values.aspEnv }}"
         - name: EventBusConnection
-          value: "{{ .Values.eventBus }}"
+          value: "{{ .Values.eventBus.name }}"
+        - name: EventBusUserName
+          value: "{{ .Values.eventBus.user }}"
+        - name: EventBusPassword
+          value: "{{ .Values.eventBus.password }}"
         - name: ASPNETCORE_URLS
           value: "{{ .Values.aspUrls }}"
+        - name: DataStorePath
+          value: "{{ .Values.dataPath }}"
+          

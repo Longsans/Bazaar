@@ -17,14 +17,28 @@ if [ -z "$valueFile" ]; then
     read -p "Please enter the value file's name: " -r valueFile;
 fi
 
-input="";
+input="$4";
 command="template";
 
-echo "Do you want to install helm chart or just check? [y/N]";
-read -r input;
+if [ -z "$input" ]; then
+    echo "Do you want to install helm chart or just check? [y/N]";
+    read -r input;
+fi
 
 if [ -n "$input" ] && [ "${input,,}" != "n" ]; then
     command=install;
+    existingInstall=$(helm list | grep "$name");
+    if [ -n "$existingInstall" ]; then
+        delete="";
+        read -r -p "There is an installation with the same name do you want to delete it? [y/N]: " delete;
+        if [ -n "$delete" ] && [ "${delete,,}" != "n" ]; then
+            helm uninstall "$name";
+        fi
+    fi
 fi
 
-helm "$command" "$name" "$workDir/HelmCharts/$chartName" --values "$workDir/HelmValues/$chartName/$valueFile.yaml";
+installPath="$workDir/HelmCharts/$chartName"
+if [ -f "$installPath.yaml" ]; then
+    installPath=$(<"$installPath.yaml");
+fi
+helm "$command" "$name" "$installPath" --values "$workDir/HelmValues/$chartName/$valueFile.yaml";

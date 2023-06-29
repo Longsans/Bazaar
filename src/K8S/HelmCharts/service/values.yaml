@@ -13,7 +13,15 @@ cpu: "200"
 
 containerPort: 80
 
+pvName: "pv-data"
+pvcName: "pvc-data"
+pvMountPath: "/data"
+
 #ENV
 aspUrls: "http://+:80"
-eventBus: "rabbitmq"
+eventBus:
+  name: "rabbitmq"
+  user: "guest"
+  password: "guest"
 aspEnv: "Development"
+dataPath: "/data/data.json"
