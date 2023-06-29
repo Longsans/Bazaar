@@ -10,7 +10,7 @@ nodes:
       kubeletExtraArgs:
         node-labels: "ingress-ready=true"
   extraMounts:
-  - hostPath: /home/cornpc/Documents/Bazaar/Data
+  - hostPath: ../Data
     containerPath: /data
   extraPortMappings:
   - containerPort: 80
