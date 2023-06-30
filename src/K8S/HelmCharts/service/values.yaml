@@ -1,0 +1,28 @@
+app: "template"
+npMeta: "-srv-np" #e.g: template-srv-np
+apiMeta: "-api" #e.g: template-api
+deplMeta: "-depl"
+
+registry: "cornycodingcorn"
+image: "template"
+projectName: "template" #Name of the dll file
+replicas: 1
+
+memory: "256"
+cpu: "200"
+
+containerPort: 80
+
+pvName: "pv-data"
+pvcName: "pvc-data"
+pvMountPath: "/data"
+
+#ENV
+servicesConfigs: "services-configs"
+aspUrls: "http://+:80"
+eventBus:
+  name: "rabbitmq"
+  user: "guest"
+  password: "guest"
+aspEnv: "Development"
+dataPath: "/data/data.json"

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.app }}{{ .Values.deplMeta }}"
+spec:
+  replicas: {{ int .Values.replicas }}
+  selector:
+    matchLabels:
+      app: "{{ .Values.app }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.app }}"
+        type: microservice
+    spec:
+      volumes:
+      - name: {{ .Values.pvName }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvcName }}
+      containers:
+      - name: "{{ .Values.app }}"
+        image: "{{ .Values.registry }}/bazaar-{{ .Values.image }}"
+        volumeMounts:
+        - name: "{{ .Values.pvName }}"
+          mountPath: "{{ .Values.pvMountPath }}"
+        resources:
+          limits:
+            memory: "{{ int .Values.memory }}Mi"
+            cpu: "{{ int .Values.cpu }}m"
+        ports:
+        - containerPort: {{ int .Values.containerPort }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.servicesConfigs }}
+        env:
+        - name: PROJECT
+          value: "{{ .Values.projectName }}"
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "{{ .Values.aspEnv }}"
+        - name: EventBusConnection
+          value: "{{ .Values.eventBus.name }}"
+        - name: EventBusUserName
+          value: "{{ .Values.eventBus.user }}"
+        - name: EventBusPassword
+          value: "{{ .Values.eventBus.password }}"
+        - name: ASPNETCORE_URLS
+          value: "{{ .Values.aspUrls }}"
+        - name: DataStorePath
+          value: "{{ .Values.dataPath }}"
+          

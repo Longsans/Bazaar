@@ -1,0 +1,3 @@
+app: "ordering"
+image: "ordering-api"
+projectName: "Ordering"

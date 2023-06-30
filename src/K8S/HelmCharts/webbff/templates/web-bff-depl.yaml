@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.app }}{{ .Values.deplMeta }}"
+spec:
+  replicas: {{ int .Values.replicas }}
+  selector:
+    matchLabels:
+      app: "{{ .Values.app }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.app }}"
+        type: microservice
+    spec:
+      containers:
+      - name: "{{ .Values.app }}"
+        image: "{{ .Values.registry }}/bazaar-{{ .Values.image }}"
+        resources:
+          limits:
+            memory: "{{ int .Values.memory }}Mi"
+            cpu: "{{ int .Values.cpu }}m"
+        ports:
+        - containerPort: {{ int .Values.containerPort }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.servicesConfigs }}
+        env:
+        - name: PROJECT
+          value: "{{ .Values.projectName }}"
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "{{ .Values.aspEnv }}"
+        - name: ClusterId
+          value: "{{ int .Values.clusterId }}"
+        - name: CoordinatorUri
+          value: "{{ .Values.coordinatorUri }}"
