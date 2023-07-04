@@ -49,6 +49,11 @@ public class OrderRepository : IOrderRepository
         return _orders.FirstOrDefault(o => o.Id == id);
     }
 
+    public IEnumerable<Order> GetAll()
+    {
+        return _orders;
+    }
+
     public Order? GetLatest()
     {
         return _orders.Count > 0 ? _orders[_orders.Count - 1] : null;
