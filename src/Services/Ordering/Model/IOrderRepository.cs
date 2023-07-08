@@ -8,6 +8,7 @@ public interface IOrderRepository
     public int NextOrderId { get; }
 
     Order? GetById(int id);
+    IEnumerable<Order> GetAll();
     Order? GetLatest();
     Order CreateProcessingPayment(Order order);
     Order CreateShippingOrder(Order order);

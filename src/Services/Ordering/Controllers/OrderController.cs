@@ -29,6 +29,13 @@ namespace Bazaar.Ordering.Controllers
             return new OrderQuery(order);
         }
 
+        [HttpGet("api/orders")]
+        public ActionResult<IEnumerable<OrderQuery>> GetAll()
+        {
+            var orders = _orderRepo.GetAll().Select(o => new OrderQuery(o));
+            return Ok(orders);
+        }
+
         [HttpPost("api/txn/{txn}/orders")]
         public ActionResult<OrderQuery> Post([FromRoute] TransactionRef txn, [FromBody] OrderCreateCommand createOrderCommand)
         {

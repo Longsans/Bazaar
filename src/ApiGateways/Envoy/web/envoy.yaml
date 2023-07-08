@@ -59,9 +59,9 @@ static_resources:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: contracting
-                        - name: "gw-short"
+                        - name: "bff-short"
                           match:
-                            prefix: "/gw/"
+                            prefix: "/bff/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"

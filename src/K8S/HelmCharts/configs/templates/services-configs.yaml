@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: services-configs
+  namespace: default
+data:
+  CatalogServiceUri: "{{ .Values.loadBalancer }}{{ .Values.catalogPath }}"
+  CustomerServiceUri: "{{ .Values.loadBalancer }}{{ .Values.customerPath }}"
+  PartnerServiceUri: "{{ .Values.loadBalancer }}{{ .Values.partnerPath }}"
+  OrderServiceUri: "{{ .Values.loadBalancer }}{{ .Values.orderPath }}"
+  BasketServiceUri: "{{ .Values.loadBalancer }}{{ .Values.basketPath }}"
