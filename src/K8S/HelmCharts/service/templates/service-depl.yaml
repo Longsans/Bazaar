@@ -12,7 +12,10 @@ spec:
       labels:
         app: "{{ .Values.app }}"
         type: microservice
+      annotations:
+        consul.hashicorp.com/connect-inject: 'true'
     spec:
+      serviceAccountName: {{ .Values.app }}{{ .Values.apiMeta }}
       volumes:
       - name: {{ .Values.pvName }}
         persistentVolumeClaim:

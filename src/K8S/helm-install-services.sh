@@ -6,6 +6,7 @@ workDir=$( dirname -- "$workDir" );
 function install() {
     name=$1;
     "$workDir"/helm-install.sh "$name"-api service "$name" y y;
+    sleep 2s; #Just to be sure.
 }
 
 for service in "$workDir"/HelmValues/service/*.yaml; do
