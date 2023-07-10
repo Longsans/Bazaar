@@ -1,7 +1,7 @@
 apiVersion: consul.hashicorp.com/v1alpha1
 kind: ServiceDefaults
 metadata:
-    name: "{{ .Values.app }}{{ .Values.apiMeta }}"
+    name: "{{ .Release.Name }}"
     namespace: "default"
 spec:
-    protocol: "http"
+    protocol: "tcp"

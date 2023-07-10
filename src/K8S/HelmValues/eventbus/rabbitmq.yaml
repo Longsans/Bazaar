@@ -1,5 +1,7 @@
-persistence:
-  size: "1Gi"
-auth:
-  username: "guest"
-  password: "guest"
+services:
+- name: basket-api
+- name: catalog-api
+- name: contracting-api
+- name: customer-api
+- name: ordering-api
+- name: payment-api

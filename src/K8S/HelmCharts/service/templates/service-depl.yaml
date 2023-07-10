@@ -14,6 +14,7 @@ spec:
         type: microservice
       annotations:
         consul.hashicorp.com/connect-inject: 'true'
+        consul.hashicorp.com/transparent-proxy: 'true'
     spec:
       serviceAccountName: {{ .Values.app }}{{ .Values.apiMeta }}
       volumes:

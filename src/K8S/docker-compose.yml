@@ -13,9 +13,6 @@ services:
       context: ../
       dockerfile: K8S/Dockerfiles/Dockerfile-envoy
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-
   webbff:
     image: ${DOCKER_REGISTRY-}bazaar-webbff
     build:
