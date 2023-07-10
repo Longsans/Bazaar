@@ -18,7 +18,7 @@ install dashboard dashboard dashboard y y
 install webapigw proxy webapigw y y
 install internallb proxy internallb y y
 install webbff webbff webbff y y
-install ingressgw consulgw ingressgw
+install ingressgw consulgw ingressgw y y
 
 sleep 20s;
 install data-volume volume data y y

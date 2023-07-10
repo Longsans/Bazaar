@@ -17,9 +17,6 @@ spec:
     # Defines the backend service.
     backendRefs:
     - kind: Service
-      name: webapigw-srv-http
+      name: webapigw
       namespace: default
       port: 80
-    - kind: Service
-      name: ordering-api
-      namespace: default

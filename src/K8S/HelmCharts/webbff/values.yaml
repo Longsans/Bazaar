@@ -13,11 +13,11 @@ containerPort: 80
 
 #Intentions
 intentions:
-- name: "webapigw-srv-http"
+- name: "webapigw"
 
 #ENV
 servicesConfigs: "services-configs"
 aspUrls: "http://+:80"
 aspEnv: "Development"
 clusterId: 1
-coordinatorUri: "http://internallb-srv-http/ca/api/coordinator"
+coordinatorUri: "http://internallb/ca/api/coordinator"

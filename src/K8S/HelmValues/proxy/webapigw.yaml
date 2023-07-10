@@ -1,5 +1,5 @@
 app: "webapigw"
 image: "webapigw"
 # expose: true
-# intentions:
-# - name: api-gateway
+intentions:
+- name: api-gateway

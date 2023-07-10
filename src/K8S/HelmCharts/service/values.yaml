@@ -19,8 +19,8 @@ pvMountPath: "/data"
 
 #Intentions
 intentions:
-- name: internallb-srv-http
-- name: webapigw-srv-http
+- name: internallb
+- name: webapigw
 
 #ENV
 servicesConfigs: "services-configs"

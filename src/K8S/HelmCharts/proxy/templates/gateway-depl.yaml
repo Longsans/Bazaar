@@ -6,17 +6,19 @@ spec:
   replicas: {{ int .Values.replicas }}
   selector:
     matchLabels:
+      service: {{ .Values.app }}
       app: "{{ .Values.app }}"
   template:
     metadata:
       labels:
+        service: {{ .Values.app }}
         app: "{{ .Values.app }}"
         type: apigateway
       annotations:
         consul.hashicorp.com/connect-inject: 'true'
         consul.hashicorp.com/transparent-proxy: 'true'
     spec:
-      serviceAccountName: {{ .Values.app }}-srv-http
+      serviceAccountName: {{ .Values.app }}
       containers:
       - name: "{{ .Values.app }}"
         image: "{{ .Values.registry }}/bazaar-{{ .Values.image }}"
@@ -25,8 +27,6 @@ spec:
             memory: "{{ int .Values.memory }}Mi"
             cpu: "{{ int .Values.cpu }}m"
         ports:
-        - name: admin-port
-          containerPort: {{ int .Values.adminPort }}
         - name: http-port
           containerPort: {{ int .Values.httpPort }}
         env:

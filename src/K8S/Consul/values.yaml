@@ -6,7 +6,7 @@ global:
   # The prefix used for all resources created in the Helm chart.
   name: consul
   # The name of the datacenter that the agents should register as.
-  datacenter: kind-bazaar
+  datacenter: dc1
   # Enables TLS across the cluster to verify authenticity of the Consul servers and clients.
   tls:
     enabled: true
@@ -22,9 +22,23 @@ server:
 # Contains values that configure the Consul UI.
 ui:
   enabled: true
-  # Registers a Kubernetes Service for the Consul UI as a NodePort.
+  # Defines the type of service created for the Consul UI (e.g. LoadBalancer, ClusterIP, NodePort).
+  # NodePort is primarily used for local deployments.
   service:
     type: NodePort
+  # Enables displaying metrics in the Consul UI.
+  metrics:
+    enabled: true
+    # The metrics provider specification.
+    provider: "prometheus"
+    # The URL of the prometheus metrics server.
+    baseURL: http://prometheus-server.default.svc.cluster.local
+# Configures and installs the automatic Consul Connect sidecar injector.
+connectInject:
+  enabled: true
+    # Enables metrics for Consul Connect sidecars.
+  metrics:
+    defaultEnabled: true
 apiGateway:
   enabled: true
   # Image to use for the api-gateway-controller pods and gateway instances

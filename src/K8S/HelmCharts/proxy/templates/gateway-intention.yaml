@@ -7,7 +7,7 @@ metadata:
 # Allow traffic from nginx to frontend
 spec:
   destination:
-    name: {{ .Values.app }}-srv-http
+    name: {{ .Values.app }}
   sources:
     {{- range $service := .Values.intentions }}
     - name: {{ $service.name }}
