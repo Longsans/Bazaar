@@ -13,18 +13,19 @@ function install() {
 }
 
 install rabbitmq eventbus rabbitmq y y
-install configs configs configs y y
 install dashboard dashboard dashboard y y
 install webapigw proxy webapigw y y
 install internallb proxy internallb y y
 install webbff webbff webbff y y
 install ingressgw consulgw ingressgw y y
+sleep 10s;
+install configs configs configs y y
 
 sleep 20s;
-install data-volume volume data y y
+install data-volume volume data y n
 
 echo "> Waiting for rabbitmq pod"
-sleep 120s;
+sleep 60s;
 kubectl wait --namespace default --for=condition=ready pod/rabbitmq-0 --timeout=30s
 
 

@@ -38,6 +38,7 @@ if [ -n "$input" ] && [ "${input,,}" != "n" ]; then
 
         if [ -n "$delete" ] && [ "${delete,,}" != "n" ]; then
             helm uninstall "$name";
+            sleep 2s;
             command=install;
         fi
     fi
