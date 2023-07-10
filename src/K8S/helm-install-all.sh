@@ -9,15 +9,16 @@ function install() {
     yamlName="$3"
 
     "$workDir"/helm-install.sh "$name" "$chartName" "$yamlName" "$4" "$5"
-    sleep 5s; #This is required
+    sleep 10s; #This is required
 }
 
 install rabbitmq eventbus rabbitmq y y
 install configs configs configs y y
 install dashboard dashboard dashboard y y
-install webapigw apigateway webapigw y y
-install internallb apigateway internallb y y
+install webapigw proxy webapigw y y
+install internallb proxy internallb y y
 install webbff webbff webbff y y
+install ingressgw consulgw ingressgw
 
 sleep 20s;
 install data-volume volume data y y

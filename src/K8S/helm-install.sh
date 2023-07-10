@@ -29,6 +29,7 @@ if [ -n "$input" ] && [ "${input,,}" != "n" ]; then
     command=install;
     existingInstall=$(helm list | grep "$name");
     if [ -n "$existingInstall" ]; then
+        command=upgrade;
         delete="$5";
 
         if [ -z "$delete" ]; then
@@ -37,6 +38,7 @@ if [ -n "$input" ] && [ "${input,,}" != "n" ]; then
 
         if [ -n "$delete" ] && [ "${delete,,}" != "n" ]; then
             helm uninstall "$name";
+            command=install;
         fi
     fi
 fi

@@ -4,3 +4,5 @@ customerPath: "/cs/api"
 partnerPath: "/ct/api"
 orderPath: "/o/api"
 basketPath: "/ba/api"
+
+defaultIntention: "deny"
