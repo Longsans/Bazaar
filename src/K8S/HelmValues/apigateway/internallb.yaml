@@ -1,2 +1,10 @@
 app: "internallb"
 image: "internallb"
+intentions:
+- name: basket-api
+- name: catalog-api
+- name: contracting-api
+- name: customer-api
+- name: ordering-api
+- name: payment-api
+- name: webbff

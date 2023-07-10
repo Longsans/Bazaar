@@ -12,7 +12,11 @@ spec:
       labels:
         app: "{{ .Values.app }}"
         type: apigateway
+      annotations:
+        consul.hashicorp.com/connect-inject: 'true'
+        consul.hashicorp.com/transparent-proxy: 'true'
     spec:
+      serviceAccountName: {{ .Values.app }}-srv-http
       containers:
       - name: "{{ .Values.app }}"
         image: "{{ .Values.registry }}/bazaar-{{ .Values.image }}"

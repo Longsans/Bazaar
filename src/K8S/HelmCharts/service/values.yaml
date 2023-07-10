@@ -17,6 +17,11 @@ pvName: "pv-data"
 pvcName: "pvc-data"
 pvMountPath: "/data"
 
+#Intentions
+intentions:
+- name: internallb-srv-http
+- name: webapigw-srv-http
+
 #ENV
 servicesConfigs: "services-configs"
 aspUrls: "http://+:80"

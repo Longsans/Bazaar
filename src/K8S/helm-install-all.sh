@@ -18,10 +18,12 @@ install dashboard dashboard dashboard y y
 install webapigw apigateway webapigw y y
 install internallb apigateway internallb y y
 install webbff webbff webbff y y
+
+sleep 20s;
 install data-volume volume data y y
 
-sleep 40s;
 echo "> Waiting for rabbitmq pod"
+sleep 120s;
 kubectl wait --namespace default --for=condition=ready pod/rabbitmq-0 --timeout=30s
 
 

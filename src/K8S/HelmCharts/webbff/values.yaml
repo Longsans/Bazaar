@@ -11,6 +11,10 @@ cpu: "500"
 
 containerPort: 80
 
+#Intentions
+intentions:
+- name: "webapigw-srv-http"
+
 #ENV
 servicesConfigs: "services-configs"
 aspUrls: "http://+:80"
