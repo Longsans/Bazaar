@@ -2,10 +2,15 @@ global:
   enabled: true
   name: consul
   datacenter: dc1
-  tls:
-    enabled: true
+  # tls:
+  #   enabled: true
   acls:
     manageSystemACLs: true
+    defaultPolicy: "deny"
+  metrics:
+    enabled: true
+    enableAgentMetrics: true
+    agentMetricsRetentionTime: "1m"
 server:
   enabled: true
   replicas: 1
@@ -15,24 +20,16 @@ ui:
     type: NodePort
   metrics:
     enabled: true
-    # The metrics provider specification.
     provider: "prometheus"
-    # The URL of the prometheus metrics server.
     baseURL: http://prometheus-server.default.svc.cluster.local
-# Configures and installs the automatic Consul Connect sidecar injector.
 connectInject:
   enabled: true
-    # Enables metrics for Consul Connect sidecars.
-  metrics:
-    defaultEnabled: true
+  default: true
+controller:
+  enabled: true
 apiGateway:
   enabled: true
-  # Image to use for the api-gateway-controller pods and gateway instances
   image: "hashicorp/consul-api-gateway:0.5.1"
-  # Configuration settings for the GatewayClass
   managedGatewayClass:
-    # Defines the type of service created for gateways (e.g. LoadBalancer, ClusterIP, NodePort)
-    # NodePort is primarily used for local deployments.
     serviceType: NodePort
-    # Toggles the gateway ports to be mapped to host ports (used for local deployments)
     useHostPorts: true

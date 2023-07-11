@@ -45,7 +45,7 @@ if [ -n "$input" ] && [ "${input,,}" != "n" ]; then
 fi
 
 installPath="$workDir/HelmCharts/$chartName"
-if [ -f "$installPath.yaml" ]; then
-    installPath=$(<"$installPath.yaml");
+if [ -f "$installPath.txt" ]; then
+    installPath=$(<"$installPath.txt");
 fi
 helm "$command" "$name" "$installPath" --values "$workDir/HelmValues/$chartName/$valueFile.yaml" --wait;

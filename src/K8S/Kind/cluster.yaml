@@ -16,6 +16,3 @@ nodes:
   - containerPort: 6969
     hostPort: 6969
     protocol: TCP
-  - containerPort: 8501
-    hostPort: 8501
-    protocol: TCP
