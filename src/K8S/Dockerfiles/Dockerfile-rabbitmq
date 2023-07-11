@@ -1,0 +1,4 @@
+FROM rabbitmq:3-management
+ARG config_path=RabbitMQ
+COPY ${config_path}/rabbitmq.conf /etc/rabbitmq
+RUN rabbitmq-plugins

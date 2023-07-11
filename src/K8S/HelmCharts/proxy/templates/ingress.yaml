@@ -13,14 +13,14 @@ spec:
         path: "/{{ .Values.app }}/admin(/|$)(.*)"
         backend:
           service:
-            name: "{{ .Values.app }}-srv-admin"
+            name: "{{ .Values.app }}-admin"
             port:
               number: {{ .Values.adminPort }}
       - pathType: Prefix
         path: "/{{ .Values.app }}/http(/|$)(.*)"
         backend:
           service:
-            name: "{{ .Values.app }}-srv-http"
+            name: "{{ .Values.app }}"
             port:
               number: {{ .Values.httpPort }}
 {{ end }}

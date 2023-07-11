@@ -10,3 +10,5 @@ adminPort: 8001
 httpPort: 80
 
 expose: false
+
+intentions: []

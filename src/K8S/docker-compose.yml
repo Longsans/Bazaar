@@ -13,9 +13,6 @@ services:
       context: ../
       dockerfile: K8S/Dockerfiles/Dockerfile-envoy
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-
   webbff:
     image: ${DOCKER_REGISTRY-}bazaar-webbff
     build:
@@ -31,7 +28,6 @@ services:
       - contracting-api
       - customer-api
       - catalog-api
-      - rabbitmq
 
   catalog-api:
     image: ${DOCKER_REGISTRY-}bazaar-catalog-api
@@ -40,8 +36,6 @@ services:
       dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Catalog
-    depends_on:
-      - rabbitmq
 
   customer-api:
     image: ${DOCKER_REGISTRY-}bazaar-customer-api
@@ -50,8 +44,6 @@ services:
       dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Customer
-    depends_on:
-      - rabbitmq
 
   contracting-api:
     image: ${DOCKER_REGISTRY-}bazaar-contracting-api
@@ -60,8 +52,6 @@ services:
       dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Contracting
-    depends_on:
-      - rabbitmq
     
   basket-api:
     image: ${DOCKER_REGISTRY-}bazaar-basket-api
@@ -70,8 +60,6 @@ services:
       dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Basket
-    depends_on:
-      - rabbitmq
 
   ordering-api:
     image: ${DOCKER_REGISTRY-}bazaar-ordering-api
@@ -80,8 +68,6 @@ services:
       dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Ordering
-    depends_on:
-      - rabbitmq
 
   payment-api:
     image: ${DOCKER_REGISTRY-}bazaar-payment-api
@@ -90,5 +76,3 @@ services:
       dockerfile: K8S/Dockerfiles/Dockerfile-dotnet
       args:
         - project_name=Payment
-    depends_on:
-      - rabbitmq

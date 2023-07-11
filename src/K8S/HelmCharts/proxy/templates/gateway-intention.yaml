@@ -1,0 +1,16 @@
+{{- if .Values.intentions }}
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: "{{ .Values.app }}-intention"
+  namespace: default
+# Allow traffic from nginx to frontend
+spec:
+  destination:
+    name: {{ .Values.app }}
+  sources:
+    {{- range $service := .Values.intentions }}
+    - name: {{ $service.name }}
+      action: {{ or $service.action "allow" }}
+    {{- end }}
+{{- end }}

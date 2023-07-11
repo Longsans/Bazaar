@@ -1,6 +1,8 @@
-loadBalancer: "http://internallb-srv-http"
+loadBalancer: "http://internallb"
 catalogPath: "/ca/api"
 customerPath: "/cs/api"
 partnerPath: "/ct/api"
 orderPath: "/o/api"
 basketPath: "/ba/api"
+
+defaultIntention: "deny"

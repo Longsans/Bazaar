@@ -11,8 +11,12 @@ spec:
     metadata:
       labels:
         app: "{{ .Values.app }}"
-        type: microservice
+        type: webbff
+      annotations:
+        consul.hashicorp.com/connect-inject: 'true'
+        consul.hashicorp.com/transparent-proxy: 'true'
     spec:
+      serviceAccountName: {{ .Values.app }}
       containers:
       - name: "{{ .Values.app }}"
         image: "{{ .Values.registry }}/bazaar-{{ .Values.image }}"

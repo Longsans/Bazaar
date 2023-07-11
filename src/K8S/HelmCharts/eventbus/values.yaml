@@ -1,0 +1,15 @@
+services: []
+rabbitmq:
+  persistence:
+    size: "1Gi"
+  auth:
+    username: "guest"
+    password: "guest"
+  podAnnotations:
+    consul.hashicorp.com/connect-inject: 'true'
+    consul.hashicorp.com/transparent-proxy: 'true'
+  commonLabels:
+    consul.hashicorp.com/service-ignore: 'true'
+  service:
+    labels:
+      consul.hashicorp.com/service-ignore: 'false' 
