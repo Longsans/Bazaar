@@ -14,7 +14,25 @@
       "Name": "A Dream of Spring",
       "Description": "Last book in ASOIAF",
       "Price": "45.99",
-      "AvailableStock": 45,
+      "AvailableStock": 1000,
+      "RestockThreshold": 30,
+      "MaxStockThreshold": 1000
+    },
+    {
+      "ProductId": "PROD-3",
+      "Name": "Doom and Bloom",
+      "Description": "Book 7 of ASOIAF",
+      "Price": "69.99",
+      "AvailableStock": 1000,
+      "RestockThreshold": 30,
+      "MaxStockThreshold": 1000
+    },
+    {
+      "ProductId": "PROD-4",
+      "Name": "How to basic",
+      "Description": "Book 3 in ASOIAF",
+      "Price": "33.33",
+      "AvailableStock": 1000,
       "RestockThreshold": 30,
       "MaxStockThreshold": 1000
     }

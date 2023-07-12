@@ -5,5 +5,8 @@ dependencies:
 - name: prometheus-consul-exporter
   repository: https://prometheus-community.github.io/helm-charts
   version: 1.0.0
-digest: sha256:9784292a11a7172ad78144fcbd9344021f041a3caf5304ad1cab6b9c3bafc438
-generated: "2023-07-12T11:45:30.67851387+07:00"
+- name: grafana
+  repository: https://grafana.github.io/helm-charts
+  version: 6.58.2
+digest: sha256:834167a433c8e4932984d7c1bee77bb061d0d481228cbb48c174e85c075a83c3
+generated: "2023-07-12T15:09:08.516375053+07:00"
