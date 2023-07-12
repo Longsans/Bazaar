@@ -37,7 +37,7 @@ if [ -n "$input" ] && [ "${input,,}" != "n" ]; then
         fi
 
         if [ -n "$delete" ] && [ "${delete,,}" != "n" ]; then
-            helm uninstall "$name";
+            helm uninstall "$name" --wait;
             sleep 2s;
             command=install;
         fi
@@ -45,7 +45,7 @@ if [ -n "$input" ] && [ "${input,,}" != "n" ]; then
 fi
 
 installPath="$workDir/HelmCharts/$chartName"
-if [ -f "$installPath.yaml" ]; then
-    installPath=$(<"$installPath.yaml");
+if [ -f "$installPath.txt" ]; then
+    installPath=$(<"$installPath.txt");
 fi
-helm "$command" "$name" "$installPath" --values "$workDir/HelmValues/$chartName/$valueFile.yaml";
+helm "$command" "$name" "$installPath" --values "$workDir/HelmValues/$chartName/$valueFile.yaml" --wait;

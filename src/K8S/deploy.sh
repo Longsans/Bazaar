@@ -10,4 +10,5 @@ chmod +x "$workDir"/deploy-consul.sh;
 "$workDir"/deploy-consul.sh || exit 1;
 
 chmod +x "$workDir"/helm-install-all.sh;
+chmod +x "$workDir"/helm-install.sh;
 "$workDir"/helm-install-all.sh || exit 1;
