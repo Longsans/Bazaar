@@ -9,14 +9,14 @@ spec:
   # Configures the listener that is bound to the gateway's address.
   listeners:
     # Defines the listener protocol (HTTP, HTTPS, or TCP)
-  - protocol: HTTP
+  - protocol: HTTPS
     port: {{ .Values.port }}
-    name: http
+    name: https
     allowedRoutes:
       namespaces:
         from: Same
-    # tls:
-    #   # Defines the certificate to use for the HTTPS listener.
-    #   certificateRefs:
-    #   - name: consul-server-cert
-    #   mode: Terminate
+    tls:
+      # Defines the certificate to use for the HTTPS listener.
+      certificateRefs:
+      - name: consul-server-cert
+      mode: Terminate

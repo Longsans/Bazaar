@@ -2,14 +2,13 @@ global:
   enabled: true
   name: consul
   datacenter: dc1
-  # tls:
-  #   enabled: true
+  tls:
+    enabled: true
   acls:
     manageSystemACLs: true
     defaultPolicy: "deny"
   metrics:
     enabled: true
-    enableAgentMetrics: true
     agentMetricsRetentionTime: "1m"
 server:
   enabled: true
@@ -24,7 +23,6 @@ ui:
     baseURL: http://prometheus-server.default.svc.cluster.local
 connectInject:
   enabled: true
-  default: true
 controller:
   enabled: true
 apiGateway:
