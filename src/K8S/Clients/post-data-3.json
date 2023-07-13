@@ -1,0 +1,11 @@
+{
+    "buyerExternalId": "PNER-1",
+    "items": [
+        {
+            "productExternalId": "PROD-4",
+            "productName": "How to basic",
+            "productUnitPrice": "33.33",
+            "quantity": 1
+        }
+    ]
+}

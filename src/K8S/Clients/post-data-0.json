@@ -1,0 +1,11 @@
+{
+    "buyerExternalId": "PNER-1",
+    "items": [
+        {
+            "productExternalId": "PROD-1",
+            "productName": "The Winds of Winter",
+            "productUnitPrice": "34.99",
+            "quantity": 1
+        }
+    ]
+}

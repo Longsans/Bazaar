@@ -18,7 +18,7 @@ install configs configs configs y y
 install webbff webbff webbff y y
 install data-volume volume data y n
 
-install prometheus prometheus prometheus y y
+install monitoring monitoring monitoring y y
 
 echo "> Waiting for rabbitmq pod"
 kubectl wait --namespace default --for=condition=ready pod/rabbitmq-0 --timeout=240s
