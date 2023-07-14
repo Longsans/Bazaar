@@ -20,7 +20,7 @@ ui:
   metrics:
     enabled: true
     provider: "prometheus"
-    baseURL: http://prometheus-server.default.svc.cluster.local
+    baseURL: http://monitoring-prometheus-server.default.svc.cluster.local
 connectInject:
   enabled: true
 controller:
