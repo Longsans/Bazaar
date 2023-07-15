@@ -12,7 +12,7 @@ function install() {
 }
 
 install rabbitmq eventbus rabbitmq y y
-# install dashboard dashboard dashboard y y
+install dashboard dashboard dashboard y y
 
 chmod +x "$workDir"/helm-install-base.sh;
 "$workDir"/helm-install-base.sh
