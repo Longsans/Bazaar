@@ -1,5 +1,3 @@
-using Bazaar.Contracting.Model;
-
 namespace Bazaar.Contracting.Dto;
 
 public class ContractQuery

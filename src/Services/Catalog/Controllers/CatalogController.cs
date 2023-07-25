@@ -1,4 +1,3 @@
-using Bazaar.Catalog.Model;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bazaar.Catalog.Controllers

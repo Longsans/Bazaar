@@ -1,5 +1,4 @@
 using Bazaar.Catalog.Infrastructure.Transactional;
-using Bazaar.Catalog.Model;
 using Bazaar.Catalog.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,8 +1,9 @@
-﻿using Bazaar.BuildingBlocks.Transactions.Utility;
+﻿using Bazaar.BuildingBlocks.Transactions.Abstractions;
+using Bazaar.BuildingBlocks.Transactions.Utility;
 
 namespace Bazaar.BuildingBlocks.Transactions
 {
-    public class TransactionClient
+    public class TransactionClient : ITransactionClient
     {
         public TransactionRef? TransactionRef => _txnRef;
         protected TransactionRef? _txnRef;

@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Bazaar.Basket.Model;
 
 namespace Bazaar.Basket.Controllers
 {
