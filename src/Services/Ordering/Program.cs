@@ -1,6 +1,3 @@
-using Bazaar.BuildingBlocks.Transactions.Abstractions;
-using Bazaar.Ordering.Infrastructure.Transactional;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

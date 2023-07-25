@@ -1,7 +1,4 @@
-using Bazaar.BuildingBlocks.Transactions.Abstractions;
-using Microsoft.AspNetCore.Mvc;
-
-namespace Bazaar.Ordering.Controllers
+namespace Bazaar.Ordering.Adapters.Controllers
 {
     [ApiController]
     public class OrderController : ControllerBase

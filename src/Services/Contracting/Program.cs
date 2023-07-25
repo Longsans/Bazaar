@@ -1,4 +1,3 @@
-using Bazaar.Contracting.Model;
 using Bazaar.Contracting.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
