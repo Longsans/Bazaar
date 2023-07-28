@@ -1,6 +1,6 @@
 namespace Bazaar.Contracting.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]s")]
     [ApiController]
     public class PartnerController : ControllerBase
     {
@@ -12,21 +12,49 @@ namespace Bazaar.Contracting.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public IActionResult GetById(int id, [FromQuery] string? externalId = null)
         {
-            var partner = _partnerRepo.GetById(id);
+            Partner? partner;
+            if (externalId != null)
+            {
+                partner = _partnerRepo.GetByExternalId(externalId);
+            }
+            else
+            {
+                partner = _partnerRepo.GetById(id);
+            }
             if (partner == null)
+            {
                 return NotFound();
+            }
             return Ok(new PartnerQuery(partner));
         }
 
-        [HttpGet("ext/{externalId}")]
-        public IActionResult GetByExternalId(string externalId)
+        [HttpPost]
+        public ActionResult<Partner> Create(Partner partner)
         {
-            var partner = _partnerRepo.GetByExternalId(externalId);
-            if (partner == null)
-                return NotFound();
-            return Ok(new PartnerQuery(partner));
+            var created = _partnerRepo.Create(partner);
+            return CreatedAtAction(nameof(GetById), created.Id, created);
+        }
+
+        [HttpPut]
+        public IActionResult Update(Partner partner)
+        {
+            if (_partnerRepo.Update(partner))
+            {
+                return Ok();
+            }
+            return NotFound(partner.Id);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            if (_partnerRepo.Delete(id))
+            {
+                return Ok();
+            }
+            return NotFound(id);
         }
     }
 }

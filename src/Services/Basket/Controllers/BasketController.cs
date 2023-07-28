@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bazaar.Basket.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]s")]
     [ApiController]
     public class BasketController : ControllerBase
     {
@@ -20,6 +20,14 @@ namespace Bazaar.Basket.Controllers
             if (basket == null)
                 return NotFound();
             return Ok(basket);
+        }
+
+        [HttpPost("{buyerId}")]
+        public ActionResult<CustomerBasket> UpdateBasket(
+            [FromRoute] string buyerId, [FromBody] CustomerBasket basket)
+        {
+            _basketRepo.Update(buyerId, basket);
+            return basket;
         }
     }
 }

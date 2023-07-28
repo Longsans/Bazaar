@@ -2,7 +2,7 @@ namespace Bazaar.Basket.Repositories;
 
 public class BasketRepository : IBasketRepository
 {
-    private readonly CustomerBasket[] _baskets;
+    private readonly List<CustomerBasket> _baskets;
 
     public BasketRepository()
     {
@@ -24,13 +24,34 @@ public class BasketRepository : IBasketRepository
                     ImageUrl = "https://imageserver.com/not-coming"
                 }
             };
-        _baskets = new CustomerBasket[] {
+        _baskets = new List<CustomerBasket> {
             new CustomerBasket("CUST-1", items)
         };
+    }
+
+    public CustomerBasket GetBasketOrCreateIfNotExist(string buyerId)
+    {
+        var basket = _baskets.FirstOrDefault(b => b.BuyerId == buyerId);
+        if (basket == null)
+        {
+            basket = new CustomerBasket(buyerId);
+            _baskets.Add(basket);
+        }
+        return basket;
     }
 
     public CustomerBasket? GetByBuyerId(string buyerId)
     {
         return _baskets.FirstOrDefault(b => b.BuyerId == buyerId);
+    }
+
+    public void Update(string buyerId, CustomerBasket update)
+    {
+        var basket = _baskets.FirstOrDefault(b => b.BuyerId == buyerId);
+        if (basket != null)
+        {
+            _baskets.Remove(basket);
+        }
+        _baskets.Add(update);
     }
 }

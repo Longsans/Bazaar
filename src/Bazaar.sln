@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Catalog", "Services\Catalog
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Contracting", "Services\Contracting\Contracting.csproj", "{DF5641A3-11CB-4D79-81E8-40495F090F8F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Customer", "Services\Customer\Customer.csproj", "{F481F6B5-0090-437A-9F05-542569A6E7C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShopperInfo", "Services\Customer\ShopperInfo.csproj", "{F481F6B5-0090-437A-9F05-542569A6E7C7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ordering", "Services\Ordering\Ordering.csproj", "{74AEA867-4450-46F2-A921-1BD4F92DD308}"
 EndProject
