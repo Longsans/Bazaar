@@ -23,6 +23,13 @@ namespace Bazaar.Catalog.Controllers
             return Ok(item);
         }
 
+        [HttpPost("api/catalog")]
+        public IActionResult Create(CatalogItem item)
+        {
+            var createdItem = _catalogRepo.Create(item);
+            return CreatedAtAction(nameof(GetById), createdItem.Id, createdItem);
+        }
+
         [HttpGet("api/catalog/{productId}/stock")]
         public ActionResult<int> GetAvailableStockInTransaction(string productId, [FromQuery] TransactionRef txn)
         {

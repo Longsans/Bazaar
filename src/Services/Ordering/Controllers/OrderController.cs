@@ -17,8 +17,8 @@ namespace Bazaar.Ordering.Adapters.Controllers
             _orderRm = orderRm;
         }
 
-        [HttpGet("api/order/{id}")]
-        public ActionResult<OrderQuery> Get(int id)
+        [HttpGet("api/orders/{id}")]
+        public ActionResult<OrderQuery> GetById(int id)
         {
             var order = _orderRepo.GetById(id);
             if (order == null)
