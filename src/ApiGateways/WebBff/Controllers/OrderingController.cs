@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-namespace Bazaar.ApiGateways.WebBff.Adapters.Controllers
+﻿namespace Bazaar.ApiGateways.WebBff.Controllers
 {
     [ApiController]
     public class OrderingController : ControllerBase

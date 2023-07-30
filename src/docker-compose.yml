@@ -10,6 +10,9 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
 
+  catalog-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
   webbff:
     image: ${DOCKER_REGISTRY-}webbff
     build:
@@ -20,7 +23,7 @@ services:
       - ordering-api
       - basket-api
       - contracting-api
-      - customer-api
+      - shopper-info-api
       - catalog-api
       - rabbitmq
   catalog-api:
@@ -30,13 +33,16 @@ services:
       dockerfile: Services/Catalog/Dockerfile
     depends_on:
       - rabbitmq
-  customer-api:
-    image: ${DOCKER_REGISTRY-}customer-api
+      - catalog-sql
+      - internallb
+  shopper-info-api:
+    image: ${DOCKER_REGISTRY-}shopper-info-api
     build:
       context: .
-      dockerfile: Services/Customer/Dockerfile
+      dockerfile: Services/ShopperInfo/Dockerfile
     depends_on:
       - rabbitmq
+      - internallb 
   contracting-api:
     image: ${DOCKER_REGISTRY-}contracting-api
     build:
@@ -44,6 +50,7 @@ services:
       dockerfile: Services/Contracting/Dockerfile
     depends_on:
       - rabbitmq
+      - internallb
   basket-api:
     image: ${DOCKER_REGISTRY-}basket-api
     build:
@@ -51,6 +58,7 @@ services:
       dockerfile: Services/Basket/Dockerfile
     depends_on:
       - rabbitmq
+      - internallb
   ordering-api:
     image: ${DOCKER_REGISTRY-}ordering-api
     build:
@@ -58,6 +66,7 @@ services:
       dockerfile: Services/Ordering/Dockerfile
     depends_on:
       - rabbitmq
+      - internallb 
   payment-api:
     image: ${DOCKER_REGISTRY-}payment-api
     build:

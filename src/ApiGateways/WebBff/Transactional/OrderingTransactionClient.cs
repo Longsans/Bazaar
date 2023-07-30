@@ -1,7 +1,4 @@
-﻿using Bazaar.BuildingBlocks.Transactions.Utility;
-using Newtonsoft.Json.Linq;
-
-namespace Bazaar.ApiGateways.WebBff.Adapters.Transactional
+﻿namespace Bazaar.ApiGateways.WebBff.Transactional
 {
     public class OrderingTransactionClient : TransactionClient, IOrderingTransactionClient
     {

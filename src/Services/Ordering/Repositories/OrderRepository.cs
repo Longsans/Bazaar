@@ -8,7 +8,7 @@ public class OrderRepository : IOrderRepository
 
     public OrderRepository(JsonDataAdapter adapter)
     {
-        var items = adapter.ReadToObjects<OrderItem>(ORDER_ITEMS_SECTION, (item, id) => item.Id = id);
+        var items = adapter.ReadToObjects<OrderItem>(ORDER_ITEMS_SECTION);
 
         _orders = new()
         {
@@ -18,7 +18,6 @@ public class OrderRepository : IOrderRepository
                 Status = OrderStatus.Postponed,
             }
         };
-        _orders = adapter.GenerateId(_orders, (o, id) => o.Id = id).ToList();
         _orders.ForEach(o => o.AssignExternalId());
     }
 

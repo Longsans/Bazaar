@@ -2,46 +2,46 @@ namespace Bazaar.Catalog.Repositories;
 
 public class CatalogRepository : ICatalogRepository
 {
-    private readonly List<CatalogItem> _items;
-    private int _nextId => _items.Count + 1;
-    private const string CATALOG_SECTION = "products";
+    private readonly CatalogDbContext _context;
 
-    public CatalogRepository(JsonDataAdapter adapter)
+    public CatalogRepository(CatalogDbContext context)
     {
-        _items = adapter.ReadToObjects<CatalogItem>(CATALOG_SECTION, (item, id) => item.Id = id).ToList();
+        _context = context;
     }
 
     public CatalogItem? GetItemById(int id)
     {
-        return _items.FirstOrDefault(item => item.Id == id);
+        return _context.CatalogItems.FirstOrDefault(item => item.Id == id);
     }
 
     public CatalogItem? GetItemByProductId(string productId)
     {
-        return _items.FirstOrDefault(item => item.ProductId == productId);
+        return _context.CatalogItems.FirstOrDefault(item => item.ProductId == productId);
     }
 
     public CatalogItem Create(CatalogItem item)
     {
-        item.Id = _nextId;
-        _items.Add(item);
+        _context.CatalogItems.Add(item);
+        _context.SaveChanges();
         return item;
     }
 
-    public void Update(CatalogItem item)
+    public bool Update(CatalogItem item)
     {
-        var existing = _items.FirstOrDefault(i => i.Id == item.Id);
+        var existing = _context.CatalogItems.FirstOrDefault(i => i.Id == item.Id);
         if (existing == null)
-            return;
-        _items.Remove(existing);
-        _items.Add(item);
+            return false;
+        _context.CatalogItems.Entry(existing).CurrentValues.SetValues(item);
+        _context.SaveChanges();
+        return true;
     }
 
-    public void Delete(int id)
+    public bool Delete(int id)
     {
-        var existing = _items.FirstOrDefault(i => i.Id == id);
+        var existing = _context.CatalogItems.FirstOrDefault(i => i.Id == id);
         if (existing == null)
-            return;
-        _items.Remove(existing);
+            return false;
+        _context.CatalogItems.Remove(existing);
+        return true;
     }
 }
