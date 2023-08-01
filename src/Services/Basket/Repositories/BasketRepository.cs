@@ -2,56 +2,87 @@ namespace Bazaar.Basket.Repositories;
 
 public class BasketRepository : IBasketRepository
 {
-    private readonly List<CustomerBasket> _baskets;
+    private readonly BasketDbContext _context;
 
-    public BasketRepository()
+    public BasketRepository(BasketDbContext context)
     {
-        var items = new BasketItem[] {
-                new BasketItem {
-                    Id = 1,
-                    ProductId = "PROD-1",
-                    ProductName = "The Winds of Winter",
-                    UnitPrice = 34.99m,
-                    Quantity = 2,
-                    ImageUrl = "https://imageserver.com/twow-when?"
-                },
-                new BasketItem {
-                    Id = 1,
-                    ProductId = "PROD-2",
-                    ProductName = "A Dream of Spring",
-                    UnitPrice = 45.99m,
-                    Quantity = 1,
-                    ImageUrl = "https://imageserver.com/not-coming"
-                }
-            };
-        _baskets = new List<CustomerBasket> {
-            new CustomerBasket("CUST-1", items)
-        };
+        _context = context;
     }
 
-    public CustomerBasket GetBasketOrCreateIfNotExist(string buyerId)
+    public BuyerBasket? AddItemToBasket(string buyerId, BasketItem item)
     {
-        var basket = _baskets.FirstOrDefault(b => b.BuyerId == buyerId);
+        var basket = GetByBuyerId(buyerId);
         if (basket == null)
         {
-            basket = new CustomerBasket(buyerId);
-            _baskets.Add(basket);
+            return null;
+        }
+        basket.Items.Add(item);
+        _context.SaveChanges();
+        return basket;
+    }
+
+    public BuyerBasket? ChangeItemQuantity(string buyerId, string productId, uint quantity)
+    {
+        if (quantity == 0)
+        {
+            return null;
+        }
+
+        var basket = GetByBuyerId(buyerId);
+        if (basket == null)
+        {
+            return null;
+        }
+
+        var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
+        if (item == null)
+        {
+            return null;
+        }
+
+        item.Quantity = quantity;
+        _context.SaveChanges();
+        return basket;
+    }
+
+    public BuyerBasket GetBasketOrCreateIfNotExist(string buyerId)
+    {
+        var basket = GetByBuyerId(buyerId);
+        if (basket == null)
+        {
+            basket = new BuyerBasket(buyerId)
+            {
+                Items = new()
+            };
+            _context.BuyerBaskets.Add(basket);
+            _context.SaveChanges();
         }
         return basket;
     }
 
-    public CustomerBasket? GetByBuyerId(string buyerId)
+    public BuyerBasket? GetByBuyerId(string buyerId)
     {
-        return _baskets.FirstOrDefault(b => b.BuyerId == buyerId);
+        return _context.BuyerBaskets
+            .Include(b => b.Items)
+            .FirstOrDefault(b => b.BuyerId == buyerId);
     }
 
-    public void Update(string buyerId, CustomerBasket update)
+    public BuyerBasket? RemoveItemFromBasket(string buyerId, string productId)
     {
-        var basket = _baskets.FirstOrDefault(b => b.BuyerId == buyerId);
-        if (basket != null)
+        var basket = GetByBuyerId(buyerId);
+        if (basket == null)
         {
-            _baskets.Remove(basket);
+            return null;
         }
-        _baskets.Add(update);
+
+        var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
+        if (item == null)
+        {
+            return null;
+        }
+
+        basket.Items.Remove(item);
+        _context.SaveChanges();
+        return basket;
     }
 }
