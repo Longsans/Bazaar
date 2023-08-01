@@ -54,20 +54,36 @@
       "RegularPerSaleFeePercent": "0.1"
     }
   ],
-  "orderItems": [
+  "orders": [
     {
-      "ProductExternalId": "PROD-1",
-      "ProductName": "The Winds of Winter",
-      "ProductUnitPrice": "34.99",
-      "Quantity": 1,
-      "OrderId": 1
+      "BuyerId": "SPER-1",
+      "Items": [
+        {
+          "ProductId": "PROD-1",
+          "ProductName": "The Winds of Winter",
+          "ProductUnitPrice": "34.99",
+          "Quantity": 1
+        },
+        {
+          "ProductId": "PROD-2",
+          "ProductName": "A Dream of Spring",
+          "ProductUnitPrice": "45.99",
+          "Quantity": 2
+        }
+      ],
+      "Status": "Shipping"
     },
     {
-      "ProductExternalId": "PROD-2",
-      "ProductName": "A Dream of Spring",
-      "ProductUnitPrice": "45.99",
-      "Quantity": 2,
-      "OrderId": 1
+      "BuyerId": "SPER-1",
+      "Items": [
+        {
+          "ProductId": "PROD-3",
+          "ProductName": "The Intelligent Investor",
+          "ProductUnitPrice": "16.54",
+          "Quantity": 4
+        }
+      ],
+      "Status": "AwaitingSellerConfirmation"
     }
   ],
   "baskets": [

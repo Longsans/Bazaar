@@ -16,6 +16,15 @@ services:
   basket-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
+  ordering-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+  shopper-info-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+  contracting-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
   webbff:
     image: ${DOCKER_REGISTRY-}webbff
     build:
@@ -29,6 +38,7 @@ services:
       - shopper-info-api
       - catalog-api
       - rabbitmq
+  
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api
     build:
@@ -38,6 +48,7 @@ services:
       - rabbitmq
       - catalog-sql
       - internallb
+
   shopper-info-api:
     image: ${DOCKER_REGISTRY-}shopper-info-api
     build:
@@ -45,7 +56,9 @@ services:
       dockerfile: Services/ShopperInfo/Dockerfile
     depends_on:
       - rabbitmq
-      - internallb 
+      - internallb
+      - shopper-info-sql
+
   contracting-api:
     image: ${DOCKER_REGISTRY-}contracting-api
     build:
@@ -54,6 +67,8 @@ services:
     depends_on:
       - rabbitmq
       - internallb
+      - contracting-sql
+
   basket-api:
     image: ${DOCKER_REGISTRY-}basket-api
     build:
@@ -63,6 +78,7 @@ services:
       - rabbitmq
       - internallb
       - basket-sql
+
   ordering-api:
     image: ${DOCKER_REGISTRY-}ordering-api
     build:
@@ -70,7 +86,9 @@ services:
       dockerfile: Services/Ordering/Dockerfile
     depends_on:
       - rabbitmq
-      - internallb 
+      - internallb
+      - ordering-sql
+
   payment-api:
     image: ${DOCKER_REGISTRY-}payment-api
     build:

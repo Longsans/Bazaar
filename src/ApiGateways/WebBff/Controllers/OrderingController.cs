@@ -15,7 +15,7 @@
         }
 
         [HttpPost("api/orders")]
-        public async Task<ActionResult<OrderQuery>> PostAsync([FromBody] OrderCreateCommand createOrderCommand)
+        public async Task<ActionResult<OrderQuery>> CreateOrderAsync([FromBody] OrderCreateCommand createOrderCommand)
         {
             if (createOrderCommand.Items.Count == 0)
                 return BadRequest(new { error = "Order has no items." });
@@ -25,15 +25,16 @@
                 foreach (var item in createOrderCommand.Items)
                 {
                     _logger.LogWarning("--ORDGW_CTRL: executing stock retrieval.");
-                    var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductExternalId);
+                    var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductId);
                     _logger.LogWarning($"--ORDGW_CTRL: retrieved available stock: {availableStock}.");
 
                     if (availableStock < item.Quantity)
                     {
                         throw new InvalidOperationException(
-                            $"Product {item.ProductExternalId} does not have enough stock to satisfy order.");
+                            $"Product {item.ProductId} does not have enough stock to satisfy order.");
                     }
-                    await _txnClient.AdjustProductAvailableStock(item.ProductExternalId, (int)availableStock - item.Quantity);
+                    await _txnClient.AdjustProductAvailableStock(
+                        item.ProductId, (int)availableStock - item.Quantity);
                 }
 
                 var createdOrder = await _txnClient.CreateProcessingOrder(createOrderCommand);
@@ -59,7 +60,8 @@
         }
 
         [HttpPost("api/orders-fail")]
-        public async Task<ActionResult<OrderQuery>> PostAsyncFail([FromBody] OrderCreateCommand createOrderCommand)
+        public async Task<ActionResult<OrderQuery>> CreateOrderAsyncFail(
+            [FromBody] OrderCreateCommand createOrderCommand)
         {
             if (createOrderCommand.Items.Count == 0)
                 return BadRequest(new { error = "Order has no items." });
@@ -69,15 +71,15 @@
                 foreach (var item in createOrderCommand.Items)
                 {
                     _logger.LogWarning("--ORDGW_CTRL: executing stock retrieval.");
-                    var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductExternalId);
+                    var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductId);
                     _logger.LogWarning($"--ORDGW_CTRL: retrieved available stock: {availableStock}.");
 
                     if (availableStock < item.Quantity)
                     {
                         throw new InvalidOperationException(
-                            $"Product {item.ProductExternalId} does not have enough stock to satisfy order.");
+                            $"Product {item.ProductId} does not have enough stock to satisfy order.");
                     }
-                    await _txnClient.AdjustProductAvailableStock(item.ProductExternalId, (int)availableStock - item.Quantity);
+                    await _txnClient.AdjustProductAvailableStock(item.ProductId, (int)availableStock - item.Quantity);
                 }
 
                 throw new InvalidOperationException("This operation failed and catalog item's stock has been rolled-back.");

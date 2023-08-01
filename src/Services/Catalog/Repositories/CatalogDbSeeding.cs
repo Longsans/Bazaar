@@ -6,7 +6,6 @@
 
         public static async Task Seed(this CatalogDbContext context, IServiceProvider sp)
         {
-            var adapter = sp.GetRequiredService<JsonDataAdapter>();
             await context.Database.MigrateAsync();
 
             if (context.CatalogItems.Any())
@@ -14,6 +13,7 @@
                 return;
             }
 
+            var adapter = sp.GetRequiredService<JsonDataAdapter>();
             context.CatalogItems.AddRange(
                     adapter.ReadToObjects<CatalogItem>(CATALOG_SECTION).ToList());
             context.SaveChanges();

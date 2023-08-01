@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
         public string ExternalId { get; set; }
-        public string BuyerExternalId { get; set; }
+        public string BuyerId { get; set; }
         public List<OrderItemQuery> Items { get; set; } = new();
         public string Status { get; set; }
     }
