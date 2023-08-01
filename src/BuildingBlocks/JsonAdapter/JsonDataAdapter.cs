@@ -1,20 +1,19 @@
-﻿using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace Bazaar.BuildingBlocks.JsonAdapter;
 
 public class JsonDataAdapter
 {
-    private readonly string DATA_STORE_PATH;
+    private readonly string READ_PATH;
 
-    public JsonDataAdapter(IConfiguration config)
+    public JsonDataAdapter(string path)
     {
-        DATA_STORE_PATH = config["DataStorePath"]!;
+        READ_PATH = path;
     }
 
     public IEnumerable<T> ReadToObjects<T>(string fromSection)
     {
-        var dataJson = JObject.Parse(File.ReadAllText(DATA_STORE_PATH));
+        var dataJson = JObject.Parse(File.ReadAllText(READ_PATH));
         var itemsJson = dataJson[fromSection]!.Children().ToList();
         var items = new List<T>();
         for (int i = 0; i < itemsJson.Count; i++)

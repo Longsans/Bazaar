@@ -69,5 +69,26 @@
       "Quantity": 2,
       "OrderId": 1
     }
+  ],
+  "baskets": [
+    {
+      "BuyerId": "SPER-1",
+      "Items": [
+        {
+          "ProductId": "PROD-1",
+          "ProductName": "The Winds of Winter",
+          "UnitPrice": 34.99,
+          "Quantity": 2,
+          "ImageUrl": "https://imageserver.com/published2035?"
+        },
+        {
+          "ProductId": "PROD-2",
+          "ProductName": "A Dream of Spring",
+          "UnitPrice": 45.99,
+          "Quantity": 1,
+          "ImageUrl": "https://imageserver.com/lolnothappening"
+        }
+      ]
+    }
   ]
 }

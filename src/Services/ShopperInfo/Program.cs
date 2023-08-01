@@ -1,9 +1,11 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+#region Register app service
+builder.Services.AddSingleton<IShopperRepository, ShopperRepository>();
+#endregion
 
 builder.Services.AddControllers();
-builder.Services.AddSingleton<IShopperRepository, ShopperRepository>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

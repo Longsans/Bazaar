@@ -31,6 +31,13 @@ services:
     ports:
       - "5433:1433"
 
+  basket-sql:
+    environment:
+      - SA_PASSWORD=P@ssw0rd
+      - ACCEPT_EULA=Y
+    ports:
+      - "5434:1433"
+
   webbff:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -41,6 +48,7 @@ services:
       - OrderServiceUri=http://internallb/o/api
     ports:
       - "5210:80"
+
   catalog-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -51,7 +59,7 @@ services:
       - PartnerServiceUri=http://internallb/ct/api
       - OrderServiceUri=http://internallb/o/api
       - BasketServiceUri=http://internallb/ba/api
-      - DataStorePath=/root/Data/data.json
+      - SeedDataFilePath=/root/Data/data.json
       - ConnectionString=Server=catalog-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
     volumes:
       - ./Data:/root/Data
@@ -59,43 +67,52 @@ services:
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     ports:
       - "5240:80"
+
   shopper-info-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - DataStorePath=/root/Data/data.json
+      - SeedDataFilePath=/root/Data/data.json
     volumes:
       - ./Data:/root/Data
     ports:
       - "5242:80"
+
   contracting-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - DataStorePath=/root/Data/data.json
+      - SeedDataFilePath=/root/Data/data.json
     volumes:
       - ./Data:/root/Data
     ports:
       - "5244:80"
+
   basket-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
+      - SeedDataFilePath=/root/Data/data.json
+      - ConnectionString=Server=basket-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
     ports:
       - "5246:80"
+    volumes:
+      - ./Data:/root/Data
+
   ordering-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - DataStorePath=/root/Data/data.json
+      - SeedDataFilePath=/root/Data/data.json
     volumes:
       - ./Data:/root/Data
     ports:
       - "5248:80"
+
   payment-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

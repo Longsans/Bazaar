@@ -13,6 +13,9 @@ services:
   catalog-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
+  basket-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
   webbff:
     image: ${DOCKER_REGISTRY-}webbff
     build:
@@ -59,6 +62,7 @@ services:
     depends_on:
       - rabbitmq
       - internallb
+      - basket-sql
   ordering-api:
     image: ${DOCKER_REGISTRY-}ordering-api
     build:

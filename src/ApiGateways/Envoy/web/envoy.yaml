@@ -38,9 +38,9 @@ static_resources:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: ordering
-                        - name: "ba-short"
+                        - name: "b-short"
                           match:
-                            prefix: "/ba/"
+                            prefix: "/b/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"

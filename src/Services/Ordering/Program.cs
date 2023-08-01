@@ -1,13 +1,9 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+#region Register app services
 builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
-builder.Services.AddSingleton<JsonDataAdapter>();
+builder.Services.AddSingleton(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 builder.Services.AddSingleton<LockManager<int>>();
 builder.Services.AddSingleton<IResourceManager<Order, int>, OrderTransactionalResourceManager>(sp =>
 {
@@ -17,6 +13,12 @@ builder.Services.AddSingleton<IResourceManager<Order, int>, OrderTransactionalRe
 });
 builder.Services.AddSingleton(sp => new HttpClient { Timeout = TimeSpan.FromSeconds(20) });
 builder.Services.RegisterEventBus(builder.Configuration);
+#endregion
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
