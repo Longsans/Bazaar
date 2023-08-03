@@ -13,4 +13,5 @@ global using Bazaar.Ordering.Events;
 global using Bazaar.Ordering.Repositories;
 global using Bazaar.Ordering.Transactional;
 global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.EntityFrameworkCore;
 global using RabbitMQ.Client;

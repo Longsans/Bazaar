@@ -2,77 +2,58 @@ namespace Bazaar.Ordering.Repositories;
 
 public class OrderRepository : IOrderRepository
 {
-    private readonly List<Order> _orders;
-    private const string ORDER_ITEMS_SECTION = "orderItems";
-    public int NextOrderId => _orders.Count + 1;
+    private readonly OrderingDbContext _context;
+    private readonly ILogger<OrderRepository> _logger;
 
-    public OrderRepository(JsonDataAdapter adapter)
+    public OrderRepository(OrderingDbContext context, ILogger<OrderRepository> logger)
     {
-        var items = adapter.ReadToObjects<OrderItem>(ORDER_ITEMS_SECTION, (item, id) => item.Id = id);
-
-        _orders = new()
-        {
-            new Order {
-                BuyerExternalId = "CUST-1",
-                Items = items.ToList(),
-                Status = OrderStatus.Postponed,
-            }
-        };
-        _orders = adapter.GenerateId(_orders, (o, id) => o.Id = id).ToList();
-        _orders.ForEach(o => o.AssignExternalId());
-    }
-
-    public Order CreateProcessingPayment(Order order)
-    {
-        if (_orders.Any(o => o.Id == order.Id))
-            throw new ArgumentException("Order already created");
-        order.Id = NextOrderId;
-        order.AssignExternalId();
-        order.Status = OrderStatus.ProcessingPayment;
-        _orders.Add(order);
-        return order;
-    }
-
-    public Order CreateShippingOrder(Order order)
-    {
-        if (_orders.Any(o => o.Id == order.Id))
-            throw new ArgumentException("Order already created");
-        order.Id = NextOrderId;
-        order.AssignExternalId();
-        order.Status = OrderStatus.Shipping;
-        _orders.Add(order);
-        return order;
+        _context = context;
+        _logger = logger;
     }
 
     public Order? GetById(int id)
     {
-        return _orders.FirstOrDefault(o => o.Id == id);
+        return _context.Orders
+            .Include(o => o.Items)
+            .FirstOrDefault(o => o.Id == id);
     }
 
     public IEnumerable<Order> GetAll()
     {
-        return _orders;
+        return _context.Orders.Include(o => o.Items);
     }
 
-    public Order? GetLatest()
+    public Order CreateProcessingPaymentOrder(Order order)
     {
-        return _orders.Count > 0 ? _orders[_orders.Count - 1] : null;
+        order.Status = OrderStatus.ProcessingPayment;
+        _context.Orders.Add(order);
+        _context.SaveChanges();
+        return order;
     }
 
-    public void Update(Order order)
+    public Order? UpdateStatus(int id, OrderStatus status)
     {
-        var existing = _orders.FirstOrDefault(o => o.Id == order.Id);
-        if (existing == null)
-            return;
-        existing.Items = order.Items;
-        existing.Status = order.Status;
-    }
+        var order = _context.Orders
+            .Include(o => o.Items)
+            .FirstOrDefault(o => o.Id == id);
+        if (order == null)
+        {
+            return null;
+        }
 
-    public void UpdateStatus(int orderId, OrderStatus status)
-    {
-        var existing = _orders.FirstOrDefault(o => o.Id == orderId);
-        if (existing == null)
-            return;
-        existing.Status = status;
+        if (status == OrderStatus.Cancelled && !order.IsCancellable)
+        {
+            _logger.LogWarning(
+                "Logical error: Attempted to cancel an order that is either " +
+                "(1) processing payment, " +
+                "(2) shipping, " +
+                "(3) shipped or " +
+                "(4) already cancelled");
+            return null;
+        }
+
+        order.Status = status;
+        _context.SaveChanges();
+        return order;
     }
 }

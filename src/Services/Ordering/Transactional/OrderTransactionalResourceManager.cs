@@ -2,14 +2,14 @@
 {
     public class OrderTransactionalResourceManager : BasicResourceManager<Order, int>
     {
-        private readonly IOrderRepository _orderRepo;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public OrderTransactionalResourceManager(
-            IOrderRepository orderRepo,
+            IServiceScopeFactory scopeFactory,
             LockManager<int> lockManager,
             Func<Order, int> indexSelector) : base(lockManager, indexSelector)
         {
-            _orderRepo = orderRepo;
+            _scopeFactory = scopeFactory;
         }
 
         public override void HandleCommit(TransactionRef txn)
@@ -18,8 +18,18 @@
             if (txnState == null)
                 return;
 
-            foreach (var newItem in txnState.PendingInserts) _orderRepo.CreateProcessingPayment(newItem);
-            foreach (var updatedItem in txnState.PendingUpdates) _orderRepo.Update(updatedItem);
+            using var scope = _scopeFactory.CreateScope();
+            var orderRepo = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
+
+            foreach (var newItem in txnState.PendingInserts)
+            {
+                orderRepo.CreateProcessingPaymentOrder(newItem);
+            }
+
+            foreach (var updatedItem in txnState.PendingUpdates)
+            {
+                orderRepo.UpdateStatus(updatedItem.Id, updatedItem.Status);
+            }
 
             base.HandleCommit(txn);
         }

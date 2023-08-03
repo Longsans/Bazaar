@@ -2,14 +2,14 @@
 {
     public class CatalogTransactionalResourceManager : BasicResourceManager<CatalogItem, int>
     {
-        private readonly ICatalogRepository _catalogRepo;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public CatalogTransactionalResourceManager(
-            ICatalogRepository catalogRepo,
+            IServiceScopeFactory scopeFactory,
             LockManager<int> lockManager,
             Func<CatalogItem, int> indexSelector) : base(lockManager, indexSelector)
         {
-            _catalogRepo = catalogRepo;
+            _scopeFactory = scopeFactory;
         }
 
         public override void HandleCommit(TransactionRef txn)
@@ -18,9 +18,11 @@
             if (txnState == null)
                 return;
 
-            foreach (var newItem in txnState.PendingInserts) _catalogRepo.Create(newItem);
-            foreach (var updatedItem in txnState.PendingUpdates) _catalogRepo.Update(updatedItem);
-            foreach (var deletedIndex in txnState.PendingDeletes) _catalogRepo.Delete(deletedIndex);
+            using var scope = _scopeFactory.CreateScope();
+            var catalogRepo = scope.ServiceProvider.GetRequiredService<ICatalogRepository>();
+            foreach (var newItem in txnState.PendingInserts) catalogRepo.Create(newItem);
+            foreach (var updatedItem in txnState.PendingUpdates) catalogRepo.Update(updatedItem);
+            foreach (var deletedIndex in txnState.PendingDeletes) catalogRepo.Delete(deletedIndex);
 
             base.HandleCommit(txn);
         }

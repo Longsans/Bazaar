@@ -38,20 +38,20 @@ static_resources:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: ordering
-                        - name: "ba-short"
+                        - name: "b-short"
                           match:
-                            prefix: "/ba/"
+                            prefix: "/b/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: basket
-                        - name: "cs-short"
+                        - name: "s-short"
                           match:
-                            prefix: "/cs/"
+                            prefix: "/s/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
-                            cluster: customer
+                            cluster: shopper-info
                         - name: "ct-short"
                           match:
                             prefix: "/ct/"
@@ -102,17 +102,17 @@ static_resources:
                     socket_address:
                       address: webbff
                       port_value: 80
-    - name: customer
+    - name: shopper-info
       connect_timeout: 0.25s
       type: LOGICAL_DNS
       load_assignment:
-        cluster_name: customer
+        cluster_name: shopper-info
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: customer-api
+                      address: shopper-info-api
                       port_value: 80
     - name: catalog
       connect_timeout: 0.25s

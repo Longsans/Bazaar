@@ -8,4 +8,6 @@ public class BasketItem
     public decimal UnitPrice { get; set; }
     public uint Quantity { get; set; }
     public string ImageUrl { get; set; }
+    public BuyerBasket Basket { get; set; }
+    public int BasketId { get; set; }
 }

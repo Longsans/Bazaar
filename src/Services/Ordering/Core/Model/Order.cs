@@ -4,20 +4,24 @@ public class Order
 {
     public int Id { get; set; }
     public string ExternalId { get; set; }
-    public string BuyerExternalId { get; set; }
+    public string BuyerId { get; set; }
     public List<OrderItem> Items { get; set; } = new();
     public OrderStatus Status { get; set; }
 
-    public Order() { }
+    #region Domain logic
 
-    public Order(OrderCreateCommand command)
-    {
-        BuyerExternalId = command.BuyerExternalId;
-        Items = command.Items.Select(i => new OrderItem(i)).ToList();
-    }
+    public bool IsCancellable
+        => Status == OrderStatus.AwaitingSellerConfirmation || Status == OrderStatus.Postponed;
 
-    public void AssignExternalId()
-    {
-        ExternalId = $"ORDR-{Id}";
-    }
+    #endregion
+}
+
+public enum OrderStatus
+{
+    ProcessingPayment,
+    AwaitingSellerConfirmation,
+    Shipping,
+    Shipped,
+    Cancelled,
+    Postponed,
 }

@@ -12,50 +12,59 @@
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Shopper> GetById(int id, [FromQuery] string? externalId = null)
+        public ActionResult<Shopper> GetById(int id)
         {
-            Shopper? shopper;
-            if (externalId != null)
-            {
-                shopper = _shopperRepo.GetByExternalId(externalId);
-            }
-            else
-            {
-                shopper = _shopperRepo.GetById(id);
-            }
-
+            var shopper = _shopperRepo.GetById(id);
             if (shopper == null)
             {
                 return NotFound();
             }
+
+            return shopper;
+        }
+
+        [HttpGet("/api/shoppers-by-eid/{externalId}")]
+        public ActionResult<Shopper> GetByExternalId(string externalId)
+        {
+            var shopper = _shopperRepo.GetByExternalId(externalId);
+            if (shopper == null)
+            {
+                return NotFound();
+            }
+
             return shopper;
         }
 
         [HttpPost]
-        public ActionResult<Shopper> Create(Shopper shopper)
+        public ActionResult<Shopper> Register(ShopperWriteCommand registerCommand)
         {
-            var created = _shopperRepo.Create(shopper);
-            return CreatedAtAction(nameof(GetById), new { created.Id, created.ExternalId }, created);
+            var created = _shopperRepo.Register(registerCommand.ToShopperInfo());
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [HttpPut]
-        public IActionResult UpdatedInfo(Shopper shopper)
+        [HttpPut("{id}")]
+        public IActionResult UpdatedInfo(int id, ShopperWriteCommand updateCommand)
         {
-            if (_shopperRepo.Update(shopper))
+            var update = updateCommand.ToShopperInfo();
+            update.Id = id;
+
+            if (!_shopperRepo.UpdateInfo(update))
             {
-                return Ok();
+                return NotFound(id);
             }
-            return NotFound(shopper.Id);
+
+            return Ok();
         }
 
         [HttpDelete("id")]
         public IActionResult Delete(int id)
         {
-            if (_shopperRepo.Delete(id))
+            if (!_shopperRepo.Delete(id))
             {
-                return Ok();
+                return NotFound(id);
             }
-            return NotFound(id);
+
+            return Ok();
         }
     }
 }
