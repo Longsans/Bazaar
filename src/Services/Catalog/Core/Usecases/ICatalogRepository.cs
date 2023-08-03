@@ -1,0 +1,10 @@
+namespace Bazaar.Catalog.Core.Usecases;
+
+public interface ICatalogRepository
+{
+    CatalogItem? GetItemById(int id);
+    CatalogItem? GetItemByProductId(string externalId);
+    CatalogItem Create(CatalogItem item);
+    bool Update(CatalogItem item);
+    bool Delete(int id);
+}

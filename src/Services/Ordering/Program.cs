@@ -1,25 +1,30 @@
-using Bazaar.BuildingBlocks.Transactions.Abstractions;
-using Bazaar.Ordering.Infrastructure.Transactional;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+#region Register app services
+builder.Services.AddDbContext<OrderingDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration["ConnectionString"]);
+    //options.UseSqlServer(
+    //    "Server=localhost,5435;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true");
+});
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
+builder.Services.AddSingleton<LockManager<int>>();
+builder.Services.AddSingleton<IResourceManager<Order, int>, OrderTransactionalResourceManager>(sp =>
+{
+    var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+    var lockManager = sp.GetRequiredService<LockManager<int>>();
+    return new OrderTransactionalResourceManager(scopeFactory, lockManager, o => o.Id);
+});
+builder.Services.AddSingleton(sp => new HttpClient { Timeout = TimeSpan.FromSeconds(20) });
+builder.Services.RegisterEventBus(builder.Configuration);
+#endregion
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
-builder.Services.AddSingleton<JsonDataAdapter>();
-builder.Services.AddSingleton<LockManager<int>>();
-builder.Services.AddSingleton<IResourceManager<Order, int>, OrderTransactionalResourceManager>(sp =>
-{
-    var orderRepo = sp.GetRequiredService<IOrderRepository>();
-    var lockManager = sp.GetRequiredService<LockManager<int>>();
-    return new OrderTransactionalResourceManager(orderRepo, lockManager, o => o.Id);
-});
-builder.Services.AddSingleton(sp => new HttpClient { Timeout = TimeSpan.FromSeconds(20) });
-builder.Services.RegisterEventBus(builder.Configuration);
 
 var app = builder.Build();
 
@@ -35,6 +40,12 @@ app.ConfigureEventBus();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
+    await dbContext.Seed(scope.ServiceProvider);
+}
 
 app.Run();
 

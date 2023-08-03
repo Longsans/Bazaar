@@ -1,6 +1,4 @@
-using Bazaar.Contracting.Model;
-
-namespace Bazaar.Contracting.Dto;
+namespace Bazaar.Contracting.DTOs;
 
 public class PartnerQuery
 {

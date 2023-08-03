@@ -9,6 +9,34 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
+    profiles:
+      - ordering
+
+  catalog-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - catalog
+      - ordering
+
+  basket-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - basket
+
+  ordering-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - ordering
+
+  shopper-info-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - shopper-info
+
+  contracting-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - contracting
 
   webbff:
     image: ${DOCKER_REGISTRY-}webbff
@@ -20,37 +48,57 @@ services:
       - ordering-api
       - basket-api
       - contracting-api
-      - customer-api
+      - shopper-info-api
       - catalog-api
       - rabbitmq
+    profiles:
+      - ordering
+  
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api
     build:
       context: .
       dockerfile: Services/Catalog/Dockerfile
     depends_on:
-      - rabbitmq
-  customer-api:
-    image: ${DOCKER_REGISTRY-}customer-api
+      - catalog-sql
+      - internallb
+    profiles:
+      - catalog
+      - ordering
+
+  shopper-info-api:
+    image: ${DOCKER_REGISTRY-}shopper-info-api
     build:
       context: .
-      dockerfile: Services/Customer/Dockerfile
+      dockerfile: Services/ShopperInfo/Dockerfile
     depends_on:
-      - rabbitmq
+      - internallb
+      - shopper-info-sql
+    profiles:
+      - shopper-info
+
   contracting-api:
     image: ${DOCKER_REGISTRY-}contracting-api
     build:
       context: .
       dockerfile: Services/Contracting/Dockerfile
     depends_on:
-      - rabbitmq
+      - internallb
+      - contracting-sql
+    profiles:
+      - contracting
+
   basket-api:
     image: ${DOCKER_REGISTRY-}basket-api
     build:
       context: .
       dockerfile: Services/Basket/Dockerfile
     depends_on:
-      - rabbitmq
+      - internallb
+      - basket-sql
+    profiles:
+      - basket
+
   ordering-api:
     image: ${DOCKER_REGISTRY-}ordering-api
     build:
@@ -58,6 +106,11 @@ services:
       dockerfile: Services/Ordering/Dockerfile
     depends_on:
       - rabbitmq
+      - internallb
+      - ordering-sql
+    profiles:
+      - ordering
+
   payment-api:
     image: ${DOCKER_REGISTRY-}payment-api
     build:
@@ -65,3 +118,5 @@ services:
       dockerfile: Services/Payment/Dockerfile
     depends_on:
       - rabbitmq
+    profiles:
+      - ordering

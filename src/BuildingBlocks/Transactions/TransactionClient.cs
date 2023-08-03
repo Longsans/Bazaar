@@ -1,8 +1,9 @@
-﻿using Bazaar.BuildingBlocks.Transactions.Utility;
+﻿using Bazaar.BuildingBlocks.Transactions.Abstractions;
+using Bazaar.BuildingBlocks.Transactions.Utility;
 
 namespace Bazaar.BuildingBlocks.Transactions
 {
-    public class TransactionClient
+    public class TransactionClient : ITransactionClient
     {
         public TransactionRef? TransactionRef => _txnRef;
         protected TransactionRef? _txnRef;
@@ -32,14 +33,16 @@ namespace Bazaar.BuildingBlocks.Transactions
         public async Task Commit()
         {
             // commit transaction, coordinator handles both prepare and commit
-            var response = await SendPutRequestToCoordinator($"transactions/{_txnRef}", true);
+            var response = await _httpClient.PutAsync(
+                $"{COORDINATOR_URI}/transactions/{_txnRef}/commit", null);
             response.EnsureSuccessStatusCode();
             _txnRef = null;
         }
 
         public async Task Rollback()
         {
-            var response = await SendPutRequestToCoordinator($"transactions/{_txnRef}", false);
+            var response = await _httpClient.PutAsync(
+                $"{COORDINATOR_URI}/transactions/{_txnRef}/rollback", null);
             response.EnsureSuccessStatusCode();
             _txnRef = null;
         }
@@ -48,12 +51,6 @@ namespace Bazaar.BuildingBlocks.Transactions
         {
             var jsonContent = TransmissionUtil.SerializeToJson(content);
             return await _httpClient.PostAsync($"{COORDINATOR_URI}/{endpoint}", jsonContent);
-        }
-
-        protected async Task<HttpResponseMessage> SendPutRequestToCoordinator(string endpoint, object content)
-        {
-            var jsonContent = TransmissionUtil.SerializeToJson(content);
-            return await _httpClient.PutAsync($"{COORDINATOR_URI}/{endpoint}", jsonContent);
         }
 
         protected async Task<bool> SendIndexToCoordinator(string index)

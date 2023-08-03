@@ -1,9 +1,6 @@
-﻿using Bazaar.BuildingBlocks.Transactions.Utility;
-using Newtonsoft.Json.Linq;
-
-namespace Bazaar.ApiGateways.WebBff.Transactional
+﻿namespace Bazaar.ApiGateways.WebBff.Transactional
 {
-    public class OrderingTransactionClient : TransactionClient
+    public class OrderingTransactionClient : TransactionClient, IOrderingTransactionClient
     {
         private readonly string CATALOG_SERVICE_URI;
         private readonly string ORDER_SERVICE_URI;

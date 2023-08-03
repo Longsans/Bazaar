@@ -1,9 +1,7 @@
-using Bazaar.BuildingBlocks.Transactions.Abstractions;
-using Microsoft.AspNetCore.Mvc;
-
-namespace Bazaar.Ordering.Controllers
+namespace Bazaar.Ordering.Adapters.Controllers
 {
     [ApiController]
+    [Route("api/[controller]s")]
     public class OrderController : ControllerBase
     {
         private readonly IOrderRepository _orderRepo;
@@ -20,8 +18,8 @@ namespace Bazaar.Ordering.Controllers
             _orderRm = orderRm;
         }
 
-        [HttpGet("api/order/{id}")]
-        public ActionResult<OrderQuery> Get(int id)
+        [HttpGet("{id}")]
+        public ActionResult<OrderQuery> GetById(int id)
         {
             var order = _orderRepo.GetById(id);
             if (order == null)
@@ -29,25 +27,40 @@ namespace Bazaar.Ordering.Controllers
             return new OrderQuery(order);
         }
 
-        [HttpGet("api/orders")]
+        [HttpGet]
         public ActionResult<IEnumerable<OrderQuery>> GetAll()
         {
             var orders = _orderRepo.GetAll().Select(o => new OrderQuery(o));
             return Ok(orders);
         }
 
-        [HttpPost("api/txn/{txn}/orders")]
-        public ActionResult<OrderQuery> Post([FromRoute] TransactionRef txn, [FromBody] OrderCreateCommand createOrderCommand)
+        [HttpPost]
+        public ActionResult<OrderQuery> CreateOrder(OrderWriteCommand command)
+        {
+            var order = _orderRepo.CreateProcessingPaymentOrder(command.ToOrder());
+            return CreatedAtAction(nameof(GetById), new { id = order.Id }, new OrderQuery(order));
+        }
+
+        [HttpPatch("{id}")]
+        public ActionResult<OrderQuery> UpdateOrderStatus(int id, OrderStatus status)
+        {
+            var updatedOrder = _orderRepo.UpdateStatus(id, status);
+            if (updatedOrder == null)
+            {
+                return NotFound(id);
+            }
+            return new OrderQuery(updatedOrder);
+        }
+
+        [HttpPost("/api/txn/{txn}/orders")]
+        public ActionResult<OrderQuery> CreateOrderInTransaction(
+            [FromRoute] TransactionRef txn, [FromBody] OrderWriteCommand command)
         {
             try
             {
                 var txnState = _orderRm.GetOrCreateTransactionState(txn);
-                var createdOrder = new Order(createOrderCommand)
-                {
-                    Id = _orderRepo.NextOrderId,
-                    Status = OrderStatus.ProcessingPayment
-                };
-                createdOrder.AssignExternalId();
+                var createdOrder = command.ToOrder();
+                createdOrder.Status = OrderStatus.ProcessingPayment;
                 txnState.PendingInserts.Add(createdOrder);
                 return new OrderQuery(createdOrder);
             }
@@ -57,14 +70,14 @@ namespace Bazaar.Ordering.Controllers
             }
         }
 
-        [HttpPost("api/txn")]
+        [HttpPost("/api/txn")]
         public IActionResult PrepareToCommitTransaction([FromBody] TransactionRef txn)
         {
             _orderRm.HandlePrepare(txn);
             return Ok();
         }
 
-        [HttpPut("api/txn/{txn}")]
+        [HttpPut("/api/txn/{txn}")]
         public IActionResult CommitOrRollbackTransaction([FromRoute] TransactionRef txn, [FromBody] bool commit)
         {
             if (!commit)

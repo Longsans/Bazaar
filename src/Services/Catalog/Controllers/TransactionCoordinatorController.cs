@@ -36,20 +36,22 @@ namespace Bazaar.Catalog.Controllers
             }
         }
 
-        [HttpPut("transactions/{txn}")]
-        public async Task<IActionResult> CommitOrRollbackTransaction([FromRoute] TransactionRef txn, [FromBody] bool commit)
+        [HttpPut("transactions/{txn}/commit")]
+        public async Task<IActionResult> CommitTransaction([FromRoute] TransactionRef txn)
         {
             _logger.LogInformation("--COOR: transaction commit cmd received.");
-            if (!commit)
-            {
-                _logger.LogInformation("--COOR: rollback requested.");
-                await _coordinator.RollbackTransaction(txn);
-                _logger.LogInformation("--COOR: transaction rolled-back.");
-                return Ok();
-            }
             var result = await _coordinator.CommitTransaction(txn);
             _logger.LogInformation("--COOR: transaction committed.");
             return result ? Ok() : StatusCode(503);
+        }
+
+        [HttpPut("transactions/{txn}/rollback")]
+        public async Task<IActionResult> RollbackTransaction([FromRoute] TransactionRef txn)
+        {
+            _logger.LogInformation("--COOR: rollback requested.");
+            await _coordinator.RollbackTransaction(txn);
+            _logger.LogInformation("--COOR: transaction rolled-back.");
+            return Ok();
         }
     }
 }
