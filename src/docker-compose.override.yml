@@ -95,6 +95,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/Data/data.json
+      - ConnectionString=Server=shopper-info-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
     volumes:
       - ./Data:/root/Data
     ports:

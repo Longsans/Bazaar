@@ -55,6 +55,16 @@
       "RegularPerSaleFeePercent": 0.1
     }
   ],
+  "shoppers": [
+    {
+      "FirstName": "Kevin",
+      "LastName": "Spacey",
+      "Email": "spaceyk@gmail.com",
+      "PhoneNumber": "0901222333",
+      "Gender": "Male",
+      "DateOfBirth": "1959-07-26"
+    }
+  ],
   "orders": [
     {
       "BuyerId": "SPER-1",
