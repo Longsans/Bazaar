@@ -31,29 +31,23 @@ public class OrderRepository : IOrderRepository
         return order;
     }
 
-    public Order? UpdateStatus(int id, OrderStatus status)
+    public IUpdateOrderStatusResult UpdateStatus(int id, OrderStatus status)
     {
         var order = _context.Orders
             .Include(o => o.Items)
             .FirstOrDefault(o => o.Id == id);
         if (order == null)
         {
-            return null;
+            return IUpdateOrderStatusResult.OrderNotFoundError;
         }
 
         if (status == OrderStatus.Cancelled && !order.IsCancellable)
         {
-            _logger.LogWarning(
-                "Logical error: Attempted to cancel an order that is either " +
-                "(1) processing payment, " +
-                "(2) shipping, " +
-                "(3) shipped or " +
-                "(4) already cancelled");
-            return null;
+            return IUpdateOrderStatusResult.InvalidOrderCancellationError;
         }
 
         order.Status = status;
         _context.SaveChanges();
-        return order;
+        return IUpdateOrderStatusResult.Success(order);
     }
 }
