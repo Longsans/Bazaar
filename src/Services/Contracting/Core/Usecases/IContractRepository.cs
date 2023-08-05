@@ -3,7 +3,7 @@
 public interface IContractRepository
 {
     Contract? GetById(int id);
-    void CreateFixedPeriod(Contract contract);
-    void CreateIndefinite(Contract contract);
-    void EndContract(int id);
+    ICreateFixedPeriodResult CreateFixedPeriod(Contract contract);
+    ICreateIndefiniteResult CreateIndefinite(Contract contract);
+    IEndContractResult EndIndefiniteContract(int id);
 }
