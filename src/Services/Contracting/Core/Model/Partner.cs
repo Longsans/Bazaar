@@ -12,15 +12,13 @@ public class Partner
     public Gender Gender { get; set; }
     public List<Contract> Contracts { get; set; }
 
-    public bool IsUnderFixedPeriodContract =>
-        CurrentContract != null && CurrentContract.EndDate > DateTime.Now;
-
-    public bool IsUnderIndefiniteContract => CurrentContract != null && CurrentContract.EndDate == null;
-
-    public bool IsUnderContract => IsUnderFixedPeriodContract || IsUnderIndefiniteContract;
+    public bool IsUnderContract => CurrentContract != null &&
+        (CurrentContract.EndDate == null || CurrentContract.EndDate > DateTime.Now.Date);
 
     public Contract? CurrentContract =>
-        Contracts.FirstOrDefault(c => c.StartDate == Contracts.Max(c2 => c2.StartDate));
+        Contracts.FirstOrDefault(
+            c => c.StartDate == Contracts.Max(c2 => c2.StartDate) &&
+                (c.EndDate == null || c.EndDate == Contracts.Max(c2 => c2.EndDate)));
 }
 
 public enum Gender

@@ -21,28 +21,35 @@ public class BasketRepository : IBasketRepository
         return basket;
     }
 
-    public BuyerBasket? ChangeItemQuantity(string buyerId, string productId, uint quantity)
+    public IChangeItemQuantityResult ChangeItemQuantity(string buyerId, string productId, uint quantity)
     {
-        if (quantity == 0)
+        if (quantity < 1)
         {
-            return null;
+            return IChangeItemQuantityResult.QuantityLessThanOneError;
         }
 
         var basket = GetByBuyerId(buyerId);
         if (basket == null)
         {
-            return null;
+            return IChangeItemQuantityResult.BasketNotFoundError;
         }
 
         var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
         if (item == null)
         {
-            return null;
+            return IChangeItemQuantityResult.BasketItemNotFoundError;
         }
 
         item.Quantity = quantity;
-        _context.SaveChanges();
-        return basket;
+        try
+        {
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            return IChangeItemQuantityResult.OtherExceptionError(ex.Message);
+        }
+        return IChangeItemQuantityResult.Success(item);
     }
 
     public BuyerBasket GetBasketOrCreateIfNotExist(string buyerId)
@@ -67,22 +74,29 @@ public class BasketRepository : IBasketRepository
             .FirstOrDefault(b => b.BuyerId == buyerId);
     }
 
-    public BuyerBasket? RemoveItemFromBasket(string buyerId, string productId)
+    public IRemoveItemFromBasketResult RemoveItemFromBasket(string buyerId, string productId)
     {
         var basket = GetByBuyerId(buyerId);
         if (basket == null)
         {
-            return null;
+            return IRemoveItemFromBasketResult.BasketNotFoundError;
         }
 
         var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
         if (item == null)
         {
-            return null;
+            return IRemoveItemFromBasketResult.BasketItemNotFoundError;
         }
 
         basket.Items.Remove(item);
-        _context.SaveChanges();
-        return basket;
+        try
+        {
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            return IRemoveItemFromBasketResult.OtherExceptionError(ex.Message);
+        }
+        return IRemoveItemFromBasketResult.Success(basket);
     }
 }

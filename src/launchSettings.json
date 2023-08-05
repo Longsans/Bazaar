@@ -3,16 +3,10 @@
     "Docker Compose": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
-      "serviceActions": {
-        "basket-api": "StartDebugging",
-        "catalog-api": "StartDebugging",
-        "contracting-api": "StartDebugging",
-        "customer-api": "StartDebugging",
-        "ordering-api": "StartDebugging",
-        "payment-api": "StartDebugging",
-        "internallb": "StartWithoutDebugging",
-        "rabbitmq": "StartWithoutDebugging",
-        "webapigw": "StartWithoutDebugging"
+      "composeProfile": {
+        "includes": [
+          "contracting"
+        ]
       }
     }
   }

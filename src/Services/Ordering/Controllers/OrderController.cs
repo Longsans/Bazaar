@@ -44,12 +44,14 @@ namespace Bazaar.Ordering.Adapters.Controllers
         [HttpPatch("{id}")]
         public ActionResult<OrderQuery> UpdateOrderStatus(int id, OrderStatus status)
         {
-            var updatedOrder = _orderRepo.UpdateStatus(id, status);
-            if (updatedOrder == null)
+            var updateResult = _orderRepo.UpdateStatus(id, status);
+            return updateResult switch
             {
-                return NotFound(id);
-            }
-            return new OrderQuery(updatedOrder);
+                OrderSuccessResult r => new OrderQuery(r.Order),
+                OrderNotFoundError => NotFound(new { id }),
+                InvalidOrderCancellationError e => Conflict(new { error = e.Error }),
+                _ => StatusCode(500)
+            };
         }
 
         [HttpPost("/api/txn/{txn}/orders")]
