@@ -42,26 +42,27 @@ namespace Bazaar.Basket.Controllers
 
         [HttpPost("{buyerId}/items")]
         public ActionResult<BasketItemQuery> AddItemToBasket(
-            [FromRoute] string buyerId, [FromBody] BasketItemWriteCommand itemWc)
+            [FromRoute] string buyerId, [FromBody] BasketItemWriteCommand addItemCommand)
         {
             var basket = _basketRepo.AddItemToBasket(buyerId,
                 new BasketItem
                 {
-                    ProductId = itemWc.ProductId,
-                    ProductName = itemWc.ProductName,
-                    UnitPrice = itemWc.UnitPrice,
-                    Quantity = itemWc.Quantity,
-                    ImageUrl = itemWc.ImageUrl
+                    ProductId = addItemCommand.ProductId,
+                    ProductName = addItemCommand.ProductName,
+                    UnitPrice = addItemCommand.UnitPrice,
+                    Quantity = addItemCommand.Quantity,
+                    ImageUrl = addItemCommand.ImageUrl
                 });
+
             if (basket == null)
             {
                 return NotFound(buyerId);
             }
 
-            var addedItem = basket.Items.FirstOrDefault(i => i.ProductId == itemWc.ProductId);
+            var addedItem = basket.Items.FirstOrDefault(i => i.ProductId == addItemCommand.ProductId);
             if (addedItem == null)
             {
-                return Conflict(itemWc.ProductId);
+                return Conflict(addItemCommand.ProductId);
             }
 
             return CreatedAtAction(
@@ -70,16 +71,34 @@ namespace Bazaar.Basket.Controllers
                 new BasketItemQuery(addedItem));
         }
 
+        [HttpPut("{buyerId}/items/{productId}")]
+        public ActionResult<BasketItemQuery> ChangeItemQuantity(
+            string buyerId, string productId, [FromBody] uint quantity)
+        {
+            var result = _basketRepo.ChangeItemQuantity(buyerId, productId, quantity);
+            return result switch
+            {
+                BasketItemSuccessResult r => new BasketItemQuery(r.BasketItem),
+                QuantityLessThanOneErrorResult => BadRequest(new { error = "Quantity must be at least 1." }),
+                BasketNotFoundErrorResult => NotFound(new { buyerId }),
+                BasketItemNotFoundErrorResult => NotFound(new { productId }),
+                ExceptionErrorResult ex => StatusCode(500, new { error = ex.Error }),
+                _ => StatusCode(500),
+            };
+        }
+
         [HttpDelete("{buyerId}/items/{productId}")]
         public ActionResult<BuyerBasketQuery> RemoveItemFromBasket(string buyerId, string productId)
         {
-            var basket = _basketRepo.RemoveItemFromBasket(buyerId, productId);
-            if (basket == null)
+            var result = _basketRepo.RemoveItemFromBasket(buyerId, productId);
+            return result switch
             {
-                return NotFound(new { buyerId, productId });
-            }
-
-            return new BuyerBasketQuery(basket);
+                BasketSuccessResult r => new BuyerBasketQuery(r.Basket),
+                BasketNotFoundErrorResult => NotFound(new { buyerId }),
+                BasketItemNotFoundErrorResult => NotFound(new { productId }),
+                ExceptionErrorResult ex => StatusCode(500, new { error = ex.Error }),
+                _ => StatusCode(500),
+            };
         }
     }
 }

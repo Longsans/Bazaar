@@ -68,13 +68,22 @@ public class PartnerController : ControllerBase
 
         var contract = createCommand.ToContractInfo();
         contract.PartnerId = partnerId;
-        _contractRepo.CreateFixedPeriod(contract);
+        var signUpResult = _contractRepo.CreateFixedPeriod(contract);
 
-        return CreatedAtAction(
-            nameof(ContractController.GetById),
-            "Contract",
-            new { id = contract.Id },
-            new ContractQuery(contract));
+        return signUpResult switch
+        {
+            ContractSuccessResult =>
+                CreatedAtAction(
+                    nameof(ContractController.GetById),
+                    "Contract",
+                    new { id = contract.Id },
+                    new ContractQuery(contract)),
+            ContractStartDateInPastOrAfterEndDateError =>
+                BadRequest(new { error = "Contract end date must be after current date." }),
+            PartnerNotFoundError => NotFound(new { partnerId }),
+            PartnerUnderContractError => Conflict("Partner is currently already under contract."),
+            _ => StatusCode(500)
+        };
     }
 
     [HttpPost("{partnerId}/indefinite-contracts")]
@@ -89,32 +98,37 @@ public class PartnerController : ControllerBase
 
         var contract = createCommand.ToContractInfo();
         contract.PartnerId = partnerId;
-        _contractRepo.CreateIndefinite(contract);
+        var signUpResult = _contractRepo.CreateIndefinite(contract);
 
-        return CreatedAtAction(
-            nameof(ContractController.GetById),
-            "Contract",
-            new { id = contract.Id },
-            new ContractQuery(contract));
+        return signUpResult switch
+        {
+            ContractSuccessResult =>
+                CreatedAtAction(
+                    nameof(ContractController.GetById),
+                    "Contract",
+                    new { id = contract.Id },
+                    new ContractQuery(contract)),
+            ContractStartDateInPastOrAfterEndDateError =>
+                BadRequest(new { error = "Contract start date must be from now on and must be before end date." }),
+            PartnerNotFoundError => NotFound(new { partnerId }),
+            PartnerUnderContractError => Conflict("Partner is currently already under contract."),
+            _ => StatusCode(500)
+        };
     }
 
     [HttpPut("{partnerId}/indefinite-contracts/end-current")]
     public ActionResult<ContractQuery> EndCurrentIndefiniteContract(int partnerId)
     {
-        var partner = _partnerRepo.GetById(partnerId);
-        if (partner == null)
+        var endContractResult = _contractRepo.EndIndefiniteContract(partnerId);
+        return endContractResult switch
         {
-            return NotFound(partnerId);
-        }
-
-        var currentContract = partner.Contracts.FirstOrDefault(c => c.EndDate == null);
-        if (currentContract == null)
-        {
-            return Conflict(new { error = "Partner has no current contract" });
-        }
-
-        _contractRepo.EndContract(currentContract.Id);
-        return new ContractQuery(currentContract);
+            ContractSuccessResult r => new ContractQuery(r.Contract!),
+            PartnerNotFoundError => NotFound(new { partnerId }),
+            ContractNotFoundError => NotFound(new { error = "Partner has no contract." }),
+            ContractNotIndefiniteError =>
+                BadRequest(new { error = "Partner currently has a contract, but it is not indefinite." }),
+            _ => StatusCode(500)
+        };
     }
 
     [HttpDelete("{id}")]
