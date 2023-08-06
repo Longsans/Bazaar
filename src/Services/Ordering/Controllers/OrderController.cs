@@ -6,16 +6,13 @@ namespace Bazaar.Ordering.Adapters.Controllers
     {
         private readonly IOrderRepository _orderRepo;
         private readonly IEventBus _eventBus;
-        private readonly IResourceManager<Order, int> _orderRm;
 
         public OrderController(
             IOrderRepository orderRepository,
-            IEventBus eventBus,
-            IResourceManager<Order, int> orderRm)
+            IEventBus eventBus)
         {
             _orderRepo = orderRepository;
             _eventBus = eventBus;
-            _orderRm = orderRm;
         }
 
         [HttpGet("{id}")]
@@ -38,6 +35,10 @@ namespace Bazaar.Ordering.Adapters.Controllers
         public ActionResult<OrderQuery> CreateOrder(OrderWriteCommand command)
         {
             var order = _orderRepo.CreateProcessingPaymentOrder(command.ToOrder());
+            _eventBus.Publish(
+                new OrderCreatedIntegrationEvent(
+                    order.Id, order.Items.Select(i => new OrderStockItem(i.ProductId, i.Quantity))));
+
             return CreatedAtAction(nameof(GetById), new { id = order.Id }, new OrderQuery(order));
         }
 
@@ -52,47 +53,6 @@ namespace Bazaar.Ordering.Adapters.Controllers
                 InvalidOrderCancellationError e => Conflict(new { error = e.Error }),
                 _ => StatusCode(500)
             };
-        }
-
-        [HttpPost("/api/txn/{txn}/orders")]
-        public ActionResult<OrderQuery> CreateOrderInTransaction(
-            [FromRoute] TransactionRef txn, [FromBody] OrderWriteCommand command)
-        {
-            try
-            {
-                var txnState = _orderRm.GetOrCreateTransactionState(txn);
-                var createdOrder = command.ToOrder();
-                createdOrder.Status = OrderStatus.ProcessingPayment;
-                txnState.PendingInserts.Add(createdOrder);
-                return new OrderQuery(createdOrder);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(new { error = e.Message });
-            }
-        }
-
-        [HttpPost("/api/txn")]
-        public IActionResult PrepareToCommitTransaction([FromBody] TransactionRef txn)
-        {
-            _orderRm.HandlePrepare(txn);
-            return Ok();
-        }
-
-        [HttpPut("/api/txn/{txn}")]
-        public IActionResult CommitOrRollbackTransaction([FromRoute] TransactionRef txn, [FromBody] bool commit)
-        {
-            if (!commit)
-            {
-                _orderRm.HandleRollback(txn);
-                return Ok();
-            }
-            var txnState = _orderRm.GetOrCreateTransactionState(txn);
-            var createdOrders = new List<Order>(txnState.PendingInserts);
-            _orderRm.HandleCommit(txn);
-            createdOrders.ForEach(
-                o => _eventBus.Publish(new OrderStatusChangedToProcessingPaymentIntegrationEvent(o.Id)));
-            return Ok();
         }
     }
 }

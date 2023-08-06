@@ -13,15 +13,6 @@ public class OrderingDbContext : DbContext
             .WithOne(i => i.Order)
             .IsRequired();
 
-        modelBuilder.Entity<Order>()
-            .HasIndex(o => o.ExternalId)
-            .IsUnique();
-
-        modelBuilder.Entity<Order>()
-            .Property(o => o.ExternalId)
-            .HasComputedColumnSql("CONCAT('ORDR-', [Id])", stored: true)
-            .HasColumnName("ExternalId");
-
         modelBuilder.Entity<OrderItem>()
             .HasIndex(i => new { i.ProductId, i.OrderId })
             .IsUnique();

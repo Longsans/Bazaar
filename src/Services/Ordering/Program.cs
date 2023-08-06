@@ -10,14 +10,6 @@ builder.Services.AddDbContext<OrderingDbContext>(options =>
 });
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
-builder.Services.AddSingleton<LockManager<int>>();
-builder.Services.AddSingleton<IResourceManager<Order, int>, OrderTransactionalResourceManager>(sp =>
-{
-    var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-    var lockManager = sp.GetRequiredService<LockManager<int>>();
-    return new OrderTransactionalResourceManager(scopeFactory, lockManager, o => o.Id);
-});
-builder.Services.AddSingleton(sp => new HttpClient { Timeout = TimeSpan.FromSeconds(20) });
 builder.Services.RegisterEventBus(builder.Configuration);
 #endregion
 
@@ -51,7 +43,7 @@ app.Run();
 
 public static class EventBusExtensionMethods
 {
-    public static void RegisterEventBus(this IServiceCollection services, IConfiguration configuration)
+    public static void RegisterEventBus(this IServiceCollection services, IConfiguration config)
     {
         services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
         services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
@@ -59,39 +51,39 @@ public static class EventBusExtensionMethods
                 var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
                 var factory = new ConnectionFactory()
                 {
-                    HostName = configuration["EventBusConnection"],
+                    HostName = config["EventBusConnection"],
                     DispatchConsumersAsync = true
                 };
 
-                if (!string.IsNullOrEmpty(configuration["EventBusUserName"]))
+                if (!string.IsNullOrEmpty(config["EventBusUserName"]))
                 {
-                    factory.UserName = configuration["EventBusUserName"];
+                    factory.UserName = config["EventBusUserName"];
                 }
 
-                if (!string.IsNullOrEmpty(configuration["EventBusPassword"]))
+                if (!string.IsNullOrEmpty(config["EventBusPassword"]))
                 {
-                    factory.Password = configuration["EventBusPassword"];
+                    factory.Password = config["EventBusPassword"];
                 }
 
                 var retryCount = 5;
-                if (!string.IsNullOrEmpty(configuration["EventBusRetryCount"]))
+                if (!string.IsNullOrEmpty(config["EventBusRetryCount"]))
                 {
-                    retryCount = int.Parse(configuration["EventBusRetryCount"]!);
+                    retryCount = int.Parse(config["EventBusRetryCount"]!);
                 }
 
                 return new DefaultRabbitMQPersistentConnection(factory, logger, retryCount);
             });
         services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
             {
-                var subscriptionClientName = configuration["SubscriptionClientName"];
+                var subscriptionClientName = config["SubscriptionClientName"];
                 var rabbitMQPersistentConnection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
                 var logger = sp.GetRequiredService<ILogger<EventBusRabbitMQ>>();
                 var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
 
                 var retryCount = 5;
-                if (!string.IsNullOrEmpty(configuration["EventBusRetryCount"]))
+                if (!string.IsNullOrEmpty(config["EventBusRetryCount"]))
                 {
-                    retryCount = int.Parse(configuration["EventBusRetryCount"]!);
+                    retryCount = int.Parse(config["EventBusRetryCount"]!);
                 }
 
                 return new EventBusRabbitMQ(
@@ -104,6 +96,7 @@ public static class EventBusExtensionMethods
             });
         services.AddTransient<OrderPaymentSucceededIntegrationEventHandler>();
         services.AddTransient<OrderPaymentFailedIntegrationEventHandler>();
+        services.AddTransient<OrderStocksConfirmedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)

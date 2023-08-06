@@ -52,7 +52,7 @@ services:
       - catalog-api
       - rabbitmq
     profiles:
-      - ordering
+      - webbff
   
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api
