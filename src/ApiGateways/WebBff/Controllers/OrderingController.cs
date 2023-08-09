@@ -3,102 +3,70 @@
     [ApiController]
     public class OrderingController : ControllerBase
     {
-        private readonly IOrderingTransactionClient _txnClient;
+        private readonly ICatalogRepository _catalogRepo;
+        private readonly IBasketRepository _basketRepo;
+        private readonly IOrderRepository _orderRepo;
         private readonly ILogger<OrderingController> _logger;
 
         public OrderingController(
-            IOrderingTransactionClient txnClient,
+            ICatalogRepository catalogRepo,
+            IBasketRepository basketRepo,
+            IOrderRepository orderRepo,
             ILogger<OrderingController> logger)
         {
-            _txnClient = txnClient;
+            _catalogRepo = catalogRepo;
+            _basketRepo = basketRepo;
+            _orderRepo = orderRepo;
             _logger = logger;
         }
 
-        [HttpPost("api/orders")]
-        public async Task<ActionResult<OrderQuery>> CreateOrderAsync([FromBody] OrderCreateCommand createOrderCommand)
+        [HttpPost("api/buyers/{buyerId}/orders")]
+        public async Task<ActionResult<Order>> CreateOrderAsync(string buyerId)
         {
-            if (createOrderCommand.Items.Count == 0)
-                return BadRequest(new { error = "Order has no items." });
-
-            try
+            var basket = await _basketRepo.GetByBuyerId(buyerId);
+            if (basket == null)
             {
-                foreach (var item in createOrderCommand.Items)
+                return NotFound();
+            }
+
+            if (!basket.Items.Any())
+            {
+                return Conflict(new
                 {
-                    _logger.LogWarning("--ORDGW_CTRL: executing stock retrieval.");
-                    var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductId);
-                    _logger.LogWarning($"--ORDGW_CTRL: retrieved available stock: {availableStock}.");
-
-                    if (availableStock < item.Quantity)
-                    {
-                        throw new InvalidOperationException(
-                            $"Product {item.ProductId} does not have enough stock to satisfy order.");
-                    }
-                    await _txnClient.AdjustProductAvailableStock(
-                        item.ProductId, (int)availableStock - item.Quantity);
-                }
-
-                var createdOrder = await _txnClient.CreateProcessingOrder(createOrderCommand);
-                await _txnClient.Commit();
-                _logger.LogWarning("--ORDGW_CTRL: transaction commit executed.");
-                return Ok(createdOrder);
+                    error = "Buyer's basket has no items.",
+                    @object = basket
+                });
             }
-            catch (KeyNotFoundException e)
-            {
-                await _txnClient.Rollback();
-                return NotFound(new { error = e.Message });
-            }
-            catch (InvalidOperationException e)
-            {
-                await _txnClient.Rollback();
-                return Conflict(new { error = e.Message });
-            }
-            catch (Exception e)
-            {
-                await _txnClient.Rollback();
-                return BadRequest(new { error = e.Message });
-            }
-        }
 
-        [HttpPost("api/orders-fail")]
-        public async Task<ActionResult<OrderQuery>> CreateOrderAsyncFail(
-            [FromBody] OrderCreateCommand createOrderCommand)
-        {
-            if (createOrderCommand.Items.Count == 0)
-                return BadRequest(new { error = "Order has no items." });
+            var itemsOrdered = await _catalogRepo.GetManyByProductId(basket.Items.Select(item => item.ProductId));
+            var joinedItems = Enumerable.Join(
+                basket.Items,
+                itemsOrdered,
+                basketItem => basketItem.ProductId,
+                catalogItem => catalogItem.ProductId,
+                (bi, ci) => new { bi.ProductId, ci.Name, ci.AvailableStock, bi.Quantity, ci.Price });
 
-            try
+            foreach (var item in joinedItems)
             {
-                foreach (var item in createOrderCommand.Items)
+                if (item.AvailableStock < item.Quantity)
                 {
-                    _logger.LogWarning("--ORDGW_CTRL: executing stock retrieval.");
-                    var availableStock = await _txnClient.RetrieveProductAvailableStock(item.ProductId);
-                    _logger.LogWarning($"--ORDGW_CTRL: retrieved available stock: {availableStock}.");
-
-                    if (availableStock < item.Quantity)
-                    {
-                        throw new InvalidOperationException(
-                            $"Product {item.ProductId} does not have enough stock to satisfy order.");
-                    }
-                    await _txnClient.AdjustProductAvailableStock(item.ProductId, (int)availableStock - item.Quantity);
+                    return Conflict(new { productId = item.ProductId, error = "Product's available stock does not satisfy ordered quantity." });
                 }
+            }
 
-                throw new InvalidOperationException("This operation failed and catalog item's stock has been rolled-back.");
-            }
-            catch (KeyNotFoundException e)
+            var order = new Order
             {
-                await _txnClient.Rollback();
-                return NotFound(new { error = e.Message });
-            }
-            catch (InvalidOperationException e)
-            {
-                await _txnClient.Rollback();
-                return Conflict(new { error = e.Message });
-            }
-            catch (Exception e)
-            {
-                await _txnClient.Rollback();
-                return BadRequest(new { error = e.Message });
-            }
+                BuyerId = buyerId,
+                Items = joinedItems.Select(item => new OrderItem
+                {
+                    ProductId = item.ProductId,
+                    ProductName = item.Name,
+                    ProductUnitPrice = item.Price,
+                    Quantity = item.Quantity
+                }).ToList()
+            };
+            var createdOrder = await _orderRepo.Create(order);
+            return createdOrder;
         }
     }
 }

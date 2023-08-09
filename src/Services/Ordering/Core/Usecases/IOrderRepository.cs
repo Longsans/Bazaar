@@ -4,6 +4,6 @@ public interface IOrderRepository
 {
     Order? GetById(int id);
     IEnumerable<Order> GetAll();
-    Order CreateProcessingPaymentOrder(Order order);
+    ICreateOrderResult Create(Order order);
     IUpdateOrderStatusResult UpdateStatus(int id, OrderStatus status);
 }

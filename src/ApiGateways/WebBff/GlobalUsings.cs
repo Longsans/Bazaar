@@ -1,8 +1,6 @@
 global using Bazaar.ApiGateways.WebBff.Core.Model;
 global using Bazaar.ApiGateways.WebBff.Core.Usecases;
-global using Bazaar.ApiGateways.WebBff.Transactional;
-global using Bazaar.BuildingBlocks.Transactions;
-global using Bazaar.BuildingBlocks.Transactions.Abstractions;
-global using Bazaar.BuildingBlocks.Transactions.Utility;
+global using Bazaar.ApiGateways.WebBff.DTOs;
+global using Bazaar.ApiGateways.WebBff.Repositories;
 global using Microsoft.AspNetCore.Mvc;
-global using Newtonsoft.Json.Linq;
+global using Newtonsoft.Json;

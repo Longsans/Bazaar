@@ -11,32 +11,38 @@ services:
     image: rabbitmq:3-management-alpine
     profiles:
       - ordering
+      - all
 
   catalog-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - catalog
       - ordering
+      - all
 
   basket-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - basket
+      - all
 
   ordering-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - ordering
+      - all
 
   shopper-info-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - shopper-info
+      - all
 
   contracting-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - contracting
+      - all
 
   webbff:
     image: ${DOCKER_REGISTRY-}webbff
@@ -53,6 +59,7 @@ services:
       - rabbitmq
     profiles:
       - webbff
+      - all
   
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api
@@ -65,6 +72,7 @@ services:
     profiles:
       - catalog
       - ordering
+      - all
 
   shopper-info-api:
     image: ${DOCKER_REGISTRY-}shopper-info-api
@@ -76,6 +84,7 @@ services:
       - shopper-info-sql
     profiles:
       - shopper-info
+      - all
 
   contracting-api:
     image: ${DOCKER_REGISTRY-}contracting-api
@@ -87,6 +96,7 @@ services:
       - contracting-sql
     profiles:
       - contracting
+      - all
 
   basket-api:
     image: ${DOCKER_REGISTRY-}basket-api
@@ -98,6 +108,7 @@ services:
       - basket-sql
     profiles:
       - basket
+      - all
 
   ordering-api:
     image: ${DOCKER_REGISTRY-}ordering-api
@@ -110,6 +121,7 @@ services:
       - ordering-sql
     profiles:
       - ordering
+      - all
 
   payment-api:
     image: ${DOCKER_REGISTRY-}payment-api
@@ -120,3 +132,4 @@ services:
       - rabbitmq
     profiles:
       - ordering
+      - all

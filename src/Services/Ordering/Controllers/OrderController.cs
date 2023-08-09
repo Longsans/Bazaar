@@ -34,7 +34,21 @@ namespace Bazaar.Ordering.Adapters.Controllers
         [HttpPost]
         public ActionResult<OrderQuery> CreateOrder(OrderWriteCommand command)
         {
-            var order = _orderRepo.CreateProcessingPaymentOrder(command.ToOrder());
+            var createResult = _orderRepo.Create(command.ToOrder());
+            if (createResult is OrderHasNoItemsError)
+            {
+                return BadRequest(new
+                {
+                    error = "Order must have at least 1 item.",
+                    @object = command
+                });
+            }
+
+            var order = createResult switch
+            {
+                OrderSuccessResult r => r.Order,
+                _ => new Order()
+            };
             _eventBus.Publish(
                 new OrderCreatedIntegrationEvent(
                     order.Id, order.Items.Select(i => new OrderStockItem(i.ProductId, i.Quantity))));

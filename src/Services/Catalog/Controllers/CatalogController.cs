@@ -3,18 +3,17 @@ using Microsoft.AspNetCore.Mvc;
 namespace Bazaar.Catalog.Controllers
 {
     [ApiController]
+    [Route("api/[controller]")]
     public class CatalogController : ControllerBase
     {
         private readonly ICatalogRepository _catalogRepo;
-        private readonly IResourceManager<CatalogItem, int> _catalogRm;
 
-        public CatalogController(ICatalogRepository catalogRepo, IResourceManager<CatalogItem, int> catalogRm)
+        public CatalogController(ICatalogRepository catalogRepo)
         {
             _catalogRepo = catalogRepo;
-            _catalogRm = catalogRm;
         }
 
-        [HttpGet("api/catalog/{id}")]
+        [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
             var item = _catalogRepo.GetItemById(id);
@@ -23,57 +22,27 @@ namespace Bazaar.Catalog.Controllers
             return Ok(item);
         }
 
-        [HttpPost("api/catalog")]
+        [HttpGet]
+        public ActionResult<IEnumerable<CatalogItem>> GetManyByProductId([FromQuery] IEnumerable<string> productIds)
+        {
+            return _catalogRepo.GetManyByProductId(productIds).ToList();
+        }
+
+        [HttpPost]
         public IActionResult Create(CatalogItem item)
         {
             var createdItem = _catalogRepo.Create(item);
             return CreatedAtAction(nameof(GetById), createdItem.Id, createdItem);
         }
 
-        [HttpGet("api/catalog/{productId}/stock")]
-        public ActionResult<int> GetAvailableStockInTransaction(string productId, [FromQuery] TransactionRef txn)
+        [HttpPut]
+        public IActionResult Update(CatalogItem update)
         {
-            var item = _catalogRepo.GetItemByProductId(productId);
-            if (item == null)
-                return NotFound();
-
-            _catalogRm.LockReadIndex(txn, item.Id);
-            return Ok(item.AvailableStock);
-        }
-
-        [HttpPatch("api/txn/{txn}/catalog/{productId}")]
-        public IActionResult UpdateStockInTransaction(string productId, [FromRoute] TransactionRef txn, [FromBody] int availableStock)
-        {
-            var item = _catalogRepo.GetItemByProductId(productId);
-            if (item == null)
-                return NotFound();
-
-            var txnState = _catalogRm.GetOrCreateTransactionState(txn);
-            var update = new CatalogItem(item)
+            if (!_catalogRepo.Update(update))
             {
-                AvailableStock = availableStock,
-            };
-            txnState.PendingUpdates.Add(update);
-            return Ok(update);
-        }
-
-        [HttpPost("api/txn")]
-        public IActionResult PrepareToCommitTransaction([FromBody] TransactionRef txn)
-        {
-            _catalogRm.HandlePrepare(txn);
-            return Ok();
-        }
-
-        [HttpPut("api/txn/{txn}")]
-        public IActionResult CommitTransaction([FromRoute] TransactionRef txn, [FromBody] bool commit)
-        {
-            if (!commit)
-            {
-                _catalogRm.HandleRollback(txn);
-                return Ok();
+                return NotFound(update.Id);
             }
-            _catalogRm.HandleCommit(txn);
-            return Ok();
+            return NoContent();
         }
     }
 }

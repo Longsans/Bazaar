@@ -3,16 +3,17 @@
     "Docker Compose": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
-      "composeLaunchAction": "LaunchBrowser",
-      "composeLaunchServiceName": "ordering-api",
-      "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}/swagger",
       "composeProfile": {
         "includes": [
-          "ordering"
+          "all"
         ],
         "serviceActions": {
+          "basket-api": "StartWithoutDebugging",
+          "catalog-api": "StartWithoutDebugging",
+          "contracting-api": "StartWithoutDebugging",
+          "ordering-api": "StartWithoutDebugging",
           "payment-api": "StartWithoutDebugging",
-          "catalog-api": "StartWithoutDebugging"
+          "shopper-info-api": "StartWithoutDebugging"
         }
       }
     }

@@ -5,7 +5,7 @@ public abstract class OrderRepositoryResult
 }
 
 // Concrete result classes
-public class OrderSuccessResult : OrderRepositoryResult, IUpdateOrderStatusResult
+public class OrderSuccessResult : OrderRepositoryResult, ICreateOrderResult, IUpdateOrderStatusResult
 {
     public Order Order;
 
@@ -14,6 +14,7 @@ public class OrderSuccessResult : OrderRepositoryResult, IUpdateOrderStatusResul
         Order = order;
     }
 }
+public class OrderHasNoItemsError : OrderRepositoryResult, ICreateOrderResult { }
 public class OrderNotFoundError : OrderRepositoryResult, IUpdateOrderStatusResult { }
 public class InvalidOrderCancellationError : OrderRepositoryResult, IUpdateOrderStatusResult
 {
@@ -26,6 +27,12 @@ public class InvalidOrderCancellationError : OrderRepositoryResult, IUpdateOrder
 }
 
 // Method return interfaces
+public interface ICreateOrderResult
+{
+    static OrderSuccessResult Success(Order order) => new(order);
+    static OrderHasNoItemsError OrderHasNoItemsError => new();
+}
+
 public interface IUpdateOrderStatusResult
 {
     static OrderSuccessResult Success(Order order) => new(order);

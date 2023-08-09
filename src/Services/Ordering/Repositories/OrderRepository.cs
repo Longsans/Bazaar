@@ -23,12 +23,17 @@ public class OrderRepository : IOrderRepository
         return _context.Orders.Include(o => o.Items);
     }
 
-    public Order CreateProcessingPaymentOrder(Order order)
+    public ICreateOrderResult Create(Order order)
     {
-        order.Status = OrderStatus.ProcessingPayment;
+        if (!order.Items.Any())
+        {
+            return ICreateOrderResult.OrderHasNoItemsError;
+        }
+
+        order.Status = OrderStatus.AwaitingSellerConfirmation;
         _context.Orders.Add(order);
         _context.SaveChanges();
-        return order;
+        return ICreateOrderResult.Success(order);
     }
 
     public IUpdateOrderStatusResult UpdateStatus(int id, OrderStatus status)
