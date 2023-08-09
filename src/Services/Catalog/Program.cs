@@ -10,16 +10,6 @@ builder.Services.AddDbContext<CatalogDbContext>(option =>
 });
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
-builder.Services.AddSingleton<LockManager<int>>();
-builder.Services.AddSingleton<IResourceManager<CatalogItem, int>, CatalogTransactionalResourceManager>(sp =>
-{
-    var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-    var lockManager = sp.GetRequiredService<LockManager<int>>();
-    return new CatalogTransactionalResourceManager(scopeFactory, lockManager, item => item.Id);
-});
-builder.Services.AddSingleton<TransactionCoordinator>();
-builder.Services.AddSingleton(sp => new HttpClient { Timeout = TimeSpan.FromSeconds(20) });
-builder.Services.AddSingleton<IResourceLocationResolver, TransactionalUriResolver>();
 #endregion
 
 builder.Services.AddControllers();

@@ -5,8 +5,16 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "contracting"
-        ]
+          "all"
+        ],
+        "serviceActions": {
+          "basket-api": "StartWithoutDebugging",
+          "catalog-api": "StartWithoutDebugging",
+          "contracting-api": "StartWithoutDebugging",
+          "ordering-api": "StartWithoutDebugging",
+          "payment-api": "StartWithoutDebugging",
+          "shopper-info-api": "StartWithoutDebugging"
+        }
       }
     }
   }
