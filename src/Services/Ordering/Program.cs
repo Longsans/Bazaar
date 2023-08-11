@@ -7,6 +7,11 @@ builder.Services.AddDbContext<OrderingDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
     //options.UseSqlServer(
     //    "Server=localhost,5435;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true");
+
+    options.UseTriggers(triggerOptions =>
+    {
+        triggerOptions.AddTrigger<InsertOrderItemsTrigger>();
+    });
 });
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));

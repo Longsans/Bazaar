@@ -11,7 +11,6 @@
           "basket-api": "StartWithoutDebugging",
           "catalog-api": "StartWithoutDebugging",
           "contracting-api": "StartWithoutDebugging",
-          "ordering-api": "StartWithoutDebugging",
           "payment-api": "StartWithoutDebugging",
           "shopper-info-api": "StartWithoutDebugging"
         }

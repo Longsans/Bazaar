@@ -4,7 +4,7 @@ public abstract class BasketRepositoryResult { }
 
 // Result concrete types
 public class BasketSuccessResult :
-    BasketRepositoryResult, IChangeItemQuantityResult, IRemoveItemFromBasketResult
+    BasketRepositoryResult, IAddItemToBasketResult, IChangeItemQuantityResult, IRemoveItemFromBasketResult
 {
     public BuyerBasket Basket;
 
@@ -25,12 +25,12 @@ public class BasketItemSuccessResult :
     }
 }
 
-public class BasketNotFoundErrorResult :
+public class BasketItemNotFoundErrorResult :
     BasketRepositoryResult, IChangeItemQuantityResult, IRemoveItemFromBasketResult
 { }
 
-public class BasketItemNotFoundErrorResult :
-    BasketRepositoryResult, IChangeItemQuantityResult, IRemoveItemFromBasketResult
+public class BasketItemAlreadyAddedError :
+    BasketRepositoryResult, IAddItemToBasketResult
 { }
 
 public class QuantityLessThanOneErrorResult :
@@ -49,11 +49,16 @@ public class ExceptionErrorResult :
 }
 
 // Result marker interfaces returned by methods
+public interface IAddItemToBasketResult
+{
+    static BasketSuccessResult Success(BuyerBasket b) => new(b);
+    static BasketItemAlreadyAddedError BasketItemAlreadyAddedError => new();
+}
+
 public interface IChangeItemQuantityResult
 {
-    static IChangeItemQuantityResult Success(BasketItem b) => new BasketItemSuccessResult(b);
+    static IChangeItemQuantityResult Success(BasketItem item) => new BasketItemSuccessResult(item);
     static IChangeItemQuantityResult QuantityLessThanOneError => new QuantityLessThanOneErrorResult();
-    static IChangeItemQuantityResult BasketNotFoundError => new BasketNotFoundErrorResult();
     static IChangeItemQuantityResult BasketItemNotFoundError => new BasketItemNotFoundErrorResult();
     static IChangeItemQuantityResult OtherExceptionError(string error) => new ExceptionErrorResult(error);
 }
@@ -61,7 +66,6 @@ public interface IChangeItemQuantityResult
 public interface IRemoveItemFromBasketResult
 {
     static IRemoveItemFromBasketResult Success(BuyerBasket b) => new BasketSuccessResult(b);
-    static IRemoveItemFromBasketResult BasketNotFoundError => new BasketNotFoundErrorResult();
     static IRemoveItemFromBasketResult BasketItemNotFoundError => new BasketItemNotFoundErrorResult();
     static IRemoveItemFromBasketResult OtherExceptionError(string error) => new ExceptionErrorResult(error);
 }

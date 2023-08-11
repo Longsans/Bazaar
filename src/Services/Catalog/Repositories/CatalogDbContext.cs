@@ -16,9 +16,7 @@
                     .IsRequired(false);
 
                 item.Property(x => x.ProductId)
-                    .HasField("_productId");
-
-                item.Property(x => x.ProductId)
+                    .HasField("_productId")
                     .HasComputedColumnSql("CONCAT('PROD-', [Id])", stored: true)
                     .HasColumnName("ProductId");
 

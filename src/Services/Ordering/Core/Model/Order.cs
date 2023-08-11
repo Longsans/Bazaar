@@ -5,6 +5,7 @@ public class Order
     public int Id { get; set; }
     public string BuyerId { get; set; }
     public List<OrderItem> Items { get; set; } = new();
+    public decimal Total { get; set; }
     public OrderStatus Status { get; set; }
 
     #region Domain logic

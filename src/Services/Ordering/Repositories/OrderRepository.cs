@@ -30,7 +30,7 @@ public class OrderRepository : IOrderRepository
             return ICreateOrderResult.OrderHasNoItemsError;
         }
 
-        order.Status = OrderStatus.AwaitingSellerConfirmation;
+        order.Status = OrderStatus.ProcessingPayment;
         _context.Orders.Add(order);
         _context.SaveChanges();
         return ICreateOrderResult.Success(order);

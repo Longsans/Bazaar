@@ -9,6 +9,7 @@ global using Bazaar.Ordering.Dto;
 global using Bazaar.Ordering.EventHandling;
 global using Bazaar.Ordering.Events;
 global using Bazaar.Ordering.Repositories;
+global using EntityFrameworkCore.Triggered;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
 global using RabbitMQ.Client;
