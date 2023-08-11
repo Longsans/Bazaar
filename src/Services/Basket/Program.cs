@@ -6,6 +6,11 @@ builder.Services.AddDbContext<BasketDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
     //options.UseSqlServer(
     //    "Server=localhost,5434;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true");
+
+    options.UseTriggers(triggerOptions =>
+    {
+        triggerOptions.AddTrigger<BasketItemChangeTrigger>();
+    });
 });
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));

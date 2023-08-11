@@ -16,9 +16,7 @@ namespace Bazaar.Basket.Controllers
         [HttpGet("{buyerId}")]
         public ActionResult<BuyerBasketQuery> GetBasketByBuyerId(string buyerId)
         {
-            var basket = _basketRepo.GetByBuyerId(buyerId);
-            if (basket == null)
-                return NotFound();
+            var basket = _basketRepo.GetBasketOrCreateIfNotExist(buyerId);
             return new BuyerBasketQuery(basket);
         }
 
@@ -26,25 +24,19 @@ namespace Bazaar.Basket.Controllers
         public ActionResult<BasketItemQuery> GetBasketItemByBuyerIdAndProductId(
             [FromRoute] string buyerId, [FromRoute] string productId)
         {
-            var basket = _basketRepo.GetByBuyerId(buyerId);
-            if (basket == null)
+            var basketItem = _basketRepo.GetBasketItem(buyerId, productId);
+            if (basketItem == null)
             {
-                return NotFound();
+                return NotFound(new { buyerId, productId });
             }
-
-            var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
-            if (item == null)
-            {
-                return NotFound();
-            }
-            return new BasketItemQuery(item);
+            return new BasketItemQuery(basketItem);
         }
 
         [HttpPost("{buyerId}/items")]
-        public ActionResult<BasketItemQuery> AddItemToBasket(
+        public ActionResult<BuyerBasketQuery> AddItemToBasket(
             [FromRoute] string buyerId, [FromBody] BasketItemWriteCommand addItemCommand)
         {
-            var basket = _basketRepo.AddItemToBasket(buyerId,
+            var addResult = _basketRepo.AddItemToBasket(buyerId,
                 new BasketItem
                 {
                     ProductId = addItemCommand.ProductId,
@@ -54,21 +46,11 @@ namespace Bazaar.Basket.Controllers
                     ImageUrl = addItemCommand.ImageUrl
                 });
 
-            if (basket == null)
+            return addResult switch
             {
-                return NotFound(buyerId);
-            }
-
-            var addedItem = basket.Items.FirstOrDefault(i => i.ProductId == addItemCommand.ProductId);
-            if (addedItem == null)
-            {
-                return Conflict(addItemCommand.ProductId);
-            }
-
-            return CreatedAtAction(
-                nameof(GetBasketItemByBuyerIdAndProductId),
-                new { buyerId, productId = addedItem.ProductId },
-                new BasketItemQuery(addedItem));
+                BasketItemAlreadyAddedError => Conflict(new { error = "This product has already been added to this basket." }),
+                BasketSuccessResult r => new BuyerBasketQuery(r.Basket),
+            };
         }
 
         [HttpPut("{buyerId}/items/{productId}")]
@@ -80,10 +62,8 @@ namespace Bazaar.Basket.Controllers
             {
                 BasketItemSuccessResult r => new BasketItemQuery(r.BasketItem),
                 QuantityLessThanOneErrorResult => BadRequest(new { error = "Quantity must be at least 1." }),
-                BasketNotFoundErrorResult => NotFound(new { buyerId }),
                 BasketItemNotFoundErrorResult => NotFound(new { productId }),
                 ExceptionErrorResult ex => StatusCode(500, new { error = ex.Error }),
-                _ => StatusCode(500),
             };
         }
 
@@ -94,10 +74,8 @@ namespace Bazaar.Basket.Controllers
             return result switch
             {
                 BasketSuccessResult r => new BuyerBasketQuery(r.Basket),
-                BasketNotFoundErrorResult => NotFound(new { buyerId }),
                 BasketItemNotFoundErrorResult => NotFound(new { productId }),
                 ExceptionErrorResult ex => StatusCode(500, new { error = ex.Error }),
-                _ => StatusCode(500),
             };
         }
     }

@@ -9,16 +9,51 @@ public class BasketRepository : IBasketRepository
         _context = context;
     }
 
-    public BuyerBasket? AddItemToBasket(string buyerId, BasketItem item)
+    public BuyerBasket GetBasketOrCreateIfNotExist(string buyerId)
+    {
+        var basket = GetByBuyerId(buyerId);
+        if (basket == null)
+        {
+            basket = new BuyerBasket(buyerId)
+            {
+                Items = new()
+            };
+            _context.BuyerBaskets.Add(basket);
+            _context.SaveChanges();
+        }
+        return basket;
+    }
+
+    public BasketItem? GetBasketItem(string buyerId, string productId)
     {
         var basket = GetByBuyerId(buyerId);
         if (basket == null)
         {
             return null;
         }
+
+        return basket.Items.FirstOrDefault(x => x.ProductId == productId);
+    }
+
+    private BuyerBasket? GetByBuyerId(string buyerId)
+    {
+        return _context.BuyerBaskets
+            .Include(b => b.Items)
+            .FirstOrDefault(b => b.BuyerId == buyerId);
+    }
+
+    public IAddItemToBasketResult AddItemToBasket(string buyerId, BasketItem item)
+    {
+        var basket = GetBasketOrCreateIfNotExist(buyerId);
+        var existingItem = basket.Items.FirstOrDefault(x => x.ProductId == item.ProductId);
+        if (existingItem != null)
+        {
+            return IAddItemToBasketResult.BasketItemAlreadyAddedError;
+        }
+
         basket.Items.Add(item);
         _context.SaveChanges();
-        return basket;
+        return IAddItemToBasketResult.Success(basket);
     }
 
     public IChangeItemQuantityResult ChangeItemQuantity(string buyerId, string productId, uint quantity)
@@ -28,12 +63,7 @@ public class BasketRepository : IBasketRepository
             return IChangeItemQuantityResult.QuantityLessThanOneError;
         }
 
-        var basket = GetByBuyerId(buyerId);
-        if (basket == null)
-        {
-            return IChangeItemQuantityResult.BasketNotFoundError;
-        }
-
+        var basket = GetBasketOrCreateIfNotExist(buyerId);
         var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
         if (item == null)
         {
@@ -52,36 +82,9 @@ public class BasketRepository : IBasketRepository
         return IChangeItemQuantityResult.Success(item);
     }
 
-    public BuyerBasket GetBasketOrCreateIfNotExist(string buyerId)
-    {
-        var basket = GetByBuyerId(buyerId);
-        if (basket == null)
-        {
-            basket = new BuyerBasket(buyerId)
-            {
-                Items = new()
-            };
-            _context.BuyerBaskets.Add(basket);
-            _context.SaveChanges();
-        }
-        return basket;
-    }
-
-    public BuyerBasket? GetByBuyerId(string buyerId)
-    {
-        return _context.BuyerBaskets
-            .Include(b => b.Items)
-            .FirstOrDefault(b => b.BuyerId == buyerId);
-    }
-
     public IRemoveItemFromBasketResult RemoveItemFromBasket(string buyerId, string productId)
     {
-        var basket = GetByBuyerId(buyerId);
-        if (basket == null)
-        {
-            return IRemoveItemFromBasketResult.BasketNotFoundError;
-        }
-
+        var basket = GetBasketOrCreateIfNotExist(buyerId);
         var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
         if (item == null)
         {
