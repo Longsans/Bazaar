@@ -69,6 +69,7 @@ services:
     depends_on:
       - catalog-sql
       - internallb
+      - rabbitmq
     profiles:
       - catalog
       - ordering

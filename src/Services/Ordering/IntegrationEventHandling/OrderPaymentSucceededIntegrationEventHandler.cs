@@ -1,4 +1,4 @@
-namespace Bazaar.Ordering.EventHandling;
+namespace Bazaar.Ordering.IntegrationEventHandling;
 
 public class OrderPaymentSucceededIntegrationEventHandler : IIntegrationEventHandler<OrderPaymentSucceededIntegrationEvent>
 {

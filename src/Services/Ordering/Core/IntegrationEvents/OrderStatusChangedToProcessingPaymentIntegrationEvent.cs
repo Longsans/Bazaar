@@ -1,3 +1,3 @@
-namespace Bazaar.Ordering.Events;
+namespace Bazaar.Ordering.Core.IntegrationEvents;
 
 public record OrderStatusChangedToProcessingPaymentIntegrationEvent(int orderId) : IntegrationEvent;

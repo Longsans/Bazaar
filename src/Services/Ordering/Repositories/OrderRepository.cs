@@ -3,11 +3,13 @@ namespace Bazaar.Ordering.Repositories;
 public class OrderRepository : IOrderRepository
 {
     private readonly OrderingDbContext _context;
+    private readonly IEventBus _eventBus;
     private readonly ILogger<OrderRepository> _logger;
 
-    public OrderRepository(OrderingDbContext context, ILogger<OrderRepository> logger)
+    public OrderRepository(OrderingDbContext context, IEventBus eventBus, ILogger<OrderRepository> logger)
     {
         _context = context;
+        _eventBus = eventBus;
         _logger = logger;
     }
 
@@ -33,6 +35,11 @@ public class OrderRepository : IOrderRepository
         order.Status = OrderStatus.ProcessingPayment;
         _context.Orders.Add(order);
         _context.SaveChanges();
+
+        _eventBus.Publish(
+                new OrderCreatedIntegrationEvent(
+                    order.Id, order.Items.Select(item => new OrderStockItem(item.ProductId, item.Quantity))));
+
         return ICreateOrderResult.Success(order);
     }
 

@@ -108,5 +108,6 @@ public static class EventBusExtensionMethods
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
         eventBus.Subscribe<OrderPaymentSucceededIntegrationEvent, OrderPaymentSucceededIntegrationEventHandler>();
+        eventBus.Subscribe<OrderPaymentFailedIntegrationEvent, OrderPaymentFailedIntegrationEventHandler>();
     }
 }
