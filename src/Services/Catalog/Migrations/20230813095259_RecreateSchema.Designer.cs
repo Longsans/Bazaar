@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Catalog.Migrations
 {
     [DbContext(typeof(CatalogDbContext))]
-    [Migration("20230730133024_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20230813095259_RecreateSchema")]
+    partial class RecreateSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,9 +51,9 @@ namespace Catalog.Migrations
                     b.Property<string>("ProductId")
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("ProductId")
-                        .HasComputedColumnSql("'PROD-' + [Id]", true);
+                        .HasComputedColumnSql("CONCAT('PROD-', [Id])", true);
 
                     b.Property<int>("RestockThreshold")
                         .HasColumnType("int");
@@ -63,6 +63,9 @@ namespace Catalog.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId")
+                        .IsUnique();
 
                     b.ToTable("CatalogItems");
                 });

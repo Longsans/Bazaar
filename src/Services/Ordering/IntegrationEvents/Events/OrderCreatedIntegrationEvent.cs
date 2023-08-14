@@ -1,5 +1,5 @@
-﻿namespace Bazaar.Ordering.Events;
+﻿namespace Bazaar.Ordering.IntegrationEvents.Events;
 
-public record OrderCreatedIntegrationEvent(int orderId, IEnumerable<OrderStockItem> orderStockItems) : IntegrationEvent;
+public record OrderCreatedIntegrationEvent(int OrderId, IEnumerable<OrderStockItem> OrderStockItems) : IntegrationEvent;
 
-public readonly record struct OrderStockItem(string productId, int quantity);
+public readonly record struct OrderStockItem(string ProductId, int Quantity);

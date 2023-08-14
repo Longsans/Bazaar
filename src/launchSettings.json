@@ -5,15 +5,10 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "all"
-        ],
-        "serviceActions": {
-          "basket-api": "StartWithoutDebugging",
-          "catalog-api": "StartWithoutDebugging",
-          "contracting-api": "StartWithoutDebugging",
-          "payment-api": "StartWithoutDebugging",
-          "shopper-info-api": "StartWithoutDebugging"
-        }
+          "basket",
+          "catalog",
+          "webbff"
+        ]
       }
     }
   }

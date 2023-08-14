@@ -14,22 +14,15 @@ public class CatalogRepository : ICatalogRepository
 
     public async Task<CatalogItem?> GetByProductId(string productId)
     {
-        var getResult = await _httpClient.GetAsync(GetUri(productId));
-        getResult.EnsureSuccessStatusCode();
+        var getResult = await _httpClient.GetAsync(GetByProductIdUri(productId));
+        if (getResult.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
 
         var getContent = await getResult.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<CatalogItem>(getContent);
     }
 
-    public async Task<IEnumerable<CatalogItem>> GetManyByProductId(IEnumerable<string> productIds)
-    {
-        var getResult = await _httpClient.GetAsync(GetManyUri(productIds));
-        getResult.EnsureSuccessStatusCode();
-
-        var getContent = await getResult.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<List<CatalogItem>>(getContent)!;
-    }
-
-    private string GetUri(string productId) => $"{CATALOG_URI}/{productId}";
-    private string GetManyUri(IEnumerable<string> productIds) => $"{CATALOG_URI}?productIds={string.Join("&productIds=", productIds)}";
+    private string GetByProductIdUri(string productId) => $"{CATALOG_URI}?productId={productId}";
 }

@@ -5,14 +5,11 @@ namespace Bazaar.Ordering.Adapters.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderRepository _orderRepo;
-        private readonly IEventBus _eventBus;
 
         public OrderController(
-            IOrderRepository orderRepository,
-            IEventBus eventBus)
+            IOrderRepository orderRepository)
         {
             _orderRepo = orderRepository;
-            _eventBus = eventBus;
         }
 
         [HttpGet("{id}")]
@@ -44,16 +41,11 @@ namespace Bazaar.Ordering.Adapters.Controllers
                 });
             }
 
-            var order = createResult switch
+            return createResult switch
             {
-                OrderSuccessResult r => r.Order,
-                _ => new Order()
+                OrderSuccessResult r => CreatedAtAction(nameof(GetById), new { id = r.Order.Id }, new OrderQuery(r.Order)),
+                _ => StatusCode(500)
             };
-            _eventBus.Publish(
-                new OrderCreatedIntegrationEvent(
-                    order.Id, order.Items.Select(i => new OrderStockItem(i.ProductId, i.Quantity))));
-
-            return CreatedAtAction(nameof(GetById), new { id = order.Id }, new OrderQuery(order));
         }
 
         [HttpPatch("{id}")]

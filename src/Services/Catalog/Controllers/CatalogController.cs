@@ -23,9 +23,14 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<CatalogItem>> GetManyByProductId([FromQuery] IEnumerable<string> productIds)
+        public ActionResult<CatalogItem> GetByProductId([FromQuery] string productId)
         {
-            return _catalogRepo.GetManyByProductId(productIds).ToList();
+            var item = _catalogRepo.GetItemByProductId(productId);
+            if (item == null)
+            {
+                return NotFound();
+            }
+            return item;
         }
 
         [HttpPost]

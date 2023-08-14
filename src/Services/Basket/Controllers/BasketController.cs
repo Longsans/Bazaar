@@ -34,7 +34,7 @@ namespace Bazaar.Basket.Controllers
 
         [HttpPost("{buyerId}/items")]
         public ActionResult<BuyerBasketQuery> AddItemToBasket(
-            [FromRoute] string buyerId, [FromBody] BasketItemWriteCommand addItemCommand)
+            [FromRoute] string buyerId, [FromBody] BasketItemAddCommand addItemCommand)
         {
             var addResult = _basketRepo.AddItemToBasket(buyerId,
                 new BasketItem
@@ -50,10 +50,11 @@ namespace Bazaar.Basket.Controllers
             {
                 BasketItemAlreadyAddedError => Conflict(new { error = "This product has already been added to this basket." }),
                 BasketSuccessResult r => new BuyerBasketQuery(r.Basket),
+                _ => StatusCode(500)
             };
         }
 
-        [HttpPut("{buyerId}/items/{productId}")]
+        [HttpPatch("{buyerId}/items/{productId}")]
         public ActionResult<BasketItemQuery> ChangeItemQuantity(
             string buyerId, string productId, [FromBody] uint quantity)
         {
@@ -61,9 +62,10 @@ namespace Bazaar.Basket.Controllers
             return result switch
             {
                 BasketItemSuccessResult r => new BasketItemQuery(r.BasketItem),
-                QuantityLessThanOneErrorResult => BadRequest(new { error = "Quantity must be at least 1." }),
-                BasketItemNotFoundErrorResult => NotFound(new { productId }),
-                ExceptionErrorResult ex => StatusCode(500, new { error = ex.Error }),
+                QuantityLessThanOneError => BadRequest(new { error = "Quantity must be at least 1." }),
+                BasketItemNotFoundError => NotFound(new { productId }),
+                ExceptionError ex => StatusCode(500, new { error = ex.Error }),
+                _ => StatusCode(500)
             };
         }
 
@@ -74,8 +76,21 @@ namespace Bazaar.Basket.Controllers
             return result switch
             {
                 BasketSuccessResult r => new BuyerBasketQuery(r.Basket),
-                BasketItemNotFoundErrorResult => NotFound(new { productId }),
-                ExceptionErrorResult ex => StatusCode(500, new { error = ex.Error }),
+                BasketItemNotFoundError => NotFound(new { productId }),
+                ExceptionError ex => StatusCode(500, new { error = ex.Error }),
+                _ => StatusCode(500)
+            };
+        }
+
+        [HttpPost("/api/checkout")]
+        public async Task<IActionResult> Checkout(BasketCheckout checkout)
+        {
+            var checkoutResult = await _basketRepo.Checkout(checkout);
+            return checkoutResult switch
+            {
+                BasketSuccessResult => Accepted(),
+                BasketItemNotFoundError => BadRequest(new { error = "Basket has no items" }),
+                _ => StatusCode(500)
             };
         }
     }

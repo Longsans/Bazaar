@@ -1,3 +1,3 @@
-﻿namespace Bazaar.Ordering.Events;
+﻿namespace Bazaar.Ordering.IntegrationEvents.Events;
 
-public record OrderStocksConfirmedIntegrationEvent(int orderId) : IntegrationEvent;
+public record OrderStocksConfirmedIntegrationEvent(int OrderId) : IntegrationEvent;
