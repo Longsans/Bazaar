@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Basket.DTOs;
 
-public class BasketItemWriteCommand
+public class BasketItemAddCommand
 {
     public string ProductId { get; set; }
     public string ProductName { get; set; }

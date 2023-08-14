@@ -11,13 +11,13 @@ services:
     image: rabbitmq:3-management-alpine
     profiles:
       - ordering
+      - basket
       - all
 
   catalog-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - catalog
-      - ordering
       - all
 
   basket-sql:
@@ -49,14 +49,14 @@ services:
     build:
       context: .
       dockerfile: ApiGateways/WebBff/Dockerfile
-    depends_on:
-      - payment-api
-      - ordering-api
-      - basket-api
-      - contracting-api
-      - shopper-info-api
-      - catalog-api
-      - rabbitmq
+    #depends_on:
+    #  - payment-api
+    #  - ordering-api
+    #  - basket-api
+    #  - contracting-api
+    #  - shopper-info-api
+    #  - catalog-api
+    #  - rabbitmq
     profiles:
       - webbff
       - all
@@ -72,7 +72,6 @@ services:
       - rabbitmq
     profiles:
       - catalog
-      - ordering
       - all
 
   shopper-info-api:

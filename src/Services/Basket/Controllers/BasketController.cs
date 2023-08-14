@@ -34,7 +34,7 @@ namespace Bazaar.Basket.Controllers
 
         [HttpPost("{buyerId}/items")]
         public ActionResult<BuyerBasketQuery> AddItemToBasket(
-            [FromRoute] string buyerId, [FromBody] BasketItemWriteCommand addItemCommand)
+            [FromRoute] string buyerId, [FromBody] BasketItemAddCommand addItemCommand)
         {
             var addResult = _basketRepo.AddItemToBasket(buyerId,
                 new BasketItem
@@ -54,7 +54,7 @@ namespace Bazaar.Basket.Controllers
             };
         }
 
-        [HttpPut("{buyerId}/items/{productId}")]
+        [HttpPatch("{buyerId}/items/{productId}")]
         public ActionResult<BasketItemQuery> ChangeItemQuantity(
             string buyerId, string productId, [FromBody] uint quantity)
         {
