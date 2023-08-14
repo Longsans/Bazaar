@@ -1,4 +1,4 @@
-namespace Bazaar.Ordering.EventHandling;
+namespace Bazaar.Ordering.IntegrationEvents.EventHandling;
 
 public class OrderPaymentSucceededIntegrationEventHandler : IIntegrationEventHandler<OrderPaymentSucceededIntegrationEvent>
 {
@@ -15,8 +15,8 @@ public class OrderPaymentSucceededIntegrationEventHandler : IIntegrationEventHan
 
     public async Task Handle(OrderPaymentSucceededIntegrationEvent @event)
     {
-        _logger.LogInformation("Payment success, proceeding to shipment...");
-        _orderRepo.UpdateStatus(@event.orderId, OrderStatus.Shipping);
+        _logger.LogInformation("Payment success, now waiting for seller's confirmation.");
+        _orderRepo.UpdateStatus(@event.orderId, OrderStatus.AwaitingSellerConfirmation);
         await Task.CompletedTask;
     }
 }

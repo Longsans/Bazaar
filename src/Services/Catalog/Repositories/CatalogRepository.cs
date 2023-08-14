@@ -11,12 +11,17 @@ public class CatalogRepository : ICatalogRepository
 
     public CatalogItem? GetItemById(int id)
     {
-        return _context.CatalogItems.FirstOrDefault(item => item.Id == id);
+        return _context.CatalogItems.Find(id);
     }
 
     public CatalogItem? GetItemByProductId(string productId)
     {
         return _context.CatalogItems.FirstOrDefault(item => item.ProductId == productId);
+    }
+
+    public IQueryable<CatalogItem> GetManyByProductId(IEnumerable<string> productIds)
+    {
+        return _context.CatalogItems.Where(item => productIds.Contains(item.ProductId));
     }
 
     public CatalogItem Create(CatalogItem item)
@@ -28,7 +33,7 @@ public class CatalogRepository : ICatalogRepository
 
     public bool Update(CatalogItem item)
     {
-        var existing = _context.CatalogItems.FirstOrDefault(i => i.Id == item.Id);
+        var existing = _context.CatalogItems.Find(item.Id);
         if (existing == null)
             return false;
         _context.CatalogItems.Entry(existing).CurrentValues.SetValues(item);
@@ -38,7 +43,7 @@ public class CatalogRepository : ICatalogRepository
 
     public bool Delete(int id)
     {
-        var existing = _context.CatalogItems.FirstOrDefault(i => i.Id == id);
+        var existing = _context.CatalogItems.Find(id);
         if (existing == null)
             return false;
         _context.CatalogItems.Remove(existing);

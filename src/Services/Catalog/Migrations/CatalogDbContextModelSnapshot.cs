@@ -48,7 +48,7 @@ namespace Catalog.Migrations
                     b.Property<string>("ProductId")
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("ProductId")
                         .HasComputedColumnSql("CONCAT('PROD-', [Id])", true);
 
@@ -60,6 +60,9 @@ namespace Catalog.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId")
+                        .IsUnique();
 
                     b.ToTable("CatalogItems");
                 });

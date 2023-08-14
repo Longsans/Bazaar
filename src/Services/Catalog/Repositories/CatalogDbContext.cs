@@ -16,15 +16,30 @@
                     .IsRequired(false);
 
                 item.Property(x => x.ProductId)
-                    .HasField("_productId");
-
-                item.Property(x => x.ProductId)
                     .HasComputedColumnSql("CONCAT('PROD-', [Id])", stored: true)
                     .HasColumnName("ProductId");
 
                 item.HasIndex(x => x.ProductId)
                     .IsUnique();
             });
+        }
+
+        public void RejectChanges()
+        {
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Modified:
+                    case EntityState.Deleted:
+                        entry.State = EntityState.Modified;
+                        entry.State = EntityState.Unchanged;
+                        break;
+                    case EntityState.Added:
+                        entry.State = EntityState.Detached;
+                        break;
+                }
+            }
         }
     }
 }

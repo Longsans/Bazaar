@@ -1,3 +1,3 @@
 namespace Bazaar.Payment.Events;
 
-public record OrderPaymentFailedIntegrationEvent(int orderId) : IntegrationEvent;
+public record OrderPaymentFailedIntegrationEvent(int OrderId) : IntegrationEvent;

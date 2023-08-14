@@ -8,16 +8,17 @@ public class BasketDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<BuyerBasket>()
-            .HasIndex(sb => sb.BuyerId)
-            .IsUnique();
+        modelBuilder.Entity<BuyerBasket>(basket =>
+        {
+            basket.HasIndex(sb => sb.BuyerId)
+                .IsUnique();
 
-        modelBuilder.Entity<BuyerBasket>()
-            .HasMany(b => b.Items)
-            .WithOne(i => i.Basket)
-            .HasForeignKey(i => i.BasketId)
-            .HasPrincipalKey(b => b.Id)
-            .IsRequired();
+            basket.HasMany(b => b.Items)
+                .WithOne(i => i.Basket)
+                .HasForeignKey(i => i.BasketId)
+                .HasPrincipalKey(b => b.Id)
+                .IsRequired();
+        });
 
         modelBuilder.Entity<BasketItem>()
             .HasIndex(i => new { i.BasketId, i.ProductId })

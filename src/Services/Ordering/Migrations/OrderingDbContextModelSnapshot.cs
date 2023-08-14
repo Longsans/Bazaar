@@ -33,22 +33,21 @@ namespace Ordering.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ExternalId")
+                    b.Property<string>("ShippingAddress")
                         .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("ExternalId")
-                        .HasComputedColumnSql("CONCAT('ORDR-', [Id])", true);
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("Total")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ExternalId")
-                        .IsUnique();
-
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("Bazaar.Ordering.Core.Model.OrderItem", b =>
@@ -83,7 +82,7 @@ namespace Ordering.Migrations
                     b.HasIndex("ProductId", "OrderId")
                         .IsUnique();
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("Bazaar.Ordering.Core.Model.OrderItem", b =>

@@ -8,19 +8,15 @@ public class OrderingDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Order>()
-            .HasMany(o => o.Items)
-            .WithOne(i => i.Order)
-            .IsRequired();
+        modelBuilder.Entity<Order>(order =>
+        {
+            order.HasMany(o => o.Items)
+                .WithOne(i => i.Order)
+                .IsRequired();
 
-        modelBuilder.Entity<Order>()
-            .HasIndex(o => o.ExternalId)
-            .IsUnique();
-
-        modelBuilder.Entity<Order>()
-            .Property(o => o.ExternalId)
-            .HasComputedColumnSql("CONCAT('ORDR-', [Id])", stored: true)
-            .HasColumnName("ExternalId");
+            order.Property(o => o.Total)
+                .HasDefaultValue(0);
+        });
 
         modelBuilder.Entity<OrderItem>()
             .HasIndex(i => new { i.ProductId, i.OrderId })
