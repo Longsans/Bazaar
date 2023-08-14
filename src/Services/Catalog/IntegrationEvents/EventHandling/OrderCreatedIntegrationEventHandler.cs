@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Catalog.IntegrationEventHandling;
+﻿namespace Bazaar.Catalog.IntegrationEvents.EventHandling;
 
 public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<OrderCreatedIntegrationEvent>
 {
@@ -47,6 +47,7 @@ public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<Orde
         else
         {
             await _context.SaveChangesAsync();
+            _eventBus.Publish(new OrderStocksConfirmedIntegrationEvent(@event.OrderId));
         }
     }
 }

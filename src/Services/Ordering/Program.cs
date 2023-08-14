@@ -101,6 +101,11 @@ public static class EventBusExtensionMethods
             });
         services.AddTransient<OrderPaymentSucceededIntegrationEventHandler>();
         services.AddTransient<OrderPaymentFailedIntegrationEventHandler>();
+
+        services.AddTransient<OrderStocksInadequateIntegrationEventHandler>();
+        services.AddTransient<OrderItemsUnavailableIntegrationEventHandler>();
+
+        services.AddTransient<BuyerCheckoutAcceptedIntegrationEventHandler>();
         services.AddTransient<OrderStocksConfirmedIntegrationEventHandler>();
     }
 
@@ -109,5 +114,11 @@ public static class EventBusExtensionMethods
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
         eventBus.Subscribe<OrderPaymentSucceededIntegrationEvent, OrderPaymentSucceededIntegrationEventHandler>();
         eventBus.Subscribe<OrderPaymentFailedIntegrationEvent, OrderPaymentFailedIntegrationEventHandler>();
+
+        eventBus.Subscribe<OrderItemsUnavailableIntegrationEvent, OrderItemsUnavailableIntegrationEventHandler>();
+        eventBus.Subscribe<OrderStocksInadequateIntegrationEvent, OrderStocksInadequateIntegrationEventHandler>();
+
+        eventBus.Subscribe<BuyerCheckoutAcceptedIntegrationEvent, BuyerCheckoutAcceptedIntegrationEventHandler>();
+        eventBus.Subscribe<OrderStocksConfirmedIntegrationEvent, OrderStocksConfirmedIntegrationEventHandler>();
     }
 }

@@ -7,4 +7,5 @@ public interface IBasketRepository
     IAddItemToBasketResult AddItemToBasket(string buyerId, BasketItem item);
     IChangeItemQuantityResult ChangeItemQuantity(string buyerId, string productId, uint quantity);
     IRemoveItemFromBasketResult RemoveItemFromBasket(string buyerId, string productId);
+    Task<ICheckoutResult> Checkout(BasketCheckout checkout);
 }

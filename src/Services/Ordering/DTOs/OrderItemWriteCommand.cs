@@ -1,4 +1,4 @@
-namespace Bazaar.Ordering.Dto;
+namespace Bazaar.Ordering.DTOs;
 
 public class OrderItemWriteCommand
 {

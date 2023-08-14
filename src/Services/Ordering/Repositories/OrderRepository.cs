@@ -32,13 +32,9 @@ public class OrderRepository : IOrderRepository
             return ICreateOrderResult.OrderHasNoItemsError;
         }
 
-        order.Status = OrderStatus.ProcessingPayment;
+        order.Status = OrderStatus.AwaitingValidation;
         _context.Orders.Add(order);
         _context.SaveChanges();
-
-        _eventBus.Publish(
-                new OrderCreatedIntegrationEvent(
-                    order.Id, order.Items.Select(item => new OrderStockItem(item.ProductId, item.Quantity))));
 
         return ICreateOrderResult.Success(order);
     }

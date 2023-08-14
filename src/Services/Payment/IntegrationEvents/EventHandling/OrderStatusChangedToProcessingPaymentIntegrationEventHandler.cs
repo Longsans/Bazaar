@@ -17,7 +17,7 @@ public class OrderStatusChangedToProcessingPaymentIntegrationEventHandler
     public async Task Handle(OrderStatusChangedToProcessingPaymentIntegrationEvent @event)
     {
         _logger.LogInformation("Payment requested, processing...");
-        _eventBus.Publish(new OrderPaymentSucceededIntegrationEvent(@event.orderId));
+        _eventBus.Publish(new OrderPaymentSucceededIntegrationEvent(@event.OrderId));
         await Task.CompletedTask;
     }
 }

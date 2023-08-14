@@ -3,10 +3,12 @@ namespace Bazaar.Basket.Repositories;
 public class BasketRepository : IBasketRepository
 {
     private readonly BasketDbContext _context;
+    private readonly IEventBus _eventBus;
 
-    public BasketRepository(BasketDbContext context)
+    public BasketRepository(BasketDbContext context, IEventBus eventBus)
     {
         _context = context;
+        _eventBus = eventBus;
     }
 
     public BuyerBasket GetBasketOrCreateIfNotExist(string buyerId)
@@ -101,5 +103,25 @@ public class BasketRepository : IBasketRepository
             return IRemoveItemFromBasketResult.OtherExceptionError(ex.Message);
         }
         return IRemoveItemFromBasketResult.Success(basket);
+    }
+
+    public async Task<ICheckoutResult> Checkout(BasketCheckout checkout)
+    {
+        var basket = GetBasketOrCreateIfNotExist(checkout.BuyerId);
+        if (!basket.Items.Any())
+        {
+            return ICheckoutResult.BasketHasNoItemsError;
+        }
+
+        var checkoutEvent = new BuyerCheckoutAcceptedIntegrationEvent(
+            checkout.City, checkout.Country, checkout.ZipCode, checkout.ShippingAddress,
+            checkout.CardNumber, checkout.CardHolderName, checkout.CardExpiration, checkout.CardSecurityNumber,
+            checkout.BuyerId, basket);
+        _eventBus.Publish(checkoutEvent);
+
+        basket.Items.Clear();
+        await _context.SaveChangesAsync();
+
+        return ICheckoutResult.Success(basket);
     }
 }

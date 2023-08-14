@@ -82,6 +82,7 @@
           "Quantity": 2
         }
       ],
+      "ShippingAddress": "308 Negra Arroyo Lane, Albuquerque, New Mexico, United States",
       "Status": "Shipping"
     },
     {
@@ -94,6 +95,7 @@
           "Quantity": 4
         }
       ],
+      "ShippingAddress": "1600 Pennsylvania Avenue, NW Washington D.C., United States",
       "Status": "AwaitingSellerConfirmation"
     }
   ],

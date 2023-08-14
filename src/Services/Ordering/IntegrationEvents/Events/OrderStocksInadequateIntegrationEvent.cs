@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Catalog.Core.IntegrationEvents;
+﻿namespace Bazaar.Ordering.IntegrationEvents.Events;
 
 public record OrderStocksInadequateIntegrationEvent(int OrderId, IEnumerable<OrderStockInadequateItem> OrderStockInadequateItems) : IntegrationEvent;
 
