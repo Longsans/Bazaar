@@ -11,7 +11,6 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
     //options.UseSqlServer("Server=localhost\\MSSQLSERVER01;Database=Bazaar;Trusted_Connection=True;TrustServerCertificate=True;");
 });
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
-builder.Services.AddScoped<ITransactionManager, EfCoreTransactionManager>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 builder.Services.RegisterEventBus(builder.Configuration);
 #endregion
