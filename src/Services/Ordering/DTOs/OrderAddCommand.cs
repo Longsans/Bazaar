@@ -1,9 +1,9 @@
 namespace Bazaar.Ordering.DTOs;
 
-public class OrderWriteCommand
+public class OrderAddCommand
 {
     public string BuyerId { get; set; }
-    public List<OrderItemWriteCommand> Items { get; set; } = new();
+    public List<OrderItemAddCommand> Items { get; set; } = new();
     public string ShippingAddress { get; set; }
 
     public Order ToOrder() => new()

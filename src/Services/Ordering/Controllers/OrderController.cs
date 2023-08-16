@@ -29,7 +29,7 @@ namespace Bazaar.Ordering.Adapters.Controllers
         }
 
         [HttpPost]
-        public ActionResult<OrderQuery> CreateOrder(OrderWriteCommand command)
+        public ActionResult<OrderQuery> CreateOrder(OrderAddCommand command)
         {
             var createResult = _orderRepo.Create(command.ToOrder());
             if (createResult is OrderHasNoItemsError)
