@@ -24,6 +24,13 @@ services:
     ports:
       - 8080:8080
 
+  identity-sql:
+    environment:
+      - SA_PASSWORD=P@ssw0rd
+      - ACCEPT_EULA=Y
+    ports:
+      - "5438:1433"
+
   catalog-sql:
     environment:
       - SA_PASSWORD=P@ssw0rd
@@ -70,6 +77,17 @@ services:
     ports:
       - "5210:80"
 
+  identity-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionString=Server=identity-sql;Database=BazaarIdentity;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    ports:
+      - "5252:80"
+  
   catalog-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -139,3 +157,19 @@ services:
       - EventBusConnection=rabbitmq
     ports:
       - "5250:80"
+
+  webshopping:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - IdentityUrl=http://host.docker.internal:5252
+    ports:
+      - "5002:80"
+
+  webseller:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - IdentityUrl=http://host.docker.internal:5252
+    ports:
+      - "5004:80"
