@@ -26,7 +26,7 @@ public static class Config
             },
         };
 
-    public static IEnumerable<Client> Clients =>
+    public static IEnumerable<Client> Clients(IConfiguration config) =>
         new Client[]
         {
             new()
@@ -59,8 +59,8 @@ public static class Config
                     "ordering",
                 },
                 AllowOfflineAccess = true,
-                RedirectUris = { "https://localhost:7265/signin-oidc" },
-                PostLogoutRedirectUris = { "https://localhost:7265/signout-callback-oidc" }
+                RedirectUris = { $"{config["WebSellerRedirectUrl"]}/signin-oidc" },
+                PostLogoutRedirectUris = { $"{config["WebSellerRedirectUrl"]}/signout-callback-oidc" }
             }
         };
 }

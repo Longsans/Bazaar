@@ -5,9 +5,9 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "basket",
           "catalog",
-          "webbff"
+          "id",
+          "websell"
         ]
       }
     }

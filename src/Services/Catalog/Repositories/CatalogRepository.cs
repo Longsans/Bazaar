@@ -9,6 +9,11 @@ public class CatalogRepository : ICatalogRepository
         _context = context;
     }
 
+    public IQueryable<CatalogItem> GetItems()
+    {
+        return _context.CatalogItems;
+    }
+
     public CatalogItem? GetItemById(int id)
     {
         return _context.CatalogItems.Find(id);

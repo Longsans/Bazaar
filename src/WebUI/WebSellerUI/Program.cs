@@ -26,7 +26,9 @@ builder.Services.AddAuthentication(options =>
     .AddCookie("Cookie")
     .AddOpenIdConnect("oidc", options =>
     {
-        options.Authority = builder.Configuration["IdentityUrl"];
+        options.RequireHttpsMetadata = false;
+
+        options.Authority = builder.Configuration["IdentityApi"];
         options.ClientId = builder.Configuration["ClientId"];
         options.ClientSecret = builder.Configuration["ClientSecret"];
         options.ResponseType = "code";
@@ -42,6 +44,10 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient<CatalogService>(
+    client => client.BaseAddress = new Uri(builder.Configuration["CatalogUri"]));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -51,7 +57,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseIdentityServerBrowserAddresses();
+
 app.UseCors();
 app.UseStaticFiles();
 app.UseRouting();
@@ -59,11 +66,13 @@ app.UseAuthentication();
 
 app.UseBff();
 app.UseAuthorization();
+
 app.MapBffManagementEndpoints();
 
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller}/{action=Index}/{id?}");
+        name: "default",
+        pattern: "{controller}/{action=Index}/{id?}")
+    .RequireAuthorization();
 
 app.MapFallbackToFile("index.html");
 

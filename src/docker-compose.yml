@@ -10,6 +10,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
     profiles:
+      - catalog
       - ordering
       - basket
       - all
@@ -172,7 +173,7 @@ services:
       dockerfile: WebUI/WebSellerUI/Dockerfile
     depends_on:
       - catalog-api
-      - ordering-api
+      # - ordering-api
     profiles:
       - websell
       - all

@@ -2,6 +2,7 @@ namespace Bazaar.Catalog.Core.Usecases;
 
 public interface ICatalogRepository
 {
+    IQueryable<CatalogItem> GetItems();
     CatalogItem? GetItemById(int id);
     CatalogItem? GetItemByProductId(string externalId);
     IQueryable<CatalogItem> GetManyByProductId(IEnumerable<string> productIds);

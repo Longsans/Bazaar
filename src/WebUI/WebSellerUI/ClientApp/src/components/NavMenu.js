@@ -18,6 +18,10 @@ export function NavMenu() {
     setNavbarCollapsed(!navbarCollapsed);
   }
 
+  function getBffUri(path) {
+    return `http://localhost:${process.env.REACT_APP_BFF_PORT}${path}`;
+  }
+
   useEffect(() => {
     const getSession = async () => {
       var req = new Request("bff/user", {
@@ -28,6 +32,7 @@ export function NavMenu() {
 
       var resp = await fetch(req);
       if (resp.ok) {
+        console.log(resp);
         var claims = await resp.json();
         let logoutPath = "/bff/logout";
         if (claims) {
@@ -35,7 +40,7 @@ export function NavMenu() {
             (claim) => claim.type === "bff:logout_url"
           ).value;
         }
-        setLogoutUrl(`https://localhost:${process.env.REACT_APP_BFF_HTTPS_PORT}${logoutPath}`);
+        setLogoutUrl(getBffUri(logoutPath));
       } else {
         throw Error(
           `Session responded with error: ${resp.status} ${resp.statusText}`
@@ -44,10 +49,6 @@ export function NavMenu() {
     };
     getSession();
   }, []);
-
-  useEffect(() => {
-    console.log(logoutUrl);
-  }, [logoutUrl]);
 
   return (
     <header>
@@ -72,15 +73,15 @@ export function NavMenu() {
               </NavLink>
             </NavItem>
             <NavItem>
-              <NavLink tag={Link} className="text-dark" to="/fetch-data">
-                Fetch data
+              <NavLink tag={Link} className="text-dark" to="/catalog">
+                Catalog
               </NavLink>
             </NavItem>
             <NavItem>
               <NavLink
                 tag={Link}
                 className="text-dark"
-                to={`https://localhost:${process.env.REACT_APP_BFF_HTTPS_PORT}/bff/login`}
+                to={getBffUri(`/bff/login`)}
               >
                 Login
               </NavLink>

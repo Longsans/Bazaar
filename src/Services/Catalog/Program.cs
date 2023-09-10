@@ -13,6 +13,30 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 builder.Services.RegisterEventBus(builder.Configuration);
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = builder.Configuration["IdentityUrl"];
+        options.Audience = "catalog";
+        options.RequireHttpsMetadata = false;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("HasReadScope", policy =>
+    {
+        policy
+            .RequireAuthenticatedUser();
+        //.RequireClaim("scope", "catalog.read");
+    });
+
+    options.AddPolicy("HasModifyScope", policy =>
+    {
+        policy.RequireAuthenticatedUser()
+            .RequireClaim("scope", "catalog.modify");
+    });
+});
 #endregion
 
 builder.Services.AddControllers();
@@ -25,6 +49,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

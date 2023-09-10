@@ -13,7 +13,14 @@ namespace Bazaar.Catalog.Controllers
             _catalogRepo = catalogRepo;
         }
 
+        [HttpGet("all")]
+        public ActionResult<IEnumerable<CatalogItem>> GetAll()
+        {
+            return _catalogRepo.GetItems().ToList();
+        }
+
         [HttpGet("{id}")]
+        [Authorize(Policy = "HasReadScope")]
         public IActionResult GetById(int id)
         {
             var item = _catalogRepo.GetItemById(id);
@@ -23,6 +30,7 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "HasReadScope")]
         public ActionResult<CatalogItem> GetByProductId([FromQuery] string productId)
         {
             var item = _catalogRepo.GetItemByProductId(productId);
@@ -34,6 +42,7 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "HasModifyScope")]
         public IActionResult Create(CatalogItem item)
         {
             var createdItem = _catalogRepo.Create(item);
@@ -41,6 +50,7 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpPut]
+        [Authorize(Policy = "HasModifyScope")]
         public IActionResult Update(CatalogItem update)
         {
             if (!_catalogRepo.Update(update))

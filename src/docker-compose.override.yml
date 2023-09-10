@@ -82,11 +82,14 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - ConnectionString=Server=identity-sql;Database=BazaarIdentity;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - WebSellerRedirectUrl=http://localhost:5004
+      - WebShoppingRedirectUrl=http://localhost:5002
+      - IdentityIssuer=http://localhost:5252
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     ports:
-      - "5252:80"
+      - ${IDENTITY_PORT}:80
   
   catalog-api:
     environment:
@@ -95,6 +98,7 @@ services:
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/Data/data.json
       - ConnectionString=Server=catalog-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - IdentityUrl=http://identity-api
     volumes:
       - ./Data:/root/Data
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
@@ -162,7 +166,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - IdentityUrl=http://host.docker.internal:5252
+      - ClientId=webshopping
+      - ClientSecret=webshoppingsecret 
     ports:
       - "5002:80"
 
@@ -170,6 +175,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - IdentityUrl=http://host.docker.internal:5252
+      - REACT_APP_HTTPS_PORT=5004
+      - IdentityApi=http://identity-api
+      - IdentityRewriteUrl=http://localhost:5252
+      - ClientId=webseller
+      - ClientSecret=websellersecret
+      - CatalogUri=http://catalog-api/api/catalog
     ports:
       - "5004:80"
