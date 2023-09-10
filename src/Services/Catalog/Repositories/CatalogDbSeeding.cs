@@ -6,6 +6,7 @@
 
         public static async Task Seed(this CatalogDbContext context, IServiceProvider sp)
         {
+            context.Database.EnsureDeleted();
             await context.Database.MigrateAsync();
 
             if (context.CatalogItems.Any())

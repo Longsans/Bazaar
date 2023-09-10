@@ -19,12 +19,23 @@ export function NavMenu() {
   }
 
   function getBffUri(path) {
-    return `http://localhost:${process.env.REACT_APP_BFF_PORT}${path}`;
+    return process.env.NODE_ENV === "development"
+      ? `http://localhost:${process.env.REACT_APP_BFF_PORT}${path}`
+      : path;
+  }
+
+  function refreshPage() {
+    setTimeout(
+      () => {
+        window.location.reload();
+      },
+      process.env.NODE_ENV === "development" ? 1500 : 500
+    );
   }
 
   useEffect(() => {
     const getSession = async () => {
-      var req = new Request("bff/user", {
+      var req = new Request("/bff/user", {
         headers: new Headers({
           "X-CSRF": "1",
         }),
@@ -32,7 +43,6 @@ export function NavMenu() {
 
       var resp = await fetch(req);
       if (resp.ok) {
-        console.log(resp);
         var claims = await resp.json();
         let logoutPath = "/bff/logout";
         if (claims) {
@@ -72,27 +82,37 @@ export function NavMenu() {
                 Home
               </NavLink>
             </NavItem>
-            <NavItem>
-              <NavLink tag={Link} className="text-dark" to="/catalog">
-                Catalog
-              </NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink
-                tag={Link}
-                className="text-dark"
-                to={getBffUri(`/bff/login`)}
-              >
-                Login
-              </NavLink>
-            </NavItem>
-            {logoutUrl &&
+            {logoutUrl && (
               <NavItem>
-                <NavLink tag={Link} className="text-dark" to={logoutUrl}>
+                <NavLink tag={Link} className="text-dark" to="/catalog">
+                  Catalog
+                </NavLink>
+              </NavItem>
+            )}
+            {!logoutUrl && (
+              <NavItem>
+                <NavLink
+                  tag={Link}
+                  className="text-dark"
+                  to={getBffUri(`/bff/login`)}
+                  onClick={refreshPage}
+                >
+                  Login
+                </NavLink>
+              </NavItem>
+            )}
+            {logoutUrl && (
+              <NavItem>
+                <NavLink
+                  tag={Link}
+                  className="text-dark"
+                  to={logoutUrl}
+                  onClick={refreshPage}
+                >
                   Logout
                 </NavLink>
               </NavItem>
-            }
+            )}
           </ul>
         </Collapse>
       </Navbar>

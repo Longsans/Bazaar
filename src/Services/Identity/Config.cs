@@ -59,8 +59,14 @@ public static class Config
                     "ordering",
                 },
                 AllowOfflineAccess = true,
-                RedirectUris = { $"{config["WebSellerRedirectUrl"]}/signin-oidc" },
-                PostLogoutRedirectUris = { $"{config["WebSellerRedirectUrl"]}/signout-callback-oidc" }
+                RedirectUris =
+                {
+                    $"{(config["WebSellerRedirectUrl"])}/signin-oidc"
+                },
+                PostLogoutRedirectUris =
+                {
+                    $"{(config["WebSellerRedirectUrl"])}/signout-callback-oidc"
+                }
             }
         };
 }

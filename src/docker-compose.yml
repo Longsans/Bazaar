@@ -69,7 +69,7 @@ services:
       - all
 
   identity-api:
-    image: ${DOCKER_REGISTRY-}catalog-api
+    image: ${DOCKER_REGISTRY-}identity-api
     build:
       context: .
       dockerfile: Services/Identity/Dockerfile

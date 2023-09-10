@@ -83,8 +83,9 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - ConnectionString=Server=identity-sql;Database=BazaarIdentity;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - WebSellerRedirectUrl=http://localhost:5004
-      - WebShoppingRedirectUrl=http://localhost:5002
-      - IdentityIssuer=http://localhost:5252
+      - WebSellerClientUrl=http://localhost:44446
+      # - WebShoppingRedirectUrl=http://localhost:5002
+      # - WebShoppingClientUrl=http://localhost:44448
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro

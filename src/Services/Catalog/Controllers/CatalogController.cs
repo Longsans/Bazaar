@@ -14,6 +14,7 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpGet("all")]
+        [Authorize(Policy = "HasReadScope")]
         public ActionResult<IEnumerable<CatalogItem>> GetAll()
         {
             return _catalogRepo.GetItems().ToList();

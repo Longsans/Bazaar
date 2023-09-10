@@ -8,7 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CatalogDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
-    //options.UseSqlServer("Server=localhost\\MSSQLSERVER01;Database=Bazaar;Trusted_Connection=True;TrustServerCertificate=True;");
 });
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
@@ -27,8 +26,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("HasReadScope", policy =>
     {
         policy
-            .RequireAuthenticatedUser();
-        //.RequireClaim("scope", "catalog.read");
+            .RequireAuthenticatedUser()
+            .RequireClaim("scope", "catalog.read");
     });
 
     options.AddPolicy("HasModifyScope", policy =>
