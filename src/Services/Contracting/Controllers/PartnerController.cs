@@ -24,9 +24,14 @@ public class PartnerController : ControllerBase
         return new PartnerQuery(partner);
     }
 
-    [HttpGet("/api/partners-by-eid/{externalId}")]
-    public ActionResult<PartnerQuery> GetByExternalId(string externalId)
+    [HttpGet]
+    public ActionResult<PartnerQuery> GetByExternalId([FromQuery] string externalId)
     {
+        if (string.IsNullOrWhiteSpace(externalId))
+        {
+            return BadRequest("Partner External ID must be specified.");
+        }
+
         var partner = _partnerRepo.GetByExternalId(externalId);
         if (partner == null)
         {

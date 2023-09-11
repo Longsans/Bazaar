@@ -22,4 +22,10 @@ public class HttpService
             _httpClient.SetBearerToken(token);
         }
     }
+
+    protected async Task<T?> DeserializeResponse<T>(HttpResponseMessage response)
+    {
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<T>(content);
+    }
 }

@@ -94,6 +94,11 @@ export function NavMenu() {
                     Orders
                   </NavLink>
                 </NavItem>
+                <NavItem>
+                  <NavLink tag={Link} className="text-dark" to="/contracts">
+                    Contracts
+                  </NavLink>
+                </NavItem>
               </>
             )}
             {!logoutUrl && (

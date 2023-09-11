@@ -37,6 +37,7 @@ builder.Services.AddAuthentication(options =>
         options.Scope.Add("catalog.read");
         options.Scope.Add("catalog.modify");
         options.Scope.Add("ordering");
+        options.Scope.Add("contracting");
 
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;
@@ -47,6 +48,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<CatalogService>();
 builder.Services.AddHttpClient<OrderingService>();
+builder.Services.AddHttpClient<ContractingService>();
+builder.Services.AddScoped<AddressService>();
 
 var app = builder.Build();
 

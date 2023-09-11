@@ -2,26 +2,30 @@
 
 public class OrderingService : HttpService
 {
-    private readonly string ORDERING_API;
+    private readonly AddressService _addressService;
 
-    public OrderingService(HttpClient httpClient, IConfiguration config, IHttpContextAccessor contextAccessor)
+    public OrderingService(
+        HttpClient httpClient, IHttpContextAccessor contextAccessor, AddressService addressService)
         : base(httpClient, contextAccessor)
     {
-        ORDERING_API = config["OrderingApi"]!;
+        _addressService = addressService;
     }
 
-    public async Task<IEnumerable<Order>> GetByProductIds(string productIds)
+    public async Task<IEnumerable<Order>?> GetByProductIds(string productIds)
     {
         await SetAccessToken();
-        var response = await _httpClient.GetAsync(GetOrdersUri(productIds)) ?? throw new Exception("Response null.");
+        var response = await _httpClient.GetAsync(_addressService.OrdersWithProductIds(productIds)) ??
+            throw new Exception("Response null.");
+
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception("Get by product ID unsuccessful.");
+            return response.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => null,
+                _ => throw new Exception($"Response unsuccessful: {response.StatusCode}")
+            };
         }
 
-        var content = await response.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<IEnumerable<Order>>(content);
+        return await DeserializeResponse<IEnumerable<Order>>(response);
     }
-
-    private string GetOrdersUri(string productId) => $"{ORDERING_API}/api/orders?productId={productId}";
 }

@@ -8,7 +8,8 @@
           "catalog",
           "id",
           "websell",
-          "ordering"
+          "ordering",
+          "contracting"
         ]
       }
     }

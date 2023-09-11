@@ -24,6 +24,10 @@ public static class Config
             {
                 Scopes = { "ordering" }
             },
+            new("contracting", "Contracting API")
+            {
+                Scopes = { "contracting" }
+            },
         };
 
     public static IEnumerable<Client> Clients(IConfiguration config) =>
@@ -64,6 +68,7 @@ public static class Config
                     "catalog.read",
                     "catalog.modify",
                     "ordering",
+                    "contracting",
                 },
                 AllowOfflineAccess = true,
                 RedirectUris =

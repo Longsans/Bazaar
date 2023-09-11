@@ -125,6 +125,7 @@ services:
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/Data/data.json
       - ConnectionString=Server=contracting-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - IdentityApi=http://identity-api
     volumes:
       - ./Data:/root/Data
     ports:
@@ -184,5 +185,6 @@ services:
       - ClientSecret=websellersecret
       - CatalogApi=http://catalog-api
       - OrderingApi=http://ordering-api
+      - ContractingApi=http://contracting-api
     ports:
       - "5004:80"

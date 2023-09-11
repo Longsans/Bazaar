@@ -16,19 +16,15 @@ namespace WebSellerUI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CatalogItem>>> Get([FromQuery] string sellerId)
         {
-            IEnumerable<CatalogItem>? catalogItems;
-
-            if (!string.IsNullOrWhiteSpace(sellerId))
+            if (string.IsNullOrWhiteSpace(sellerId))
             {
-                catalogItems = await _catalogSvc.GetBySellerId(sellerId);
+                return BadRequest("Seller ID must be specified.");
             }
-            else
+
+            var catalogItems = await _catalogSvc.GetBySellerId(sellerId);
+            if (catalogItems == null)
             {
-                catalogItems = await _catalogSvc.GetAllItems();
-                if (catalogItems == null)
-                {
-                    return Unauthorized();
-                }
+                return Unauthorized();
             }
             return Ok(catalogItems);
         }
