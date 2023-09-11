@@ -13,13 +13,6 @@ namespace Bazaar.Catalog.Controllers
             _catalogRepo = catalogRepo;
         }
 
-        [HttpGet("all")]
-        [Authorize(Policy = "HasReadScope")]
-        public ActionResult<IEnumerable<CatalogItem>> GetAll()
-        {
-            return _catalogRepo.GetItems().ToList();
-        }
-
         [HttpGet("{id}")]
         [Authorize(Policy = "HasReadScope")]
         public IActionResult GetById(int id)
@@ -32,14 +25,40 @@ namespace Bazaar.Catalog.Controllers
 
         [HttpGet]
         [Authorize(Policy = "HasReadScope")]
-        public ActionResult<CatalogItem> GetByProductId([FromQuery] string productId)
+        public ActionResult<IEnumerable<CatalogItem>> GetByProductIds(
+            [FromQuery] string? productId = null, [FromQuery] string? sellerId = null)
         {
-            var item = _catalogRepo.GetItemByProductId(productId);
-            if (item == null)
+            if (string.IsNullOrWhiteSpace(productId) && string.IsNullOrWhiteSpace(sellerId) ||
+                !string.IsNullOrWhiteSpace(productId) && !string.IsNullOrWhiteSpace(sellerId))
             {
-                return NotFound();
+                return BadRequest("Exactly one of the following parameters must be specified: productId, sellerId.");
             }
-            return item;
+
+            var items = new List<CatalogItem>();
+            if (string.IsNullOrWhiteSpace(productId))
+            {
+                var sellerIds = sellerId.Split(',');
+
+                foreach (var id in sellerIds)
+                {
+                    items.AddRange(_catalogRepo.GetBySellerId(id));
+                }
+            }
+            else
+            {
+                var productIds = productId.Split(',');
+
+                foreach (var id in productIds)
+                {
+                    var item = _catalogRepo.GetItemByProductId(id);
+                    if (item == null)
+                    {
+                        return NotFound(new { productId = id, error = "Product not found." });
+                    }
+                    items.Add(item);
+                }
+            }
+            return items;
         }
 
         [HttpPost]

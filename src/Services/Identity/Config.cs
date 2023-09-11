@@ -43,7 +43,14 @@ public static class Config
                     "ordering",
                 },
                 AllowOfflineAccess = true,
-                RedirectUris = { "https://localhost:44434/signin-oidc" }
+                RedirectUris =
+                {
+                    $"{config["WebShoppingRedirectUrl"]}/signin-oidc"
+                },
+                PostLogoutRedirectUris =
+                {
+                    $"{config["WebShoppingRedirectUrl"]}/signout-callback-oidc"
+                }
             },
             new()
             {
@@ -61,11 +68,11 @@ public static class Config
                 AllowOfflineAccess = true,
                 RedirectUris =
                 {
-                    $"{(config["WebSellerRedirectUrl"])}/signin-oidc"
+                    $"{config["WebSellerRedirectUrl"]}/signin-oidc"
                 },
                 PostLogoutRedirectUris =
                 {
-                    $"{(config["WebSellerRedirectUrl"])}/signout-callback-oidc"
+                    $"{config["WebSellerRedirectUrl"]}/signout-callback-oidc"
                 }
             }
         };

@@ -7,7 +7,8 @@
         "includes": [
           "catalog",
           "id",
-          "websell"
+          "websell",
+          "ordering"
         ]
       }
     }

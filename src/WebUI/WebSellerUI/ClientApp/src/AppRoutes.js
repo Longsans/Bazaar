@@ -2,6 +2,7 @@ import { Catalog } from "./components/Catalog";
 import { Home } from "./components/Home";
 import { Login } from "./components/Login";
 import { Logout } from "./components/Logout";
+import { Orders } from "./components/Orders";
 
 const AppRoutes = [
   {
@@ -11,6 +12,10 @@ const AppRoutes = [
   {
     path: "/catalog",
     element: <Catalog />,
+  },
+  {
+    path: "/orders",
+    element: <Orders />,
   },
   {
     path: "/bff/login",

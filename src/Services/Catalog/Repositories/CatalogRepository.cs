@@ -24,9 +24,9 @@ public class CatalogRepository : ICatalogRepository
         return _context.CatalogItems.FirstOrDefault(item => item.ProductId == productId);
     }
 
-    public IQueryable<CatalogItem> GetManyByProductId(IEnumerable<string> productIds)
+    public IQueryable<CatalogItem> GetBySellerId(string sellerId)
     {
-        return _context.CatalogItems.Where(item => productIds.Contains(item.ProductId));
+        return _context.CatalogItems.Where(item => item.SellerId == sellerId);
     }
 
     public CatalogItem Create(CatalogItem item)

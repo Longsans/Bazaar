@@ -45,8 +45,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpClient<CatalogService>(
-    client => client.BaseAddress = new Uri(builder.Configuration["CatalogUri"]));
+builder.Services.AddHttpClient<CatalogService>();
+builder.Services.AddHttpClient<OrderingService>();
 
 var app = builder.Build();
 

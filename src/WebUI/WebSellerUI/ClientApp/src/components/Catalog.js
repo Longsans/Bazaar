@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 
-export function Catalog(props) {
+export function Catalog() {
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getCatalogAsync = async () => {
-      const response = await fetch("api/catalog");
+      const response = await fetch("api/catalog?sellerId=PNER-1");
       const data = await response.json();
       setCatalog(data);
     };
@@ -14,14 +14,13 @@ export function Catalog(props) {
   }, []);
 
   useEffect(() => {
-    if (catalog.length) setLoading(false);
-    else setLoading(true);
+    setLoading(!catalog.length);
   }, [catalog]);
 
   return (
     <div>
       <h1 id="tableLabel">Product catalog</h1>
-      <p>This component demonstrates fetching data from a remote API.</p>
+      <p>These are the products your have posted on your shop's catalog.</p>
       {loading ? (
         <p>
           <em>Loading...</em>

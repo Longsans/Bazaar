@@ -16,7 +16,7 @@ builder.Services.RegisterEventBus(builder.Configuration);
 builder.Services.AddAuthentication()
     .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = builder.Configuration["IdentityUrl"];
+        options.Authority = builder.Configuration["IdentityApi"];
         options.Audience = "catalog";
         options.RequireHttpsMetadata = false;
     });

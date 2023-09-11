@@ -83,11 +83,18 @@ export function NavMenu() {
               </NavLink>
             </NavItem>
             {logoutUrl && (
-              <NavItem>
-                <NavLink tag={Link} className="text-dark" to="/catalog">
-                  Catalog
-                </NavLink>
-              </NavItem>
+              <>
+                <NavItem>
+                  <NavLink tag={Link} className="text-dark" to="/catalog">
+                    Catalog
+                  </NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink tag={Link} className="text-dark" to="/orders">
+                    Orders
+                  </NavLink>
+                </NavItem>
+              </>
             )}
             {!logoutUrl && (
               <NavItem>

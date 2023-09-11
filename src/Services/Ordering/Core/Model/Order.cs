@@ -3,10 +3,10 @@ namespace Bazaar.Ordering.Core.Model;
 public class Order
 {
     public int Id { get; set; }
-    public string BuyerId { get; set; }
     public List<OrderItem> Items { get; set; } = new();
     public decimal Total { get; set; }
     public string ShippingAddress { get; set; }
+    public string BuyerId { get; set; }
     public OrderStatus Status { get; set; }
 
     #region Domain logic
@@ -19,11 +19,11 @@ public class Order
 
 public enum OrderStatus
 {
-    AwaitingValidation,
-    ProcessingPayment,
-    AwaitingSellerConfirmation,
-    Shipping,
-    Shipped,
-    Cancelled,
-    Postponed,
+    AwaitingValidation = 1,
+    ProcessingPayment = 2,
+    AwaitingSellerConfirmation = 4,
+    Shipping = 8,
+    Shipped = 16,
+    Cancelled = 32,
+    Postponed = 64,
 }

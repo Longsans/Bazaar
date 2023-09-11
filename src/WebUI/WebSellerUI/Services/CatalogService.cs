@@ -1,26 +1,39 @@
-﻿using IdentityModel.Client;
-using Microsoft.AspNetCore.Authentication;
-using System.Net;
+﻿using System.Net;
 
 namespace WebSellerUI.Services;
 
-public class CatalogService
+public class CatalogService : HttpService
 {
-    private readonly string CATALOG_URI;
-    private readonly HttpClient _httpClient;
-    private readonly IHttpContextAccessor _ctxAccessor;
+    private readonly string CATALOG_API;
 
     public CatalogService(HttpClient httpClient, IConfiguration config, IHttpContextAccessor contextAccessor)
+        : base(httpClient, contextAccessor)
     {
-        _httpClient = httpClient;
-        CATALOG_URI = config["CatalogUri"]!;
-        _ctxAccessor = contextAccessor;
+        CATALOG_API = config["CatalogApi"]!;
+    }
+
+    public async Task<IEnumerable<CatalogItem>?> GetBySellerId(string sellerId)
+    {
+        await SetAccessToken();
+        var response = await _httpClient.GetAsync(GetBySellerIdUri(sellerId)) ??
+                throw new Exception("Get by seller ID response null.");
+        if (!response.IsSuccessStatusCode)
+        {
+            return response.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => null,
+                _ => throw new Exception("Get by seller ID threw exception.")
+            };
+        }
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<IEnumerable<CatalogItem>>(content);
     }
 
     public async Task<IEnumerable<CatalogItem>?> GetAllItems()
     {
         await SetAccessToken();
-        var response = await _httpClient.GetAsync($"{CATALOG_URI}/all") ?? throw new Exception("Get catalog response null.");
+        var response = await _httpClient.GetAsync(CatalogUri) ?? throw new Exception("Get catalog response null.");
         if (!response.IsSuccessStatusCode)
         {
             return response.StatusCode switch
@@ -31,7 +44,7 @@ public class CatalogService
         }
 
         var content = await response.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<IEnumerable<CatalogItem>>(content).ToList();
+        return JsonConvert.DeserializeObject<IEnumerable<CatalogItem>>(content);
     }
 
     public async Task Update(CatalogItem update)
@@ -40,19 +53,13 @@ public class CatalogService
         var reqContent = new StringContent(
                 JsonConvert.SerializeObject(update), System.Text.Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PutAsync($"{CATALOG_URI}", reqContent) ?? throw new Exception("Get catalog response null.");
+        var response = await _httpClient.PutAsync(CatalogUri, reqContent) ?? throw new Exception("Get catalog response null.");
         if (!response.IsSuccessStatusCode)
         {
             throw new Exception($"Reponse indicated error: {response.StatusCode}");
         }
     }
 
-    public async Task SetAccessToken()
-    {
-        var token = await _ctxAccessor.HttpContext.GetTokenAsync("access_token");
-        if (token != null)
-        {
-            _httpClient.SetBearerToken(token);
-        }
-    }
+    private string GetBySellerIdUri(string sellerId) => $"{CATALOG_API}/api/catalog?sellerId={sellerId}";
+    private string CatalogUri => $"{CATALOG_API}/api/orders";
 }
