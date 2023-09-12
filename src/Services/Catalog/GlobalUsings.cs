@@ -7,4 +7,5 @@ global using Bazaar.Catalog.Core.Usecases;
 global using Bazaar.Catalog.IntegrationEvents.EventHandling;
 global using Bazaar.Catalog.IntegrationEvents.Events;
 global using Bazaar.Catalog.Repositories;
+global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.EntityFrameworkCore;

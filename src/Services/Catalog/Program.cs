@@ -8,11 +8,34 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CatalogDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
-    //options.UseSqlServer("Server=localhost\\MSSQLSERVER01;Database=Bazaar;Trusted_Connection=True;TrustServerCertificate=True;");
 });
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 builder.Services.RegisterEventBus(builder.Configuration);
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = builder.Configuration["IdentityApi"];
+        options.Audience = "catalog";
+        options.RequireHttpsMetadata = false;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("HasReadScope", policy =>
+    {
+        policy
+            .RequireAuthenticatedUser()
+            .RequireClaim("scope", "catalog.read");
+    });
+
+    options.AddPolicy("HasModifyScope", policy =>
+    {
+        policy.RequireAuthenticatedUser()
+            .RequireClaim("scope", "catalog.modify");
+    });
+});
 #endregion
 
 builder.Services.AddControllers();
@@ -22,9 +45,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

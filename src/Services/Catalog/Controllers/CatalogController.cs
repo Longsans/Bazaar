@@ -14,6 +14,7 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "HasReadScope")]
         public IActionResult GetById(int id)
         {
             var item = _catalogRepo.GetItemById(id);
@@ -23,17 +24,45 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpGet]
-        public ActionResult<CatalogItem> GetByProductId([FromQuery] string productId)
+        [Authorize(Policy = "HasReadScope")]
+        public ActionResult<IEnumerable<CatalogItem>> GetByProductIds(
+            [FromQuery] string? productId = null, [FromQuery] string? sellerId = null)
         {
-            var item = _catalogRepo.GetItemByProductId(productId);
-            if (item == null)
+            if (string.IsNullOrWhiteSpace(productId) && string.IsNullOrWhiteSpace(sellerId) ||
+                !string.IsNullOrWhiteSpace(productId) && !string.IsNullOrWhiteSpace(sellerId))
             {
-                return NotFound();
+                return BadRequest("Exactly one of the following parameters must be specified: productId, sellerId.");
             }
-            return item;
+
+            var items = new List<CatalogItem>();
+            if (string.IsNullOrWhiteSpace(productId))
+            {
+                var sellerIds = sellerId.Split(',');
+
+                foreach (var id in sellerIds)
+                {
+                    items.AddRange(_catalogRepo.GetBySellerId(id));
+                }
+            }
+            else
+            {
+                var productIds = productId.Split(',');
+
+                foreach (var id in productIds)
+                {
+                    var item = _catalogRepo.GetItemByProductId(id);
+                    if (item == null)
+                    {
+                        return NotFound(new { productId = id, error = "Product not found." });
+                    }
+                    items.Add(item);
+                }
+            }
+            return items;
         }
 
         [HttpPost]
+        [Authorize(Policy = "HasModifyScope")]
         public IActionResult Create(CatalogItem item)
         {
             var createdItem = _catalogRepo.Create(item);
@@ -41,6 +70,7 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpPut]
+        [Authorize(Policy = "HasModifyScope")]
         public IActionResult Update(CatalogItem update)
         {
             if (!_catalogRepo.Update(update))

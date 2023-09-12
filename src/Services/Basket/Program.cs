@@ -6,9 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<BasketDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
-    //options.UseSqlServer(
-    //    "Server=localhost,5434;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true");
-
     options.UseTriggers(triggerOptions =>
     {
         triggerOptions.AddTrigger<BasketItemChangeTrigger>();
@@ -17,6 +14,19 @@ builder.Services.AddDbContext<BasketDbContext>(options =>
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 builder.Services.RegisterEventBus(builder.Configuration);
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = builder.Configuration["IdentityApi"];
+        options.Audience = "basket";
+        options.RequireHttpsMetadata = false;
+    });
+builder.Services.AddAuthorization(builder =>
+{
+    builder.AddPolicy("HasBasketScope", policy =>
+        policy.RequireAuthenticatedUser().RequireClaim("scope", "basket"));
+});
 #endregion
 
 builder.Services.AddControllers();
@@ -33,9 +43,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllers().RequireAuthorization("HasBasketScope");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -43,7 +54,7 @@ using (var scope = app.Services.CreateScope())
     await dbContext.Seed(scope.ServiceProvider);
 }
 
-//app.ConfigureEventBus();
+app.ConfigureEventBus();
 
 await app.RunAsync();
 

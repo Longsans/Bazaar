@@ -6,12 +6,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ContractingDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
-    //options.UseSqlServer(
-    //    "Server=localhost,5437;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true");
 });
 builder.Services.AddScoped<IPartnerRepository, PartnerRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = builder.Configuration["IdentityApi"];
+        options.Audience = "contracting";
+        options.RequireHttpsMetadata = false;
+    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("HasContractingScope", policy =>
+        policy.RequireAuthenticatedUser().RequireClaim("scope", "contracting"));
+});
 #endregion
 
 builder.Services.AddControllers();
@@ -28,9 +39,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllers().RequireAuthorization("HasContractingScope");
 
 using (var scope = app.Services.CreateScope())
 {

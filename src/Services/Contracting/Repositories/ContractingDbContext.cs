@@ -23,7 +23,7 @@ public class ContractingDbContext : DbContext
 
             contract.ToTable(c =>
             {
-                c.HasCheckConstraint("CK_Contract_StartBeforeEndDate", "[StartDate] <= [EndDate]");
+                c.HasCheckConstraint("CK_Contract_StartBeforeEndDate", "[EndDate] IS NULL OR [StartDate] <= [EndDate]");
                 c.HasCheckConstraint("CK_Contract_StartDateFromToday", "[StartDate] >= CAST(GETDATE() as date)");
             });
         });

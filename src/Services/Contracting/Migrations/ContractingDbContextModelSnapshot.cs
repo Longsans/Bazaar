@@ -50,7 +50,7 @@ namespace Contracting.Migrations
 
                     b.ToTable("Contracts", t =>
                         {
-                            t.HasCheckConstraint("CK_Contract_StartBeforeEndDate", "[StartDate] <= [EndDate]");
+                            t.HasCheckConstraint("CK_Contract_StartBeforeEndDate", "[EndDate] IS NULL OR [StartDate] <= [EndDate]");
 
                             t.HasCheckConstraint("CK_Contract_StartDateFromToday", "[StartDate] >= CAST(GETDATE() as date)");
                         });

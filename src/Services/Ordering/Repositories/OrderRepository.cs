@@ -3,14 +3,10 @@ namespace Bazaar.Ordering.Repositories;
 public class OrderRepository : IOrderRepository
 {
     private readonly OrderingDbContext _context;
-    private readonly IEventBus _eventBus;
-    private readonly ILogger<OrderRepository> _logger;
 
-    public OrderRepository(OrderingDbContext context, IEventBus eventBus, ILogger<OrderRepository> logger)
+    public OrderRepository(OrderingDbContext context)
     {
         _context = context;
-        _eventBus = eventBus;
-        _logger = logger;
     }
 
     public Order? GetById(int id)
@@ -18,6 +14,13 @@ public class OrderRepository : IOrderRepository
         return _context.Orders
             .Include(o => o.Items)
             .FirstOrDefault(o => o.Id == id);
+    }
+
+    public IEnumerable<Order> GetByProductId(string productId, OrderStatus status = 0)
+    {
+        return _context.Orders
+            .Include(o => o.Items)
+            .Where(o => o.Items.Any(item => item.ProductId == productId) && o.Status.HasFlag(status));
     }
 
     public IEnumerable<Order> GetAll()
