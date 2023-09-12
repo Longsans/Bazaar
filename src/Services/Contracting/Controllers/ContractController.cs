@@ -22,4 +22,18 @@ public class ContractController : ControllerBase
 
         return new ContractQuery(contract);
     }
+
+    [HttpGet]
+    public ActionResult<IEnumerable<ContractQuery>> GetByPartnerId([FromQuery] string partnerId)
+    {
+        if (string.IsNullOrWhiteSpace(partnerId))
+        {
+            return BadRequest("Partner ID must be specified.");
+        }
+
+        return _contractRepo
+                .GetByPartnerId(partnerId)
+                .Select(c => new ContractQuery(c))
+                .ToList();
+    }
 }

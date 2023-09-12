@@ -22,14 +22,30 @@ namespace Bazaar.Ordering.Adapters.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<OrderQuery>> GetAll()
+        public ActionResult<IEnumerable<OrderQuery>> GetAll([FromQuery] string? productId = null)
         {
-            var orders = _orderRepo.GetAll().Select(o => new OrderQuery(o));
-            return Ok(orders);
+            List<Order> orders = new();
+            if (productId != null)
+            {
+                var ids = productId.Split(',', StringSplitOptions.TrimEntries);
+                foreach (var id in ids)
+                {
+                    if (orders.Any(o => o.Items.Any(item => item.ProductId == id)))
+                    {
+                        continue;
+                    }
+                    orders.AddRange(_orderRepo.GetByProductId(id));
+                }
+            }
+            else
+            {
+                orders = _orderRepo.GetAll().ToList();
+            }
+            return Ok(orders.Select(o => new OrderQuery(o)));
         }
 
         [HttpPost]
-        public ActionResult<OrderQuery> CreateOrder(OrderWriteCommand command)
+        public ActionResult<OrderQuery> CreateOrder(OrderAddCommand command)
         {
             var createResult = _orderRepo.Create(command.ToOrder());
             if (createResult is OrderHasNoItemsError)

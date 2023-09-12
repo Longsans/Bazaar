@@ -72,8 +72,8 @@ namespace Ordering.Migrations
                     b.Property<decimal>("ProductUnitPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                    b.Property<long>("Quantity")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 

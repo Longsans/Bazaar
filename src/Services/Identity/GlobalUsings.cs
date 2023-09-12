@@ -1,0 +1,9 @@
+﻿global using Bazaar.Identity;
+global using Bazaar.Identity.Data;
+global using Bazaar.Identity.Model;
+global using Duende.IdentityServer;
+global using Duende.IdentityServer.Models;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore;
+global using Serilog;

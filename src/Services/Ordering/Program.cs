@@ -16,6 +16,19 @@ builder.Services.AddDbContext<OrderingDbContext>(options =>
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 builder.Services.RegisterEventBus(builder.Configuration);
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = builder.Configuration["IdentityApi"];
+        options.Audience = "ordering";
+        options.RequireHttpsMetadata = false;
+    });
+builder.Services.AddAuthorization(builder =>
+{
+    builder.AddPolicy("HasOrderingScope", policy =>
+        policy.RequireAuthenticatedUser().RequireClaim("scope", "ordering"));
+});
 #endregion
 
 builder.Services.AddControllers();
@@ -34,9 +47,10 @@ if (app.Environment.IsDevelopment())
 
 app.ConfigureEventBus();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllers().RequireAuthorization("HasOrderingScope");
 
 using (var scope = app.Services.CreateScope())
 {

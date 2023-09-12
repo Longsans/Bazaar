@@ -21,7 +21,7 @@ public class BuyerCheckoutAcceptedIntegrationEventHandler : IIntegrationEventHan
                 ProductId = item.ProductId,
                 ProductName = item.ProductName,
                 ProductUnitPrice = item.UnitPrice,
-                Quantity = (int)item.Quantity,
+                Quantity = item.Quantity,
             }).ToList(),
             ShippingAddress = string.Join(", ", @event.ShippingAddress, @event.City, @event.Country),
         };

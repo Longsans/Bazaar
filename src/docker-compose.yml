@@ -10,8 +10,15 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
     profiles:
+      - catalog
       - ordering
       - basket
+      - all
+  
+  identity-sql:
+   image: mcr.microsoft.com/mssql/server:2022-latest
+   profiles:
+      - id
       - all
 
   catalog-sql:
@@ -59,6 +66,18 @@ services:
     #  - rabbitmq
     profiles:
       - webbff
+      - all
+
+  identity-api:
+    image: ${DOCKER_REGISTRY-}identity-api
+    build:
+      context: .
+      dockerfile: Services/Identity/Dockerfile
+    depends_on:
+      - identity-sql
+      - internallb
+    profiles:
+      - id
       - all
   
   catalog-api:
@@ -132,4 +151,30 @@ services:
       - rabbitmq
     profiles:
       - ordering
+      - all
+
+  webshopping:
+    image: ${DOCKER_REGISTRY-}webshopping
+    build:
+      context: .
+      dockerfile: WebUI/WebShoppingUI/Dockerfile
+    depends_on:
+      # - catalog-api
+      # - basket-api
+      # - ordering-api
+      - shopper-info-api
+    profiles:
+      - webshop
+      - all
+
+  webseller:
+    image: ${DOCKER_REGISTRY-}webseller
+    build:
+      context: .
+      dockerfile: WebUI/WebSellerUI/Dockerfile
+    depends_on:
+      - catalog-api
+      # - ordering-api
+    profiles:
+      - websell
       - all

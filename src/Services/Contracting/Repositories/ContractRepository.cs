@@ -17,6 +17,14 @@ public class ContractRepository : IContractRepository
             .FirstOrDefault(c => c.Id == id);
     }
 
+    public IEnumerable<Contract> GetByPartnerId(string partnerId)
+    {
+        return _context.Contracts
+            .Include(c => c.Partner)
+            .Include(c => c.SellingPlan)
+            .Where(c => c.Partner.ExternalId == partnerId);
+    }
+
     public ICreateFixedPeriodResult CreateFixedPeriod(Contract contract)
     {
         if (!contract.IsInsertable)

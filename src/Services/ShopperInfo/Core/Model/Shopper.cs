@@ -16,6 +16,6 @@
     {
         Male,
         Female,
-        Other,
+        NonBinary,
     }
 }
