@@ -25,12 +25,11 @@ export function NavMenu() {
   }
 
   function refreshPage() {
-    setTimeout(
-      () => {
-        window.location.reload();
-      },
-      process.env.NODE_ENV === "development" ? 1500 : 500
-    );
+    if (process.env.NODE_ENV === "development") return;
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   }
 
   useEffect(() => {

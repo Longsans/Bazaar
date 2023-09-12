@@ -159,9 +159,10 @@ services:
       context: .
       dockerfile: WebUI/WebShoppingUI/Dockerfile
     depends_on:
-      - catalog-api
-      - basket-api
-      - ordering-api
+      # - catalog-api
+      # - basket-api
+      # - ordering-api
+      - shopper-info-api
     profiles:
       - webshop
       - all

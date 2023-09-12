@@ -84,6 +84,7 @@ services:
       - ConnectionString=Server=identity-sql;Database=BazaarIdentity;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - WebSellerRedirectUrl=http://localhost:5004
       - WebShoppingRedirectUrl=http://localhost:5002
+      - IssuerUri=http://identity-api
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
@@ -169,8 +170,13 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+      - IdentityApi=http://identity-api
+      - IdentityRewriteUrl=http://localhost:5252 
       - ClientId=webshopping
-      - ClientSecret=webshoppingsecret 
+      - ClientSecret=webshoppingsecret
+      - CatalogApi=http://catalog-api
+      - OrderingApi=http://ordering-api
+      - ShopperInfoApi=http://shopper-info-api
     ports:
       - "5002:80"
 

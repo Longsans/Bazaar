@@ -6,11 +6,22 @@ builder.Services
     .AddDbContext<ShopperInfoDbContext>(options =>
     {
         options.UseSqlServer(builder.Configuration["ConnectionString"]);
-        //options.UseSqlServer(
-        //    "Server=shopper-info-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true");
     })
     .AddScoped<IShopperRepository, ShopperRepository>()
     .AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = builder.Configuration["IdentityApi"];
+        options.Audience = "shopper_info";
+        options.RequireHttpsMetadata = false;
+    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("HasShopperInfoScope", policy =>
+        policy.RequireAuthenticatedUser().RequireClaim("scope", "shopper_info"));
+});
 #endregion
 
 builder.Services.AddControllers()
@@ -32,9 +43,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllers().RequireAuthorization();
 
 using (var scope = app.Services.CreateScope())
 {

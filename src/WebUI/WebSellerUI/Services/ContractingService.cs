@@ -22,7 +22,7 @@ public class ContractingService : HttpService
             return response.StatusCode switch
             {
                 HttpStatusCode.Unauthorized => null,
-                _ => throw new Exception($"Response unsuccessful: {response.StatusCode}")
+                var status => throw new Exception($"Request unsuccessful, status code {status}")
             };
         }
 
@@ -40,7 +40,7 @@ public class ContractingService : HttpService
             return response.StatusCode switch
             {
                 HttpStatusCode.Unauthorized => null,
-                _ => throw new Exception($"Response unsuccessful: {response.StatusCode}")
+                var status => throw new Exception($"Request unsuccessful, status code {status}")
             };
         }
 

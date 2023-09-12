@@ -5,11 +5,9 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "catalog",
           "id",
-          "websell",
-          "ordering",
-          "contracting"
+          "webshop",
+          "shopper-info"
         ]
       }
     }

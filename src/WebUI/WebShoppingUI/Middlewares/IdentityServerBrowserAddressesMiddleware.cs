@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Primitives;
 
-namespace WebSellerUI.Middlewares;
+namespace WebShoppingUI.Middlewares;
 
 public class IdentityServerBrowserAddressesMiddleware
 {
