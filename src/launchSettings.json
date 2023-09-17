@@ -7,6 +7,9 @@
         "includes": [
           "id",
           "webshop",
+          "catalog",
+          "basket",
+          "ordering",
           "shopper-info"
         ]
       }

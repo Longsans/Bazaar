@@ -17,7 +17,7 @@ namespace Bazaar.Catalog.Controllers
         [Authorize(Policy = "HasReadScope")]
         public IActionResult GetById(int id)
         {
-            var item = _catalogRepo.GetItemById(id);
+            var item = _catalogRepo.GetById(id);
             if (item == null)
                 return NotFound();
             return Ok(item);
@@ -25,37 +25,43 @@ namespace Bazaar.Catalog.Controllers
 
         [HttpGet]
         [Authorize(Policy = "HasReadScope")]
-        public ActionResult<IEnumerable<CatalogItem>> GetByProductIds(
-            [FromQuery] string? productId = null, [FromQuery] string? sellerId = null)
+        public ActionResult<IEnumerable<CatalogItem>> GetByCriteria(
+            string? productId = null, string? sellerId = null, string? nameSubstring = null)
         {
-            if (string.IsNullOrWhiteSpace(productId) && string.IsNullOrWhiteSpace(sellerId) ||
-                !string.IsNullOrWhiteSpace(productId) && !string.IsNullOrWhiteSpace(sellerId))
+            if (string.IsNullOrWhiteSpace(productId) &&
+                string.IsNullOrWhiteSpace(sellerId) &&
+                string.IsNullOrWhiteSpace(nameSubstring))
             {
-                return BadRequest("Exactly one of the following parameters must be specified: productId, sellerId.");
+                return BadRequest("At least one of the following arguments must be specified: " +
+                    "productId, sellerId, partOfName");
+            }
+            if (!string.IsNullOrWhiteSpace(productId) && !string.IsNullOrWhiteSpace(sellerId))
+            {
+                return BadRequest("Only one of the following arguments can be specified: productId, sellerId.");
+            }
+            if (!string.IsNullOrWhiteSpace(productId) && !string.IsNullOrWhiteSpace(nameSubstring))
+            {
+                return BadRequest("The productId and partOfName arguments cannot be combined.");
             }
 
             var items = new List<CatalogItem>();
-            if (string.IsNullOrWhiteSpace(productId))
+            if (!string.IsNullOrWhiteSpace(productId))
             {
-                var sellerIds = sellerId.Split(',');
-
-                foreach (var id in sellerIds)
+                var error = AddByProductIds(items, productId);
+                if (error.HasValue)
                 {
-                    items.AddRange(_catalogRepo.GetBySellerId(id));
+                    return NotFound(new { error.Value.productId, error.Value.error });
                 }
             }
             else
             {
-                var productIds = productId.Split(',');
-
-                foreach (var id in productIds)
+                if (!string.IsNullOrWhiteSpace(sellerId))
                 {
-                    var item = _catalogRepo.GetItemByProductId(id);
-                    if (item == null)
-                    {
-                        return NotFound(new { productId = id, error = "Product not found." });
-                    }
-                    items.Add(item);
+                    AddOrFilterBySellerIds(ref items, sellerId!);
+                }
+                if (!string.IsNullOrWhiteSpace(nameSubstring))
+                {
+                    AddOrFilterByNameSubstring(ref items, nameSubstring!);
                 }
             }
             return items;
@@ -78,6 +84,49 @@ namespace Bazaar.Catalog.Controllers
                 return NotFound(update.Id);
             }
             return NoContent();
+        }
+
+        private (string productId, string error)? AddByProductIds(List<CatalogItem> items, string joinedProductIds)
+        {
+            var productIds = joinedProductIds.Split(',');
+
+            foreach (var id in productIds)
+            {
+                var item = _catalogRepo.GetByProductId(id);
+                if (item == null)
+                {
+                    return new(id, "Product not found.");
+                }
+                items.Add(item);
+            }
+            return null;
+        }
+
+        private void AddOrFilterBySellerIds(ref List<CatalogItem> items, string joinedSellerIds)
+        {
+            var sellerIds = joinedSellerIds.Split(',');
+
+            if (items.Any())
+            {
+                items = items.Where(item => sellerIds.Contains(item.SellerId)).ToList();
+            }
+
+            foreach (var id in sellerIds)
+            {
+                items.AddRange(_catalogRepo.GetBySellerId(id));
+            }
+        }
+
+        private void AddOrFilterByNameSubstring(ref List<CatalogItem> items, string nameSubstring)
+        {
+            if (items.Count == 0)
+            {
+                items.AddRange(_catalogRepo.GetByNameSubstring(nameSubstring));
+            }
+            else
+            {
+                items = items.Where(item => item.Name.Contains(nameSubstring)).ToList();
+            }
         }
     }
 }

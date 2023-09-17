@@ -66,16 +66,16 @@ services:
     ports:
       - "5437:1433"
 
-  webbff:
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
-      - ClusterId=1
-      - BasketsUri=http://internallb/b/api/buyer-baskets
-      - CatalogUri=http://internallb/ca/api/catalog
-      - OrdersUri=http://internallb/o/api/orders
-    ports:
-      - "5210:80"
+  # webbff:
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ASPNETCORE_URLS=http://+:80
+  #     - ClusterId=1
+  #     - BasketsUri=http://internallb/b/api/buyer-baskets
+  #     - CatalogUri=http://internallb/ca/api/catalog
+  #     - OrdersUri=http://internallb/o/api/orders
+  #   ports:
+  #     - "5210:80"
 
   identity-api:
     environment:
@@ -99,6 +99,7 @@ services:
       - SeedDataFilePath=/root/Data/data.json
       - ConnectionString=Server=catalog-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
+      - DisableIdentity=true
     volumes:
       - ./Data:/root/Data
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
@@ -114,6 +115,7 @@ services:
       - SeedDataFilePath=/root/Data/data.json
       - ConnectionString=Server=shopper-info-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
+      - DisableIdentity=true
     volumes:
       - ./Data:/root/Data
     ports:
@@ -127,6 +129,7 @@ services:
       - SeedDataFilePath=/root/Data/data.json
       - ConnectionString=Server=contracting-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
+      - DisableIdentity=true
     volumes:
       - ./Data:/root/Data
     ports:
@@ -140,6 +143,7 @@ services:
       - SeedDataFilePath=/root/Data/data.json
       - ConnectionString=Server=basket-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
+      - DisableIdentity=true
     ports:
       - "5246:80"
     volumes:
@@ -153,6 +157,7 @@ services:
       - SeedDataFilePath=/root/Data/data.json
       - ConnectionString=Server=ordering-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
+      - DisableIdentity=true
     volumes:
       - ./Data:/root/Data
     ports:
@@ -177,6 +182,8 @@ services:
       - CatalogApi=http://catalog-api
       - OrderingApi=http://ordering-api
       - ShopperInfoApi=http://shopper-info-api
+      - BasketApi=http://basket-api
+      - DisableIdentity=true
     ports:
       - "5002:80"
 

@@ -51,22 +51,22 @@ services:
       - contracting
       - all
 
-  webbff:
-    image: ${DOCKER_REGISTRY-}webbff
-    build:
-      context: .
-      dockerfile: ApiGateways/WebBff/Dockerfile
-    #depends_on:
-    #  - payment-api
-    #  - ordering-api
-    #  - basket-api
-    #  - contracting-api
-    #  - shopper-info-api
-    #  - catalog-api
-    #  - rabbitmq
-    profiles:
-      - webbff
-      - all
+  # webbff:
+  #   image: ${DOCKER_REGISTRY-}webbff
+  #   build:
+  #     context: .
+  #     dockerfile: ApiGateways/WebBff/Dockerfile
+  #   depends_on:
+  #    - payment-api
+  #    - ordering-api
+  #    - basket-api
+  #    - contracting-api
+  #    - shopper-info-api
+  #    - catalog-api
+  #    - rabbitmq
+  #   profiles:
+  #     - webbff
+  #     - all
 
   identity-api:
     image: ${DOCKER_REGISTRY-}identity-api
@@ -159,9 +159,9 @@ services:
       context: .
       dockerfile: WebUI/WebShoppingUI/Dockerfile
     depends_on:
-      # - catalog-api
-      # - basket-api
-      # - ordering-api
+      - catalog-api
+      - basket-api
+      - ordering-api
       - shopper-info-api
     profiles:
       - webshop

@@ -16,6 +16,13 @@ public class OrderRepository : IOrderRepository
             .FirstOrDefault(o => o.Id == id);
     }
 
+    public IEnumerable<Order> GetByBuyerId(string buyerId, OrderStatus status = 0)
+    {
+        return _context.Orders
+            .Include(o => o.Items)
+            .Where(o => o.BuyerId == buyerId && o.Status.HasFlag(status));
+    }
+
     public IEnumerable<Order> GetByProductId(string productId, OrderStatus status = 0)
     {
         return _context.Orders
