@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <NoWarn>CS8618</NoWarn>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
     <IsPackable>false</IsPackable>

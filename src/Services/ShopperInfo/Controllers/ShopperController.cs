@@ -24,7 +24,7 @@
         }
 
         [HttpGet]
-        public ActionResult<Shopper> GetByExternalId([FromQuery] string externalId)
+        public ActionResult<Shopper> GetByExternalId(string externalId)
         {
             var shopper = _shopperRepo.GetByExternalId(externalId);
             if (shopper == null)

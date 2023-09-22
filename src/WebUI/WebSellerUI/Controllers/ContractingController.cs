@@ -1,48 +1,104 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace WebSellerUI.Controllers
+namespace WebSellerUI.Controllers;
+
+[ApiController]
+[Route("api/partners/")]
+public class ContractingController : ControllerBase
 {
-    [ApiController]
-    public class ContractingController : ControllerBase
+    private readonly IContractingDataService _contractingService;
+
+    public ContractingController(IContractingDataService contractingService)
     {
-        private readonly ContractingService _contractingService;
+        _contractingService = contractingService;
+    }
 
-        public ContractingController(ContractingService contractingService)
-        {
-            _contractingService = contractingService;
-        }
+    [HttpGet("/api/contracts")]
+    public async Task<ActionResult<IEnumerable<Contract>>> GetContractsByPartnerId(
+        string partnerId)
+    {
+        var contractsResult = await _contractingService.GetContractsByPartnerId(partnerId);
 
-        [HttpGet("/api/contracts")]
-        public async Task<ActionResult<IEnumerable<Contract>>> GetContractsByPartnerId(
-            [FromQuery] string partnerId)
-        {
-            if (string.IsNullOrWhiteSpace(partnerId))
+        return contractsResult.IsSuccess
+            ? contractsResult.Result!.ToList()
+            : contractsResult.ErrorType switch
             {
-                return BadRequest("Partner ID must be specified.");
-            }
+                ServiceCallError.Unauthorized => Unauthorized(),
+                _ => StatusCode(500, contractsResult.ErrorDetail)
+            };
+    }
 
-            var contracts = await _contractingService.GetContractsByPartnerId(partnerId);
-            if (contracts == null)
-            {
-                return Unauthorized();
-            }
-            return contracts.ToList();
-        }
+    [HttpGet("{partnerId}")]
+    public async Task<ActionResult<Partner>> GetPartnerById(string partnerId)
+    {
+        var partnerResult = await _contractingService.GetPartnerById(partnerId);
 
-        [HttpGet("/api/partners/{partnerId}")]
-        public async Task<ActionResult<Partner>> GetPartnerById(string partnerId)
-        {
-            if (string.IsNullOrWhiteSpace(partnerId))
+        return partnerResult.IsSuccess
+            ? partnerResult.Result!
+            : partnerResult.ErrorType switch
             {
-                return BadRequest("Partner ID must be specified.");
-            }
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.NotFound => NotFound(),
+                _ => StatusCode(500, partnerResult.ErrorDetail)
+            };
+    }
 
-            var partner = await _contractingService.GetPartnerById(partnerId);
-            if (partner == null)
+    [HttpPost("{partnerId}/fp-contracts")]
+    public async Task<ActionResult<Contract>> SignFixedPeriodContract(
+        string partnerId, FixedPeriodContractCreateCommand command)
+    {
+        var contractResult = await _contractingService
+            .SignFixedPeriodContract(partnerId, command);
+
+        return contractResult.IsSuccess
+            ? contractResult.Result!
+            : contractResult.ErrorType switch
             {
-                return Unauthorized();
-            }
-            return partner;
-        }
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.BadRequest => BadRequest(contractResult.ErrorDetail),
+                ServiceCallError.NotFound => NotFound(contractResult.ErrorDetail),
+                ServiceCallError.Conflict => Conflict(contractResult.ErrorDetail),
+                _ => StatusCode(500, contractResult.ErrorDetail)
+            };
+    }
+
+    [HttpPost("{partnerId}/in-contracts")]
+    public async Task<ActionResult<Contract>> SignIndefiniteContract(
+        string partnerId, IndefiniteContractCreateCommand command)
+    {
+        var contractResult = await _contractingService
+            .SignIndefiniteContract(partnerId, command);
+
+        return contractResult.IsSuccess
+            ? contractResult.Result!
+            : contractResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.BadRequest => BadRequest(contractResult.ErrorDetail),
+                ServiceCallError.NotFound => NotFound(contractResult.ErrorDetail),
+                ServiceCallError.Conflict => Conflict(contractResult.ErrorDetail),
+                _ => StatusCode(500, contractResult.ErrorDetail)
+            };
+    }
+
+    [HttpPatch("{partnerId}/in-contracts/current")]
+    public async Task<ActionResult<Contract>> EndCurrentIndefiniteContract(
+        string partnerId, IndefiniteContractEndCommand command)
+    {
+        if (!command.Ended)
+            return NoContent();
+
+        var contractResult = await _contractingService
+            .EndCurrentIndefiniteContract(partnerId);
+
+        return contractResult.IsSuccess
+            ? contractResult.Result!
+            : contractResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.BadRequest => BadRequest(contractResult.ErrorDetail),
+                ServiceCallError.NotFound => NotFound(contractResult.ErrorDetail),
+                _ => StatusCode(500, contractResult.ErrorDetail)
+            };
     }
 }

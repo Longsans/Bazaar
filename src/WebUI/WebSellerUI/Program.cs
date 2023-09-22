@@ -1,82 +1,22 @@
-using Duende.Bff.Yarp;
-using System.IdentityModel.Tokens.Jwt;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(options =>
+var app = builder
+    .ConfigureServices()
+    .ConfigurePipeline();
+
+if (app.Environment.IsDevelopment())
 {
-    options.AddDefaultPolicy(
-        policy => policy.AllowAnyOrigin().AllowAnyHeader());
-});
-
-builder.Services.AddBff()
-    .AddRemoteApis();
-
-JwtSecurityTokenHandler.DefaultMapInboundClaims = true;
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultScheme = "Cookie";
-        options.DefaultChallengeScheme = "oidc";
-        options.DefaultSignOutScheme = "oidc";
-    })
-    .AddCookie("Cookie")
-    .AddOpenIdConnect("oidc", options =>
-    {
-        options.RequireHttpsMetadata = false;
-
-        options.Authority = builder.Configuration["IdentityApi"];
-        options.ClientId = builder.Configuration["ClientId"];
-        options.ClientSecret = builder.Configuration["ClientSecret"];
-        options.ResponseType = "code";
-        options.ResponseMode = "query";
-
-        options.Scope.Add("catalog.read");
-        options.Scope.Add("catalog.modify");
-        options.Scope.Add("ordering");
-        options.Scope.Add("contracting");
-
-        options.SaveTokens = true;
-        options.GetClaimsFromUserInfoEndpoint = true;
-    });
-
-builder.Services.AddAuthorization();
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpClient<CatalogService>();
-builder.Services.AddHttpClient<OrderingService>();
-builder.Services.AddHttpClient<ContractingService>();
-builder.Services.AddScoped<AddressService>();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
-
-app.UseIdentityServerBrowserAddresses();
-
-app.UseCors();
-app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthentication();
-
-app.UseBff();
-app.UseAuthorization();
-
-app.MapBffManagementEndpoints();
-
-app.MapControllerRoute(
-        name: "default",
-        pattern: "{controller}/{action=Index}/{id?}")
-    .RequireAuthorization();
-
-app.MapFallbackToFile("index.html");
 
 app.Run();

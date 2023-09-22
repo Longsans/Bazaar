@@ -12,7 +12,8 @@ public class Order
     #region Domain logic
 
     public bool IsCancellable
-        => Status == OrderStatus.AwaitingSellerConfirmation || Status == OrderStatus.Postponed;
+        => Status.HasFlag(OrderStatus.AwaitingSellerConfirmation)
+        || Status.HasFlag(OrderStatus.Postponed);
 
     #endregion
 }

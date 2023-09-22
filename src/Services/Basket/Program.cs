@@ -1,6 +1,17 @@
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
+var IF_IDENTITY_ELSE = (Action doWithIdentity, Action doWithoutIdentity) =>
+{
+    if (string.IsNullOrWhiteSpace(builder.Configuration["DisableIdentity"]))
+    {
+        doWithIdentity();
+    }
+    else
+    {
+        doWithoutIdentity();
+    }
+};
 
 #region Register app services
 builder.Services.AddDbContext<BasketDbContext>(options =>
@@ -43,10 +54,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
+// DISABLES IDENTITY
+IF_IDENTITY_ELSE(
+    () =>
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-app.MapControllers().RequireAuthorization("HasBasketScope");
+        app.MapControllers().RequireAuthorization("HasBasketScope");
+    },
+    () => app.MapControllers()
+);
 
 using (var scope = app.Services.CreateScope())
 {

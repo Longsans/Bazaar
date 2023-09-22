@@ -1,8 +1,14 @@
 using Bazaar.BuildingBlocks.EventBus;
 using Catalog.Repositories;
 using RabbitMQ.Client;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+var IF_ENABLED_IDENTITY = (Action doWithIdentity) =>
+{
+    if (string.IsNullOrWhiteSpace(builder.Configuration["DisableIdentity"]))
+        doWithIdentity();
+};
 
 #region Register app services
 builder.Services.AddDbContext<CatalogDbContext>(options =>
@@ -38,8 +44,9 @@ builder.Services.AddAuthorization(options =>
 });
 #endregion
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -51,8 +58,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
+// DISABLES IDENTITY
+IF_ENABLED_IDENTITY(() =>
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+});
 
 app.MapControllers();
 
@@ -128,3 +139,4 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<OrderCreatedIntegrationEvent, OrderCreatedIntegrationEventHandler>();
     }
 }
+

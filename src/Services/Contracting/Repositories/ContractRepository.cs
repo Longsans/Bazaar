@@ -28,22 +28,21 @@ public class ContractRepository : IContractRepository
     public ICreateFixedPeriodResult CreateFixedPeriod(Contract contract)
     {
         if (!contract.IsInsertable)
-        {
             return ICreateFixedPeriodResult.ContractStartDateInPastOrAfterEndDateError;
-        }
 
         var partner = _context.Partners
             .Include(p => p.Contracts)
             .FirstOrDefault(p => p.Id == contract.PartnerId);
+
         if (partner == null)
-        {
             return ICreateFixedPeriodResult.PartnerNotFoundError;
-        }
 
         if (partner.IsUnderContract)
-        {
             return ICreateFixedPeriodResult.PartnerUnderContractError;
-        }
+
+        var sellingPlan = _context.SellingPlans.Find(contract.SellingPlanId);
+        if (sellingPlan is null)
+            return ICreateFixedPeriodResult.SellingPlanNotFoundError;
 
         partner.Contracts.Add(contract);
         _context.SaveChanges();
@@ -53,22 +52,21 @@ public class ContractRepository : IContractRepository
     public ICreateIndefiniteResult CreateIndefinite(Contract contract)
     {
         if (!contract.IsInsertable)
-        {
             return ICreateIndefiniteResult.ContractStartDateInPastOrAfterEndDateError;
-        }
 
         var partner = _context.Partners
             .Include(p => p.Contracts)
             .FirstOrDefault(p => p.Id == contract.PartnerId);
+
         if (partner == null)
-        {
             return ICreateIndefiniteResult.PartnerNotFoundError;
-        }
 
         if (partner.IsUnderContract)
-        {
             return ICreateIndefiniteResult.PartnerUnderContractError;
-        }
+
+        var sellingPlan = _context.SellingPlans.Find(contract.SellingPlanId);
+        if (sellingPlan is null)
+            return ICreateIndefiniteResult.SellingPlanNotFoundError;
 
         contract.EndDate = null;
         partner.Contracts.Add(contract);
@@ -82,21 +80,16 @@ public class ContractRepository : IContractRepository
         var partner = _context.Partners
                             .Include(p => p.Contracts)
                             .FirstOrDefault(p => p.Id == partnerId);
+
         if (partner == null)
-        {
             return IEndContractResult.PartnerNotFoundError;
-        }
 
         var currentContract = partner.CurrentContract;
         if (currentContract == null)
-        {
             return IEndContractResult.ContractNotFoundError;
-        }
 
         if (currentContract.EndDate != null)
-        {
             return IEndContractResult.ContractNotIndefiniteError;
-        }
 
         currentContract.EndDate = DateTime.Now;
         _context.SaveChanges();

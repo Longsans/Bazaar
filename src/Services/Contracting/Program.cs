@@ -1,6 +1,15 @@
-using Bazaar.Contracting.Repositories;
-
 var builder = WebApplication.CreateBuilder(args);
+var IF_IDENTITY_ELSE = (Action doWithIdentity, Action doWithoutIdentity) =>
+{
+    if (string.IsNullOrWhiteSpace(builder.Configuration["DisableIdentity"]))
+    {
+        doWithIdentity();
+    }
+    else
+    {
+        doWithoutIdentity();
+    }
+};
 
 #region Register app services
 builder.Services.AddDbContext<ContractingDbContext>(options =>
@@ -26,7 +35,6 @@ builder.Services.AddAuthorization(options =>
 #endregion
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -39,10 +47,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
+// DISABLES IDENTITY
+IF_IDENTITY_ELSE(
+    () =>
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-app.MapControllers().RequireAuthorization("HasContractingScope");
+        app.MapControllers().RequireAuthorization("HasContractingScope");
+    },
+    () => app.MapControllers()
+);
 
 using (var scope = app.Services.CreateScope())
 {

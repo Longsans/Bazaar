@@ -1,13 +1,21 @@
 var builder = WebApplication.CreateBuilder(args);
+var IF_IDENTITY_ELSE = (Action doWithIdentity, Action doWithoutIdentity) =>
+{
+    if (string.IsNullOrWhiteSpace(builder.Configuration["DisableIdentity"]))
+    {
+        doWithIdentity();
+    }
+    else
+    {
+        doWithoutIdentity();
+    }
+};
 
 // Add services to the container.
 #region Register app services
 builder.Services.AddDbContext<OrderingDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
-    //options.UseSqlServer(
-    //    "Server=localhost,5435;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true");
-
     options.UseTriggers(triggerOptions =>
     {
         triggerOptions.AddTrigger<InsertOrderItemsTrigger>();
@@ -32,7 +40,6 @@ builder.Services.AddAuthorization(builder =>
 #endregion
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -47,10 +54,17 @@ if (app.Environment.IsDevelopment())
 
 app.ConfigureEventBus();
 
-app.UseAuthentication();
-app.UseAuthorization();
+// DISABLES IDENTITY
+IF_IDENTITY_ELSE(
+    () =>
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-app.MapControllers().RequireAuthorization("HasOrderingScope");
+        app.MapControllers().RequireAuthorization("HasOrderingScope");
+    },
+    () => app.MapControllers()
+);
 
 using (var scope = app.Services.CreateScope())
 {

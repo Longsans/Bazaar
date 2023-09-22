@@ -1,4 +1,15 @@
 var builder = WebApplication.CreateBuilder(args);
+var IF_IDENTITY_ELSE = (Action doWithIdentity, Action doWithoutIdentity) =>
+{
+    if (string.IsNullOrWhiteSpace(builder.Configuration["DisableIdentity"]))
+    {
+        doWithIdentity();
+    }
+    else
+    {
+        doWithoutIdentity();
+    }
+};
 
 // Add services to the container.
 #region Register app service
@@ -30,23 +41,28 @@ builder.Services.AddControllers()
         var enumConverter = new JsonStringEnumConverter();
         options.JsonSerializerOptions.Converters.Add(enumConverter);
     });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
+// DISABLES IDENTITY
+IF_IDENTITY_ELSE(
+    () =>
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-app.MapControllers().RequireAuthorization();
+        app.MapControllers().RequireAuthorization("HasShopperInfoScope");
+    },
+    () => app.MapControllers()
+);
 
 using (var scope = app.Services.CreateScope())
 {
