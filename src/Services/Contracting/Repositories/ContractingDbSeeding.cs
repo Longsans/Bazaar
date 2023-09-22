@@ -20,15 +20,15 @@ public static class ContractingDbSeeding
         context.SellingPlans.AddRange(adapter.ReadToObjects<SellingPlan>(SELLING_PLANS_SECTION));
         await context.SaveChangesAsync();
 
-        var partner = context.Partners.First();
-        var sellingPlan = context.SellingPlans.First();
-        var contract = new Contract
-        {
-            Partner = partner,
-            SellingPlan = sellingPlan,
-            StartDate = DateTime.Now,
-        };
-        context.Contracts.Add(contract);
-        await context.SaveChangesAsync();
+        //var partner = context.Partners.First();
+        //var sellingPlan = context.SellingPlans.First();
+        //var contract = new Contract
+        //{
+        //    Partner = partner,
+        //    SellingPlan = sellingPlan,
+        //    StartDate = DateTime.Now,
+        //};
+        //context.Contracts.Add(contract);
+        //await context.SaveChangesAsync();
     }
 }

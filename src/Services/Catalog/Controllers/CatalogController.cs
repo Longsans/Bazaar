@@ -24,7 +24,7 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "HasReadScope")]
+        //[Authorize(Policy = "HasReadScope")]
         public ActionResult<IEnumerable<CatalogItem>> GetByCriteria(
             string? productId = null, string? sellerId = null, string? nameSubstring = null)
         {
@@ -68,21 +68,22 @@ namespace Bazaar.Catalog.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = "HasModifyScope")]
-        public IActionResult Create(CatalogItem item)
+        //[Authorize(Policy = "HasModifyScope")]
+        public ActionResult<CatalogItem> Create(CatalogItemCreateCommand command)
         {
-            var createdItem = _catalogRepo.Create(item);
-            return CreatedAtAction(nameof(GetById), createdItem.Id, createdItem);
+            var createdItem = _catalogRepo.Create(command.ToCatalogItem());
+            return CreatedAtAction(nameof(GetById), new { createdItem.Id }, createdItem);
         }
 
-        [HttpPut]
-        [Authorize(Policy = "HasModifyScope")]
-        public IActionResult Update(CatalogItem update)
+        [HttpPut("{productId}")]
+        //[Authorize(Policy = "HasModifyScope")]
+        public IActionResult Update(string productId, CatalogItemUpdateCommand command)
         {
+            var update = command.ToCatalogItem(productId);
+
             if (!_catalogRepo.Update(update))
-            {
-                return NotFound(update.Id);
-            }
+                return NotFound(productId);
+
             return NoContent();
         }
 

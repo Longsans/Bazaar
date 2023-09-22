@@ -1,6 +1,7 @@
 using Bazaar.BuildingBlocks.EventBus;
 using Catalog.Repositories;
 using RabbitMQ.Client;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var IF_ENABLED_IDENTITY = (Action doWithIdentity) =>
@@ -43,7 +44,9 @@ builder.Services.AddAuthorization(options =>
 });
 #endregion
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

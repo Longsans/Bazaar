@@ -174,7 +174,8 @@ services:
       dockerfile: WebUI/WebSellerUI/Dockerfile
     depends_on:
       - catalog-api
-      # - ordering-api
+      - ordering-api
+      - contracting-api
     profiles:
       - websell
       - all

@@ -6,9 +6,9 @@ namespace WebShoppingUI.Controllers
     [ApiController]
     public class ShopperController : ControllerBase
     {
-        private readonly ShopperInfoHttpService _shopperService;
+        private readonly HttpShopperInfoService _shopperService;
 
-        public ShopperController(ShopperInfoHttpService shopperService)
+        public ShopperController(HttpShopperInfoService shopperService)
         {
             _shopperService = shopperService;
         }

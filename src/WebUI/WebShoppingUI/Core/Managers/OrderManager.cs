@@ -5,9 +5,9 @@ using OrderResult = ServiceCallResult<Order>;
 
 public class OrderManager
 {
-    private readonly IOrderingHttpService _orderingService;
+    private readonly IOrderingDataService _orderingService;
 
-    public OrderManager(IOrderingHttpService orderingService)
+    public OrderManager(IOrderingDataService orderingService)
     {
         _orderingService = orderingService;
     }

@@ -25,6 +25,10 @@ public class PartnerUnderContractError :
     ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult
 { }
 
+public class SellingPlanNotFoundError :
+    ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult
+{ }
+
 public class ContractNotFoundError :
     ContractRepositoryResult, IEndContractResult
 { }
@@ -33,6 +37,7 @@ public class ContractNotIndefiniteError :
     ContractRepositoryResult, IEndContractResult
 { }
 
+
 // Method return interfaces
 public interface ICreateFixedPeriodResult
 {
@@ -40,6 +45,7 @@ public interface ICreateFixedPeriodResult
     static ContractStartDateInPastOrAfterEndDateError ContractStartDateInPastOrAfterEndDateError => new();
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
+    static SellingPlanNotFoundError SellingPlanNotFoundError => new();
 }
 
 public interface ICreateIndefiniteResult
@@ -48,6 +54,7 @@ public interface ICreateIndefiniteResult
     static ContractStartDateInPastOrAfterEndDateError ContractStartDateInPastOrAfterEndDateError => new();
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
+    static SellingPlanNotFoundError SellingPlanNotFoundError => new();
 }
 
 public interface IEndContractResult

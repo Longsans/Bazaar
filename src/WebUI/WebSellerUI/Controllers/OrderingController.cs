@@ -1,40 +1,56 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿namespace WebSellerUI.Controllers;
 
-namespace WebSellerUI.Controllers;
+using Microsoft.AspNetCore.Mvc;
+using WebSellerUI.DTOs;
+using WebSellerUI.Managers;
 
 [Route("api/orders")]
 [ApiController]
 public class OrderingController : ControllerBase
 {
-    private readonly OrderingService _orderingSvc;
-    private readonly CatalogService _catalogSvc;
+    private readonly OrderManager _orderMgr;
 
-    public OrderingController(OrderingService orderingService, CatalogService catalogService)
+    public OrderingController(OrderManager orderManager)
     {
-        _orderingSvc = orderingService;
-        _catalogSvc = catalogService;
+        _orderMgr = orderManager;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Order>>> GetBySellerId([FromQuery] string sellerId)
+    public async Task<ActionResult<IEnumerable<Order>>> GetBySellerId(
+        [FromQuery(Name = "sellerId")] string sellerIds)
     {
-        if (string.IsNullOrWhiteSpace(sellerId))
-        {
-            return BadRequest("Request must include one or more seller IDs.");
-        }
+        var callResult = await _orderMgr.GetBySellerId(sellerIds);
 
-        var orders = new List<Order>();
-        var sellers = sellerId.Split(',', StringSplitOptions.TrimEntries);
-        foreach (var seller in sellers)
-        {
-            var products = await _catalogSvc.GetBySellerId(seller);
-            if (products == null)
+        return callResult.IsSuccess
+            ? callResult.Result!.ToList()
+            : callResult.ErrorType switch
             {
-                return Unauthorized();
-            }
-            var productIdsJoined = string.Join(',', products.Select(x => x.ProductId));
-            orders.AddRange(await _orderingSvc.GetByProductIds(productIdsJoined));
-        }
-        return orders;
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.BadRequest => BadRequest(callResult.ErrorDetail),
+                _ => StatusCode(500, callResult.ErrorDetail)
+            };
+    }
+
+    [HttpPatch("{orderId}")]
+    public async Task<IActionResult> ConfirmOrCancelOrder(int orderId, [FromBody] OrderConfirmation confirmation)
+    {
+        var callResult = confirmation switch
+        {
+            OrderConfirmation.Confirm => await _orderMgr.ConfirmOrder(orderId),
+            OrderConfirmation.Cancel => await _orderMgr.CancelOrder(orderId),
+            _ => ServiceCallResult.BadRequest(
+                "Order confirmation must be either \"Confirm\" or \"Cancel\", or 1 and 0, respectively.")
+        };
+
+        return callResult.IsSuccess
+            ? NoContent()
+            : callResult.ErrorType switch
+            {
+                ServiceCallError.BadRequest => BadRequest(callResult.ErrorDetail),
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.NotFound => NotFound(),
+                ServiceCallError.Conflict => Conflict(callResult.ErrorDetail),
+                _ => StatusCode(500, callResult.ErrorDetail)
+            };
     }
 }

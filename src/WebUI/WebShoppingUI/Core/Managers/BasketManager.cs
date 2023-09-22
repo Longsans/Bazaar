@@ -2,11 +2,11 @@
 
 public class BasketManager
 {
-    private readonly IBasketHttpService _basketService;
-    private readonly ICatalogHttpService _catalogService;
+    private readonly IBasketDataService _basketService;
+    private readonly ICatalogDataService _catalogService;
 
     public BasketManager(
-        IBasketHttpService basketService, ICatalogHttpService catalogService)
+        IBasketDataService basketService, ICatalogDataService catalogService)
     {
         _basketService = basketService;
         _catalogService = catalogService;

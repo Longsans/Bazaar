@@ -56,16 +56,16 @@ public static class ConfigExtensions
 
         builder.Services.AddTransient<HttpClientAuthorizationHandler>();
 
-        builder.Services.AddHttpClient<IShopperInfoHttpService, ShopperInfoHttpService>()
+        builder.Services.AddHttpClient<IShopperInfoDataService, HttpShopperInfoService>()
             .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
 
-        builder.Services.AddHttpClient<ICatalogHttpService, CatalogHttpService>()
+        builder.Services.AddHttpClient<ICatalogDataService, HttpCatalogService>()
             .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
 
-        builder.Services.AddHttpClient<IBasketHttpService, BasketHttpService>()
+        builder.Services.AddHttpClient<IBasketDataService, HttpBasketService>()
             .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
 
-        builder.Services.AddHttpClient<IOrderingHttpService, OrderingHttpService>()
+        builder.Services.AddHttpClient<IOrderingDataService, HttpOrderingService>()
             .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
 
         // Business logic services

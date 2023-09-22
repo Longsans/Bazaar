@@ -5,4 +5,4 @@ global using WebShoppingUI.DTOs;
 global using WebShoppingUI.Managers;
 global using WebShoppingUI.Model;
 global using WebShoppingUI.Pipeline;
-global using WebShoppingUI.HttpServices;
+global using WebShoppingUI.DataServices;

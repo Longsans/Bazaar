@@ -23,9 +23,9 @@ public class OrderController : ControllerBase
 
     [HttpGet]
     public ActionResult<IEnumerable<OrderQuery>> GetByCriteria(
-        string? productId = null, string? buyerId = null)
+        [FromQuery(Name = "productId")] string? productIds = null, string? buyerId = null)
     {
-        if (string.IsNullOrWhiteSpace(productId) && string.IsNullOrWhiteSpace(buyerId))
+        if (string.IsNullOrWhiteSpace(productIds) && string.IsNullOrWhiteSpace(buyerId))
             return BadRequest("At least one of the following arguments must be provided: productId, buyerId.");
 
         List<Order> orders = new();
@@ -33,8 +33,8 @@ public class OrderController : ControllerBase
         if (!string.IsNullOrWhiteSpace(buyerId))
             AddOrFilterByBuyerId(ref orders, buyerId);
 
-        if (!string.IsNullOrWhiteSpace(productId))
-            AddOrFilterByProductId(ref orders, productId);
+        if (!string.IsNullOrWhiteSpace(productIds))
+            AddOrFilterByProductIds(ref orders, productIds);
 
         return Ok(orders.Select(o => new OrderQuery(o)));
     }
@@ -60,7 +60,7 @@ public class OrderController : ControllerBase
     }
 
     [HttpPatch("{id}")]
-    public ActionResult<OrderQuery> UpdateOrderStatus(int id, OrderStatus status)
+    public ActionResult<OrderQuery> UpdateOrderStatus(int id, [FromBody] OrderStatus status)
     {
         var updateResult = _orderRepo.UpdateStatus(id, status);
         return updateResult switch
@@ -82,16 +82,15 @@ public class OrderController : ControllerBase
         orders = orders.Where(o => o.BuyerId == buyerId).ToList();
     }
 
-    private void AddOrFilterByProductId(ref List<Order> orders, string productId)
+    private void AddOrFilterByProductIds(ref List<Order> orders, string joinedProductIds)
     {
-        var productIds = productId.Split(',', StringSplitOptions.TrimEntries);
-        var productInOrder = (Order o) => o.Items.Any(item => item.ProductId == productId);
+        var productIds = joinedProductIds.Split(',', StringSplitOptions.TrimEntries);
         if (orders.Count == 0)
         {
             foreach (var id in productIds)
             {
                 // in case there are duplicate id's in request
-                if (orders.Any(productInOrder))
+                if (orders.Any(o => o.Items.Any(item => item.ProductId == id)))
                 {
                     continue;
                 }
@@ -103,10 +102,10 @@ public class OrderController : ControllerBase
             var filteredList = new List<Order>(orders.Count);
             foreach (var id in productIds)
             {
-                if (filteredList.Any(productInOrder))
+                if (filteredList.Any(o => o.Items.Any(item => item.ProductId == id)))
                     continue;
 
-                filteredList.AddRange(orders.Where(productInOrder));
+                filteredList.AddRange(orders.Where(o => o.Items.Any(item => item.ProductId == id)));
             }
             orders = filteredList;
         }

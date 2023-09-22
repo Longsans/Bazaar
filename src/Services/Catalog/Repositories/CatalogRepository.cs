@@ -41,12 +41,20 @@ public class CatalogRepository : ICatalogRepository
         return item;
     }
 
-    public bool Update(CatalogItem item)
+    public bool Update(CatalogItem update)
     {
-        var existing = _context.CatalogItems.Find(item.Id);
+        var existing = _context.CatalogItems.SingleOrDefault(item => item.ProductId == update.ProductId);
+
         if (existing == null)
             return false;
-        _context.CatalogItems.Entry(existing).CurrentValues.SetValues(item);
+
+        existing.Name = update.Name;
+        existing.Price = update.Price;
+        existing.Description = update.Description;
+        existing.AvailableStock = update.AvailableStock;
+        existing.RestockThreshold = update.RestockThreshold;
+        existing.MaxStockThreshold = update.MaxStockThreshold;
+
         _context.SaveChanges();
         return true;
     }

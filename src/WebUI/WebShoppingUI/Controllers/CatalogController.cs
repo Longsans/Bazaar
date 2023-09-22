@@ -6,9 +6,9 @@ namespace WebShoppingUI.Controllers;
 [ApiController]
 public class CatalogController : ControllerBase
 {
-    private readonly CatalogHttpService _catalogService;
+    private readonly HttpCatalogService _catalogService;
 
-    public CatalogController(CatalogHttpService catalogService)
+    public CatalogController(HttpCatalogService catalogService)
     {
         _catalogService = catalogService;
     }
