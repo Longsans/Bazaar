@@ -29,10 +29,10 @@ public class HttpOrderingService : HttpService, IOrderingDataService
             };
     }
 
-    public async Task<ServiceCallResult> UpdateStatus(int orderId, OrderStatus status)
+    public async Task<ServiceCallResult> UpdateStatus(int orderId, OrderUpdateStatusCommand updateCommand)
     {
         var reqContent = new StringContent(
-            ((int)status).ToString(), Encoding.UTF8, "application/json");
+            JsonConvert.SerializeObject(updateCommand), Encoding.UTF8, "application/json");
 
         var response = await _httpClient.PatchAsync(
             _addressService.OrderById(orderId), reqContent);

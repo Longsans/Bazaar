@@ -34,12 +34,13 @@ public class OrderingController : ControllerBase
     [HttpPatch("{orderId}")]
     public async Task<IActionResult> ConfirmOrCancelOrder(int orderId, [FromBody] OrderConfirmation confirmation)
     {
-        var callResult = confirmation switch
+        if (!confirmation.Confirmed && string.IsNullOrWhiteSpace(confirmation.CancelReason))
+            return BadRequest("Order cancellation must include a reason from the seller.");
+
+        var callResult = confirmation.Confirmed switch
         {
-            OrderConfirmation.Confirm => await _orderMgr.ConfirmOrder(orderId),
-            OrderConfirmation.Cancel => await _orderMgr.CancelOrder(orderId),
-            _ => ServiceCallResult.BadRequest(
-                "Order confirmation must be either \"Confirm\" or \"Cancel\", or 1 and 0, respectively.")
+            true => await _orderMgr.ConfirmOrder(orderId),
+            false => await _orderMgr.CancelOrder(orderId, confirmation.CancelReason!),
         };
 
         return callResult.IsSuccess

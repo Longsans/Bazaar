@@ -7,5 +7,5 @@ public interface IOrderRepository
     IEnumerable<Order> GetByProductId(string productId, OrderStatus status = 0);
     IEnumerable<Order> GetAll();
     ICreateOrderResult Create(Order order);
-    IUpdateOrderStatusResult UpdateStatus(int id, OrderStatus status);
+    IUpdateOrderStatusResult UpdateStatus(int id, OrderStatus status, string? cancelReason = null);
 }

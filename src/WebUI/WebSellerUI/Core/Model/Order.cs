@@ -8,6 +8,7 @@ public class Order
     public string ShippingAddress { get; set; }
     public string BuyerId { get; set; }
     public OrderStatus Status { get; set; }
+    public string? CancelReason { get; set; }
 }
 
 public enum OrderStatus
