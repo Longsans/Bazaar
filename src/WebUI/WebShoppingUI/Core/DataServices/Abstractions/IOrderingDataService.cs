@@ -6,5 +6,5 @@ using OrderResult = ServiceCallResult<Order>;
 public interface IOrderingDataService
 {
     Task<OrderCollectionResult> GetOrdersByBuyerId(string buyerId);
-    Task<OrderResult> UpdateStatus(int orderId, OrderStatus status);
+    Task<OrderResult> UpdateStatus(int orderId, OrderUpdateStatusCommand updateCommand);
 }

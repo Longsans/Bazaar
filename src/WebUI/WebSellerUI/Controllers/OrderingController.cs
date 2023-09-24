@@ -37,11 +37,9 @@ public class OrderingController : ControllerBase
         if (!confirmation.Confirmed && string.IsNullOrWhiteSpace(confirmation.CancelReason))
             return BadRequest("Order cancellation must include a reason from the seller.");
 
-        var callResult = confirmation.Confirmed switch
-        {
-            true => await _orderMgr.ConfirmOrder(orderId),
-            false => await _orderMgr.CancelOrder(orderId, confirmation.CancelReason!),
-        };
+        var callResult = confirmation.Confirmed
+            ? await _orderMgr.ConfirmOrder(orderId)
+            : await _orderMgr.CancelOrder(orderId, confirmation.CancelReason!);
 
         return callResult.IsSuccess
             ? NoContent()
