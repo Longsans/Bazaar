@@ -25,7 +25,7 @@ namespace WebShoppingUI.Controllers
             {
                 ServiceCallError.Unauthorized => Unauthorized(),
                 ServiceCallError.NotFound => NotFound(),
-                _ => StatusCode(500, callResult.ErrorMessage)
+                _ => StatusCode(500, callResult.ErrorDetail)
             };
         }
     }

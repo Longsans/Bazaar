@@ -23,7 +23,7 @@ public class CatalogController : ControllerBase
         }
         if (!callResult.IsSuccess)
         {
-            return StatusCode(500, new { error = callResult.ErrorMessage });
+            return StatusCode(500, new { error = callResult.ErrorDetail });
         }
         return callResult.Result!.ToList();
     }

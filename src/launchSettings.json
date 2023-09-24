@@ -7,8 +7,9 @@
         "includes": [
           "catalog",
           "ordering",
-          "websell",
-          "contracting"
+          "webshop",
+          "basket",
+          "shopper-info"
         ]
       }
     }

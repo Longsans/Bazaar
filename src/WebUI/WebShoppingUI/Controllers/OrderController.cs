@@ -24,8 +24,8 @@ public class OrderController : ControllerBase
         return callResult.ErrorType switch
         {
             ServiceCallError.Unauthorized => Unauthorized(),
-            ServiceCallError.BadRequest => BadRequest(callResult.ErrorMessage),
-            _ => StatusCode(500, callResult.ErrorMessage)
+            ServiceCallError.BadRequest => BadRequest(callResult.ErrorDetail),
+            _ => StatusCode(500, callResult.ErrorDetail)
         };
     }
 
@@ -40,9 +40,9 @@ public class OrderController : ControllerBase
         return callResult.ErrorType switch
         {
             ServiceCallError.Unauthorized => Unauthorized(),
-            ServiceCallError.NotFound => NotFound(callResult.ErrorMessage),
-            ServiceCallError.Conflict => Conflict(callResult.ErrorMessage),
-            _ => StatusCode(500, callResult.ErrorMessage)
+            ServiceCallError.NotFound => NotFound(callResult.ErrorDetail),
+            ServiceCallError.Conflict => Conflict(callResult.ErrorDetail),
+            _ => StatusCode(500, callResult.ErrorDetail)
         };
     }
 }
