@@ -33,10 +33,15 @@ public class HttpOrderingService : HttpService, IOrderingDataService
         return (await DeserializeResponse<IEnumerable<Order>>(response)).ToList();
     }
 
-    public async Task<OrderResult> UpdateStatus(int orderId, OrderStatus status)
+    public async Task<OrderResult> UpdateStatus(int orderId, OrderUpdateStatusCommand updateCommand)
     {
+        var reqContent = new StringContent(
+            JsonConvert.SerializeObject(updateCommand),
+            Encoding.UTF8,
+            "application/json");
+
         var response = await _httpClient.PatchAsync(
-            _addressService.OrderStatusById(orderId, status), null);
+            _addressService.OrderById(orderId), reqContent);
 
         if (response is null)
             return OrderResult.UntypedError("Update order status response null.");

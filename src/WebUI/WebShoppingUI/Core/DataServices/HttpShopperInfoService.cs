@@ -12,22 +12,43 @@ public class HttpShopperInfoService : HttpService, IShopperInfoDataService
 
     public async Task<ServiceCallResult<Shopper>> GetByExternalId(string externalId)
     {
-        var response = await _httpClient.GetAsync(_addressService.ShopperByExternalId(externalId));
+        var response = await _httpClient.GetAsync(_addressService.ShopperByExternalIdQuery(externalId));
 
         if (response is null)
             return ServiceCallResult<Shopper>.UntypedError("Get shopper by external ID response null.");
 
-        if (!response.IsSuccessStatusCode)
-        {
-            return response.StatusCode switch
+        return response.IsSuccessStatusCode
+            ? await DeserializeResponse<Shopper>(response)
+            : response.StatusCode switch
             {
                 HttpStatusCode.Unauthorized => ServiceCallResult<Shopper>.Unauthorized,
                 HttpStatusCode.NotFound => ServiceCallResult<Shopper>.NotFound(
                     await response.Content.ReadAsStringAsync()),
                 var status => ServiceCallResult<Shopper>.UntypedError(ErrorStatusMessage(status))
             };
-        }
+    }
 
-        return await DeserializeResponse<Shopper>(response);
+    public async Task<ServiceCallResult> UpdateInfo(string externalId, ShopperWriteCommand updateCommand)
+    {
+        var reqContent = new StringContent(
+            JsonConvert.SerializeObject(updateCommand),
+            Encoding.UTF8,
+            "application/json");
+
+        var response = await _httpClient.PutAsync(
+            _addressService.ShopperByExternalId(externalId), reqContent);
+
+        if (response is null)
+            return ServiceCallResult.UntypedError("Update shopper info response null.");
+
+        return response.IsSuccessStatusCode
+            ? ServiceCallResult.Success
+            : response.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => ServiceCallResult.Unauthorized,
+                HttpStatusCode.NotFound => ServiceCallResult.NotFound(
+                    await response.Content.ReadAsStringAsync()),
+                var status => ServiceCallResult.UntypedError(ErrorStatusMessage(status))
+            };
     }
 }

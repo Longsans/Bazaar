@@ -17,38 +17,37 @@ public class BasketController : ControllerBase
     public async Task<ActionResult<Basket>> GetByBuyerId(string buyerId)
     {
         var callResult = await _basketMgr.GetBasketByBuyerId(buyerId);
-        if (callResult.IsUnauthorized)
-        {
-            return Unauthorized();
-        }
-        if (!callResult.IsSuccess)
-        {
-            return StatusCode(500, new { callResult.ErrorMessage });
-        }
-        return callResult.Result!;
+
+        return callResult.IsSuccess
+            ? callResult.Result!
+            : callResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                _ => StatusCode(500, new { callResult.ErrorDetail })
+            };
     }
 
     [HttpPost("{buyerId}/items")]
-    public async Task<ActionResult<Basket>> AddItemToBasket(string buyerId, BasketItemAddCommand command)
+    public async Task<ActionResult<Basket>> AddItemToBasket(
+        string buyerId, BasketItemAddCommand command)
     {
         var basketItem = new BasketItem
         {
             ProductId = command.ProductId,
             Quantity = command.Quantity
         };
-        var callResult = await _basketMgr.AddItemToBasket(buyerId, basketItem);
+        var addResult = await _basketMgr.AddItemToBasket(buyerId, basketItem);
 
-        if (callResult.IsSuccess)
-            return callResult.Result!;
-
-        return callResult.ErrorType switch
-        {
-            ServiceCallError.Unauthorized => Unauthorized(),
-            ServiceCallError.NotFound => NotFound(new { error = callResult.ErrorMessage }),
-            ServiceCallError.BadRequest => BadRequest(new { error = callResult.ErrorMessage }),
-            ServiceCallError.Conflict => Conflict(new { error = callResult.ErrorMessage }),
-            _ => StatusCode(500, new { error = callResult.ErrorMessage })
-        };
+        return addResult.IsSuccess
+            ? addResult.Result!
+            : addResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.NotFound => NotFound(new { error = addResult.ErrorDetail }),
+                ServiceCallError.BadRequest => BadRequest(new { error = addResult.ErrorDetail }),
+                ServiceCallError.Conflict => Conflict(new { error = addResult.ErrorDetail }),
+                _ => StatusCode(500, new { error = addResult.ErrorDetail })
+            };
     }
 
     [HttpPatch("{buyerId}/items/{productId}")]
@@ -60,33 +59,47 @@ public class BasketController : ControllerBase
             return BadRequest("Quantity must be greater than 0.");
         }
 
-        var callResult = await _basketMgr.ChangeItemQuantity(buyerId, productId, quantity);
+        var changeItemResult = await _basketMgr.ChangeItemQuantity(buyerId, productId, quantity);
 
-        if (callResult.IsSuccess)
-            return NoContent();
+        return changeItemResult.IsSuccess
+            ? NoContent()
+            : changeItemResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.NotFound => NotFound(new { error = changeItemResult.ErrorDetail }),
+                ServiceCallError.BadRequest => BadRequest(new { error = changeItemResult.ErrorDetail }),
+                _ => StatusCode(500, new { error = changeItemResult.ErrorDetail }),
+            };
+    }
 
-        return callResult.ErrorType switch
-        {
-            ServiceCallError.Unauthorized => Unauthorized(),
-            ServiceCallError.NotFound => NotFound(new { error = callResult.ErrorMessage }),
-            ServiceCallError.BadRequest => BadRequest(new { error = callResult.ErrorMessage }),
-            _ => StatusCode(500, new { error = callResult.ErrorMessage }),
-        };
+    [HttpDelete("{buyerId}/items/{productId}")]
+    public async Task<IActionResult> RemoveItemFromBasket(
+        string buyerId, string productId)
+    {
+        var removeResult = await _basketMgr.RemoveItemFromBasket(buyerId, productId);
+
+        return removeResult.IsSuccess
+            ? NoContent()
+            : removeResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.NotFound => NotFound(removeResult.ErrorDetail),
+                _ => StatusCode(500, new { removeResult.ErrorDetail })
+            };
     }
 
     [HttpPost("checkout")]
     public async Task<IActionResult> Checkout(BasketCheckout checkout)
     {
-        var callResult = await _basketMgr.Checkout(checkout);
+        var checkoutResult = await _basketMgr.Checkout(checkout);
 
-        if (callResult.IsSuccess)
-            return Accepted();
-
-        return callResult.ErrorType switch
-        {
-            ServiceCallError.Unauthorized => Unauthorized(),
-            ServiceCallError.BadRequest => BadRequest(new { error = callResult.ErrorMessage }),
-            _ => StatusCode(500, new { error = callResult.ErrorMessage }),
-        };
+        return checkoutResult.IsSuccess
+            ? Accepted()
+            : checkoutResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.BadRequest => BadRequest(new { error = checkoutResult.ErrorDetail }),
+                _ => StatusCode(500, new { error = checkoutResult.ErrorDetail }),
+            };
     }
 }

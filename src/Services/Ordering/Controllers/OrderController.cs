@@ -60,14 +60,15 @@ public class OrderController : ControllerBase
     }
 
     [HttpPatch("{id}")]
-    public ActionResult<OrderQuery> UpdateOrderStatus(int id, [FromBody] OrderStatus status)
+    public ActionResult<OrderQuery> UpdateOrderStatus(int id, [FromBody] OrderUpdateStatusCommand command)
     {
-        var updateResult = _orderRepo.UpdateStatus(id, status);
+        var updateResult = _orderRepo.UpdateStatus(id, command.Status, command.CancelReason);
         return updateResult switch
         {
             OrderSuccessResult r => new OrderQuery(r.Order),
             OrderNotFoundError => NotFound(new { id }),
-            InvalidOrderCancellationError e => Conflict(new { error = e.Error }),
+            InvalidOrderCancellationError e => Conflict(new { e.Error }),
+            InvalidStatusCancelledOrderError e => Conflict(new { e.Error }),
             _ => StatusCode(500)
         };
     }

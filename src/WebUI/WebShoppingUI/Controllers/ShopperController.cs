@@ -1,32 +1,46 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace WebShoppingUI.Controllers
+namespace WebShoppingUI.Controllers;
+
+[Route("api/[controller]s")]
+[ApiController]
+public class ShopperController : ControllerBase
 {
-    [Route("api/[controller]s")]
-    [ApiController]
-    public class ShopperController : ControllerBase
+    private readonly IShopperInfoDataService _shopperService;
+
+    public ShopperController(IShopperInfoDataService shopperService)
     {
-        private readonly HttpShopperInfoService _shopperService;
+        _shopperService = shopperService;
+    }
 
-        public ShopperController(HttpShopperInfoService shopperService)
-        {
-            _shopperService = shopperService;
-        }
+    [HttpGet("{shopperId}")]
+    public async Task<ActionResult<ShopperQuery>> GetById(string shopperId)
+    {
+        var getResult = await _shopperService.GetByExternalId(shopperId);
 
-        [HttpGet("{shopperId}")]
-        public async Task<ActionResult<ShopperQuery>> GetById(string shopperId)
-        {
-            var callResult = await _shopperService.GetByExternalId(shopperId);
-
-            if (callResult.IsSuccess)
-                return new ShopperQuery(callResult.Result!);
-
-            return callResult.ErrorType switch
+        return getResult.IsSuccess
+            ? new ShopperQuery(getResult.Result!)
+            : getResult.ErrorType switch
             {
                 ServiceCallError.Unauthorized => Unauthorized(),
                 ServiceCallError.NotFound => NotFound(),
-                _ => StatusCode(500, callResult.ErrorMessage)
+                _ => StatusCode(500, getResult.ErrorDetail)
             };
-        }
+    }
+
+    [HttpPut("{shopperId}")]
+    public async Task<IActionResult> UpdateInfo(
+        string shopperId, ShopperWriteCommand updateCommand)
+    {
+        var updateResult = await _shopperService.UpdateInfo(shopperId, updateCommand);
+
+        return updateResult.IsSuccess
+            ? NoContent()
+            : updateResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.NotFound => NotFound(),
+                _ => StatusCode(500, updateResult.ErrorDetail)
+            };
     }
 }

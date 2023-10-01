@@ -8,6 +8,7 @@
         public decimal Total { get; set; }
         public string ShippingAddress { get; set; }
         public string Status { get; set; }
+        public string? CancelReason { get; set; }
 
         public OrderQuery(Order o)
         {
@@ -17,6 +18,7 @@
             Total = o.Total;
             ShippingAddress = o.ShippingAddress;
             Status = Enum.GetName(o.Status)!;
+            CancelReason = o.CancelReason;
         }
     }
 }

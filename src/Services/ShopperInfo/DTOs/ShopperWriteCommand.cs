@@ -11,6 +11,17 @@ public class ShopperWriteCommand
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public Gender Gender { get; set; }
 
+    public Shopper ToShopper(string externalId) => new()
+    {
+        ExternalId = externalId,
+        FirstName = FirstName,
+        LastName = LastName,
+        Email = Email,
+        PhoneNumber = PhoneNumber,
+        DateOfBirth = DateOfBirth,
+        Gender = Gender,
+    };
+
     public Shopper ToShopperInfo() => new()
     {
         FirstName = FirstName,

@@ -26,11 +26,20 @@ public class OrderManager
 
     public async Task<ServiceCallResult> ConfirmOrder(int orderId)
     {
-        return await _orderingService.UpdateStatus(orderId, OrderStatus.Shipping);
+        var updateCommand = new OrderUpdateStatusCommand
+        {
+            Status = OrderStatus.Shipping,
+        };
+        return await _orderingService.UpdateStatus(orderId, updateCommand);
     }
 
-    public async Task<ServiceCallResult> CancelOrder(int orderId)
+    public async Task<ServiceCallResult> CancelOrder(int orderId, string reason)
     {
-        return await _orderingService.UpdateStatus(orderId, OrderStatus.Cancelled);
+        var updateCommand = new OrderUpdateStatusCommand
+        {
+            Status = OrderStatus.Cancelled,
+            CancelReason = reason
+        };
+        return await _orderingService.UpdateStatus(orderId, updateCommand);
     }
 }

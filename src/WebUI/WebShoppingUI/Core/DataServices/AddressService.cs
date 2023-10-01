@@ -27,8 +27,6 @@ public class AddressService
         => $"{ORDERING_API}/api/orders?buyerId={buyerId}";
     public string OrderById(int orderId)
         => $"{ORDERING_API}/api/orders/{orderId}";
-    public string OrderStatusById(int orderId, OrderStatus status)
-        => $"{ORDERING_API}/api/orders/{orderId}?status={status}";
 
     // Basket
     public string BasketByBuyerId(string buyerId)
@@ -43,6 +41,9 @@ public class AddressService
     public string BasketCheckout => $"{BASKET_API}/api/buyer-baskets/checkout";
 
     // Shopper info
-    public string ShopperByExternalId(string externalId)
+    public string ShopperByExternalIdQuery(string externalId)
         => $"{SHOPPER_INFO_API}/api/shoppers?externalId={externalId}";
+
+    public string ShopperByExternalId(string externalId)
+        => $"{SHOPPER_INFO_API}/api/shoppers/{externalId}";
 }

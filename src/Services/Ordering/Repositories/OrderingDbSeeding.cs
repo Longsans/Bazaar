@@ -6,12 +6,8 @@ public static class OrderingDbSeeding
 
     public static async Task Seed(this OrderingDbContext context, IServiceProvider sp)
     {
+        await context.Database.EnsureDeletedAsync();
         await context.Database.MigrateAsync();
-
-        if (context.Orders.Any())
-        {
-            return;
-        }
 
         var adapter = sp.GetRequiredService<JsonDataAdapter>();
         context.Orders.AddRange(adapter.ReadToObjects<Order>(ORDERS_SECTION));

@@ -16,4 +16,5 @@ public interface IContractingDataService
         string partnerId, IndefiniteContractCreateCommand command);
 
     Task<ContractResult> EndCurrentIndefiniteContract(string partnerId);
+    Task<ContractResult> ExtendCurrentFixedPeriodContract(string partnerId, ContractExtension extension);
 }

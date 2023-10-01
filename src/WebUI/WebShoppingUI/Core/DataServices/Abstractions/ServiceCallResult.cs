@@ -2,9 +2,9 @@
 
 public record ServiceCallResult
 {
-    public bool IsSuccess => ErrorMessage is null;
+    public bool IsSuccess => ErrorDetail is null;
     public ServiceCallError? ErrorType { get; init; }
-    public string? ErrorMessage { get; init; }
+    public string? ErrorDetail { get; init; }
 
     public bool IsUnauthorized => ErrorType == ServiceCallError.Unauthorized;
     public bool IsNotFound => ErrorType == ServiceCallError.NotFound;
@@ -15,7 +15,7 @@ public record ServiceCallResult
     public ServiceCallResult(ServiceCallError? errorType = null, string? errorMessage = null)
     {
         ErrorType = errorType;
-        ErrorMessage = errorMessage;
+        ErrorDetail = errorMessage;
     }
 
     public static ServiceCallResult Success => new();
@@ -42,7 +42,7 @@ public record ServiceCallResult
 
     // conversions
     public ServiceCallResult<T> WithResult<T>(T? result = null) where T : class
-        => new(ErrorType, ErrorMessage, result);
+        => new(ErrorType, ErrorDetail, result);
 }
 
 public record ServiceCallResult<T> : ServiceCallResult

@@ -6,9 +6,9 @@ namespace WebShoppingUI.Controllers;
 [ApiController]
 public class CatalogController : ControllerBase
 {
-    private readonly HttpCatalogService _catalogService;
+    private readonly ICatalogDataService _catalogService;
 
-    public CatalogController(HttpCatalogService catalogService)
+    public CatalogController(ICatalogDataService catalogService)
     {
         _catalogService = catalogService;
     }
@@ -23,7 +23,7 @@ public class CatalogController : ControllerBase
         }
         if (!callResult.IsSuccess)
         {
-            return StatusCode(500, new { error = callResult.ErrorMessage });
+            return StatusCode(500, new { error = callResult.ErrorDetail });
         }
         return callResult.Result!.ToList();
     }

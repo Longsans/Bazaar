@@ -59,6 +59,11 @@ public class BasketManager
         return ServiceCallResult.Success;
     }
 
+    public async Task<ServiceCallResult> RemoveItemFromBasket(string buyerId, string productId)
+    {
+        return await _basketService.RemoveItemFromBasket(buyerId, productId);
+    }
+
     public async Task<ServiceCallResult> Checkout(BasketCheckout checkout)
     {
         return await _basketService.Checkout(checkout);

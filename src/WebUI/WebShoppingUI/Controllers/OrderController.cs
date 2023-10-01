@@ -16,33 +16,33 @@ public class OrderController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Order>>> GetByBuyerId(string buyerId)
     {
-        var callResult = await _orderMgr.GetByBuyerIdAsync(buyerId);
+        var getResult = await _orderMgr.GetByBuyerIdAsync(buyerId);
 
-        if (callResult.IsSuccess)
-            return callResult.Result!.ToList();
+        if (getResult.IsSuccess)
+            return getResult.Result!.ToList();
 
-        return callResult.ErrorType switch
+        return getResult.ErrorType switch
         {
             ServiceCallError.Unauthorized => Unauthorized(),
-            ServiceCallError.BadRequest => BadRequest(callResult.ErrorMessage),
-            _ => StatusCode(500, callResult.ErrorMessage)
+            ServiceCallError.BadRequest => BadRequest(getResult.ErrorDetail),
+            _ => StatusCode(500, getResult.ErrorDetail)
         };
     }
 
     [HttpPatch("{orderId}")]
-    public async Task<ActionResult<Order>> CancelOrder(int orderId)
+    public async Task<ActionResult<Order>> CancelOrder(int orderId, OrderCancellation cancellation)
     {
-        var callResult = await _orderMgr.CancelOrder(orderId);
+        var cancelResult = await _orderMgr.CancelOrder(orderId, cancellation.Reason);
 
-        if (callResult.IsSuccess)
-            return callResult.Result!;
+        if (cancelResult.IsSuccess)
+            return cancelResult.Result!;
 
-        return callResult.ErrorType switch
+        return cancelResult.ErrorType switch
         {
             ServiceCallError.Unauthorized => Unauthorized(),
-            ServiceCallError.NotFound => NotFound(callResult.ErrorMessage),
-            ServiceCallError.Conflict => Conflict(callResult.ErrorMessage),
-            _ => StatusCode(500, callResult.ErrorMessage)
+            ServiceCallError.NotFound => NotFound(cancelResult.ErrorDetail),
+            ServiceCallError.Conflict => Conflict(cancelResult.ErrorDetail),
+            _ => StatusCode(500, cancelResult.ErrorDetail)
         };
     }
 }
