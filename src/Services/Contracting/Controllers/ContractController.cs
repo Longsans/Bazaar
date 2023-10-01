@@ -54,7 +54,7 @@ public class ContractController : ControllerBase
                     "Contract",
                     new { id = contract.Id },
                     new ContractQuery(contract)),
-            ContractStartDateInPastOrAfterEndDateError =>
+            ContractEndDateBeforeCurrentDate =>
                 BadRequest(new { error = "Contract end date must be after current date." }),
             SellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
             PartnerNotFoundError => NotFound(new { partnerExternalId }),
@@ -82,7 +82,7 @@ public class ContractController : ControllerBase
                     "Contract",
                     new { id = contract.Id },
                     new ContractQuery(contract)),
-            ContractStartDateInPastOrAfterEndDateError =>
+            ContractEndDateBeforeCurrentDate =>
                 BadRequest(new { error = "Contract start date must be from now on and must be before end date." }),
             SellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
             PartnerNotFoundError => NotFound(new { partnerExternalId }),

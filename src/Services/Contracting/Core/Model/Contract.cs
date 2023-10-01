@@ -13,5 +13,5 @@ public class Contract
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
 
-    public bool IsInsertable => EndDate == null || EndDate >= DateTime.Now.Date;
+    public bool HasValidEndDate => EndDate == null || EndDate >= DateTime.Now.Date;
 }

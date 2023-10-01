@@ -27,11 +27,11 @@ public class ContractRepository : IContractRepository
 
     public ICreateFixedPeriodResult CreateFixedPeriod(Contract contract)
     {
-        contract.StartDate = contract.StartDate.Date;
+        contract.StartDate = DateTime.Now.Date;
         contract.EndDate = contract.EndDate?.Date;
 
-        if (!contract.IsInsertable)
-            return ICreateFixedPeriodResult.ContractStartDateInPastOrAfterEndDateError;
+        if (!contract.HasValidEndDate)
+            return ICreateFixedPeriodResult.ContractEndDateBeforeCurrentDate;
 
         var partner = _context.Partners
             .Include(p => p.Contracts)
@@ -54,7 +54,10 @@ public class ContractRepository : IContractRepository
 
     public ICreateIndefiniteResult CreateIndefinite(Contract contract)
     {
-        if (!contract.IsInsertable)
+        contract.StartDate = DateTime.Now.Date;
+        contract.EndDate = null;
+
+        if (!contract.HasValidEndDate)
             return ICreateIndefiniteResult.ContractStartDateInPastOrAfterEndDateError;
 
         var partner = _context.Partners
@@ -71,11 +74,8 @@ public class ContractRepository : IContractRepository
         if (sellingPlan is null)
             return ICreateIndefiniteResult.SellingPlanNotFoundError;
 
-        contract.StartDate = contract.StartDate.Date;
-        contract.EndDate = null;
         partner.Contracts.Add(contract);
         _context.SaveChanges();
-
         return ICreateIndefiniteResult.Success;
     }
 

@@ -8,6 +8,5 @@ public class IndefiniteContractCreateCommand
     {
         PartnerId = partnerId,
         SellingPlanId = SellingPlanId,
-        StartDate = DateTime.Now,
     };
 }

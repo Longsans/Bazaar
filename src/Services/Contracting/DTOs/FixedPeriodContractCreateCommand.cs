@@ -9,7 +9,6 @@ public class FixedPeriodContractCreateCommand
     {
         PartnerId = partnerId,
         SellingPlanId = SellingPlanId,
-        StartDate = DateTime.Now,
         EndDate = EndDate
     };
 }

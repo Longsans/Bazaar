@@ -17,7 +17,7 @@ public class ContractSuccessResult :
     public ContractSuccessResult(Contract contract) { Contract = contract; }
 }
 
-public class ContractStartDateInPastOrAfterEndDateError :
+public class ContractEndDateBeforeCurrentDate :
     ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult
 { }
 
@@ -58,7 +58,7 @@ public class ContractEndedError :
 public interface ICreateFixedPeriodResult
 {
     static ContractSuccessResult Success => new();
-    static ContractStartDateInPastOrAfterEndDateError ContractStartDateInPastOrAfterEndDateError => new();
+    static ContractEndDateBeforeCurrentDate ContractEndDateBeforeCurrentDate => new();
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
     static SellingPlanNotFoundError SellingPlanNotFoundError => new();
@@ -67,7 +67,7 @@ public interface ICreateFixedPeriodResult
 public interface ICreateIndefiniteResult
 {
     static ContractSuccessResult Success => new();
-    static ContractStartDateInPastOrAfterEndDateError ContractStartDateInPastOrAfterEndDateError => new();
+    static ContractEndDateBeforeCurrentDate ContractStartDateInPastOrAfterEndDateError => new();
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
     static SellingPlanNotFoundError SellingPlanNotFoundError => new();
