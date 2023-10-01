@@ -4,7 +4,11 @@ public abstract class ContractRepositoryResult { }
 
 // Concrete results
 public class ContractSuccessResult :
-    ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult, IEndContractResult
+    ContractRepositoryResult,
+    ICreateFixedPeriodResult,
+    ICreateIndefiniteResult,
+    IEndContractResult,
+    IExtendContractResult
 {
     public Contract? Contract;
 
@@ -25,13 +29,30 @@ public class PartnerUnderContractError :
     ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult
 { }
 
+public class SellingPlanNotFoundError :
+    ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult
+{ }
+
 public class ContractNotFoundError :
-    ContractRepositoryResult, IEndContractResult
+    ContractRepositoryResult, IEndContractResult, IExtendContractResult
 { }
 
 public class ContractNotIndefiniteError :
     ContractRepositoryResult, IEndContractResult
 { }
+
+public class EndDateNotAfterOldEndDateError :
+    ContractRepositoryResult, IExtendContractResult
+{ }
+
+public class ContractNotFixedPeriodError :
+    ContractRepositoryResult, IExtendContractResult
+{ }
+
+public class ContractEndedError :
+    ContractRepositoryResult, IExtendContractResult
+{ }
+
 
 // Method return interfaces
 public interface ICreateFixedPeriodResult
@@ -40,6 +61,7 @@ public interface ICreateFixedPeriodResult
     static ContractStartDateInPastOrAfterEndDateError ContractStartDateInPastOrAfterEndDateError => new();
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
+    static SellingPlanNotFoundError SellingPlanNotFoundError => new();
 }
 
 public interface ICreateIndefiniteResult
@@ -48,6 +70,7 @@ public interface ICreateIndefiniteResult
     static ContractStartDateInPastOrAfterEndDateError ContractStartDateInPastOrAfterEndDateError => new();
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
+    static SellingPlanNotFoundError SellingPlanNotFoundError => new();
 }
 
 public interface IEndContractResult
@@ -56,4 +79,13 @@ public interface IEndContractResult
     static PartnerNotFoundError PartnerNotFoundError => new();
     static ContractNotFoundError ContractNotFoundError => new();
     static ContractNotIndefiniteError ContractNotIndefiniteError => new();
+}
+
+public interface IExtendContractResult
+{
+    static ContractSuccessResult Success(Contract c) => new(c);
+    static EndDateNotAfterOldEndDateError EndDateNotAfterOldEndDateError => new();
+    static ContractNotFoundError ContractNotFoundError => new();
+    static ContractNotFixedPeriodError ContractNotFixedPeriodError => new();
+    static ContractEndedError ContractEndedError => new();
 }

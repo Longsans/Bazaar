@@ -1,70 +1,58 @@
-﻿namespace Bazaar.ShopperInfo.Controllers
+﻿namespace Bazaar.ShopperInfo.Controllers;
+
+[Route("api/[controller]s")]
+[ApiController]
+public class ShopperController : ControllerBase
 {
-    [Route("api/[controller]s")]
-    [ApiController]
-    public class ShopperController : ControllerBase
+    private readonly IShopperRepository _shopperRepo;
+
+    public ShopperController(IShopperRepository shopperRepo)
     {
-        private readonly IShopperRepository _shopperRepo;
+        _shopperRepo = shopperRepo;
+    }
 
-        public ShopperController(IShopperRepository shopperRepo)
-        {
-            _shopperRepo = shopperRepo;
-        }
+    [HttpGet("{id}")]
+    public ActionResult<Shopper> GetById(int id)
+    {
+        var shopper = _shopperRepo.GetById(id);
 
-        [HttpGet("{id}")]
-        public ActionResult<Shopper> GetById(int id)
-        {
-            var shopper = _shopperRepo.GetById(id);
-            if (shopper == null)
-            {
-                return NotFound();
-            }
+        return shopper is not null
+            ? shopper
+            : NotFound();
+    }
 
-            return shopper;
-        }
+    [HttpGet]
+    public ActionResult<Shopper> GetByExternalId(string externalId)
+    {
+        var shopper = _shopperRepo.GetByExternalId(externalId);
 
-        [HttpGet]
-        public ActionResult<Shopper> GetByExternalId([FromQuery] string externalId)
-        {
-            var shopper = _shopperRepo.GetByExternalId(externalId);
-            if (shopper == null)
-            {
-                return NotFound();
-            }
+        return shopper is not null
+            ? shopper
+            : NotFound();
+    }
 
-            return shopper;
-        }
+    [HttpPost]
+    public ActionResult<Shopper> Register(ShopperWriteCommand registerCommand)
+    {
+        var created = _shopperRepo.Register(registerCommand.ToShopperInfo());
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+    }
 
-        [HttpPost]
-        public ActionResult<Shopper> Register(ShopperWriteCommand registerCommand)
-        {
-            var created = _shopperRepo.Register(registerCommand.ToShopperInfo());
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
+    [HttpPut("{externalId}")]
+    public IActionResult UpdatedInfo(string externalId, ShopperWriteCommand updateCommand)
+    {
+        var update = updateCommand.ToShopper(externalId);
 
-        [HttpPut("{id}")]
-        public IActionResult UpdatedInfo(int id, ShopperWriteCommand updateCommand)
-        {
-            var update = updateCommand.ToShopperInfo();
-            update.Id = id;
+        return _shopperRepo.UpdateInfoByExternalId(update)
+            ? Ok()
+            : NotFound(new { externalId });
+    }
 
-            if (!_shopperRepo.UpdateInfo(update))
-            {
-                return NotFound(id);
-            }
-
-            return Ok();
-        }
-
-        [HttpDelete("id")]
-        public IActionResult Delete(int id)
-        {
-            if (!_shopperRepo.Delete(id))
-            {
-                return NotFound(id);
-            }
-
-            return Ok();
-        }
+    [HttpDelete("{externalId}")]
+    public IActionResult Delete(string externalId)
+    {
+        return _shopperRepo.DeleteByExternalId(externalId)
+            ? Ok()
+            : NotFound(new { externalId });
     }
 }

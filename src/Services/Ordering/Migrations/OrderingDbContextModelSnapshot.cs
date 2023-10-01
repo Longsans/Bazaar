@@ -33,6 +33,9 @@ namespace Ordering.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CancelReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ShippingAddress")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

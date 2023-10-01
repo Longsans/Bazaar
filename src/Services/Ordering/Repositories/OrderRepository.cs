@@ -16,6 +16,13 @@ public class OrderRepository : IOrderRepository
             .FirstOrDefault(o => o.Id == id);
     }
 
+    public IEnumerable<Order> GetByBuyerId(string buyerId, OrderStatus status = 0)
+    {
+        return _context.Orders
+            .Include(o => o.Items)
+            .Where(o => o.BuyerId == buyerId && o.Status.HasFlag(status));
+    }
+
     public IEnumerable<Order> GetByProductId(string productId, OrderStatus status = 0)
     {
         return _context.Orders
@@ -42,22 +49,23 @@ public class OrderRepository : IOrderRepository
         return ICreateOrderResult.Success(order);
     }
 
-    public IUpdateOrderStatusResult UpdateStatus(int id, OrderStatus status)
+    public IUpdateOrderStatusResult UpdateStatus(int id, OrderStatus status, string? cancelReason = null)
     {
         var order = _context.Orders
             .Include(o => o.Items)
             .FirstOrDefault(o => o.Id == id);
+
         if (order == null)
-        {
             return IUpdateOrderStatusResult.OrderNotFoundError;
-        }
 
         if (status == OrderStatus.Cancelled && !order.IsCancellable)
-        {
             return IUpdateOrderStatusResult.InvalidOrderCancellationError;
-        }
+
+        if (status != OrderStatus.Cancelled && order.Status == OrderStatus.Cancelled)
+            return IUpdateOrderStatusResult.InvalidStatusCancelledOrderError;
 
         order.Status = status;
+        order.CancelReason = status == OrderStatus.Cancelled ? cancelReason : null;
         _context.SaveChanges();
         return IUpdateOrderStatusResult.Success(order);
     }

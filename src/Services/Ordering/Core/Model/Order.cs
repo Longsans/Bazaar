@@ -8,11 +8,13 @@ public class Order
     public string ShippingAddress { get; set; }
     public string BuyerId { get; set; }
     public OrderStatus Status { get; set; }
+    public string? CancelReason { get; set; }
 
     #region Domain logic
 
     public bool IsCancellable
-        => Status == OrderStatus.AwaitingSellerConfirmation || Status == OrderStatus.Postponed;
+        => Status.HasFlag(OrderStatus.AwaitingSellerConfirmation)
+        || Status.HasFlag(OrderStatus.Postponed);
 
     #endregion
 }
