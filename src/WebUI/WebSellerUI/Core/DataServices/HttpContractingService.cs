@@ -136,4 +136,34 @@ public class HttpContractingService : HttpService, IContractingDataService
                 var status => ContractResult.UntypedError(ErrorStatusMessage(status))
             };
     }
+
+    public async Task<ContractResult> ExtendCurrentFixedPeriodContract(
+        string partnerId, ContractExtension extension)
+    {
+        var reqContent = new StringContent(
+            JsonConvert.SerializeObject(extension),
+            Encoding.UTF8,
+            "application/json");
+
+        var response = await _httpClient.PatchAsync(
+            _addressService.PartnerCurrentFixedPeriodContract(partnerId), reqContent);
+
+        if (response is null)
+            return ContractResult.UntypedError("Extend current FP contract response null.");
+
+        return response.IsSuccessStatusCode
+            ? ContractResult.Success(
+                await DeserializeResponse<Contract>(response))
+            : response.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => ContractResult.Unauthorized,
+                HttpStatusCode.NotFound => ContractResult.NotFound(
+                    await response.Content.ReadAsStringAsync()),
+                HttpStatusCode.Conflict => ContractResult.Conflict(
+                    await response.Content.ReadAsStringAsync()),
+                HttpStatusCode.BadRequest => ContractResult.BadRequest(
+                    await response.Content.ReadAsStringAsync()),
+                var status => ContractResult.UntypedError(ErrorStatusMessage(status))
+            };
+    }
 }

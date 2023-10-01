@@ -27,6 +27,9 @@ public class ContractRepository : IContractRepository
 
     public ICreateFixedPeriodResult CreateFixedPeriod(Contract contract)
     {
+        contract.StartDate = contract.StartDate.Date;
+        contract.EndDate = contract.EndDate?.Date;
+
         if (!contract.IsInsertable)
             return ICreateFixedPeriodResult.ContractStartDateInPastOrAfterEndDateError;
 
@@ -68,6 +71,7 @@ public class ContractRepository : IContractRepository
         if (sellingPlan is null)
             return ICreateIndefiniteResult.SellingPlanNotFoundError;
 
+        contract.StartDate = contract.StartDate.Date;
         contract.EndDate = null;
         partner.Contracts.Add(contract);
         _context.SaveChanges();
@@ -91,8 +95,30 @@ public class ContractRepository : IContractRepository
         if (currentContract.EndDate != null)
             return IEndContractResult.ContractNotIndefiniteError;
 
-        currentContract.EndDate = DateTime.Now;
+        currentContract.EndDate = DateTime.Now.Date;
         _context.SaveChanges();
         return IEndContractResult.Success(currentContract);
+    }
+
+    public IExtendContractResult ExtendFixedPeriodContract(int id, DateTime extendedEndDate)
+    {
+        var contract = _context.Contracts.Find(id);
+        extendedEndDate = extendedEndDate.Date;
+
+        if (contract is null)
+            return IExtendContractResult.ContractNotFoundError;
+
+        if (contract.EndDate is null)
+            return IExtendContractResult.ContractNotFixedPeriodError;
+
+        if (contract.EndDate < DateTime.Now.Date)
+            return IExtendContractResult.ContractEndedError;
+
+        if (extendedEndDate <= contract.EndDate)
+            return IExtendContractResult.EndDateNotAfterOldEndDateError;
+
+        contract.EndDate = extendedEndDate.Date;
+        _context.SaveChanges();
+        return IExtendContractResult.Success(contract);
     }
 }

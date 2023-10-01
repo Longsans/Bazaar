@@ -7,4 +7,5 @@ public interface IContractRepository
     ICreateFixedPeriodResult CreateFixedPeriod(Contract contract);
     ICreateIndefiniteResult CreateIndefinite(Contract contract);
     IEndContractResult EndIndefiniteContract(int id);
+    IExtendContractResult ExtendFixedPeriodContract(int id, DateTime extendedEndDate);
 }

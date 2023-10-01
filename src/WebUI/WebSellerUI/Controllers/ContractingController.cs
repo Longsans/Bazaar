@@ -101,4 +101,23 @@ public class ContractingController : ControllerBase
                 _ => StatusCode(500, contractResult.ErrorDetail)
             };
     }
+
+    [HttpPatch("{partnerId}/fp-contracts/current")]
+    public async Task<ActionResult<Contract>> ExtendCurrentFixedPeriodContract(
+        string partnerId, ContractExtension extension)
+    {
+        var extendResult = await _contractingService
+            .ExtendCurrentFixedPeriodContract(partnerId, extension);
+
+        return extendResult.IsSuccess
+            ? extendResult.Result!
+            : extendResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.BadRequest => BadRequest(extendResult.ErrorDetail),
+                ServiceCallError.NotFound => NotFound(extendResult.ErrorDetail),
+                ServiceCallError.Conflict => Conflict(extendResult.ErrorDetail),
+                _ => StatusCode(500, extendResult.ErrorDetail)
+            };
+    }
 }

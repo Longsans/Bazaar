@@ -41,6 +41,9 @@ public class AddressService
     public string PartnerCurrentIndefiniteContract(string partnerId)
         => $"{CONTRACTING_API}/api/partners/{partnerId}/indefinite-contracts/current";
 
+    public string PartnerCurrentFixedPeriodContract(string partnerId)
+        => $"{CONTRACTING_API}/api/partners/{partnerId}/fixed-period-contracts/current";
+
     public string ContractsByPartnerId(string partnerId)
         => $"{CONTRACTING_API}/api/contracts?partnerId={partnerId}";
 
