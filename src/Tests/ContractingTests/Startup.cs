@@ -12,6 +12,8 @@ internal class Startup
             options.UseInMemoryDatabase("ContractingTestDb");
         });
 
+        services.AddTransient<ContractManager>();
+        services.AddTransient<ISellingPlanRepository, SellingPlanRepository>();
         services.AddTransient<IPartnerRepository, PartnerRepository>();
         services.AddTransient<IContractRepository, ContractRepository>();
         services.AddTransient<ContractController>();

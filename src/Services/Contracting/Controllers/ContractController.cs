@@ -4,19 +4,17 @@
 [ApiController]
 public class ContractController : ControllerBase
 {
-    private readonly IPartnerRepository _partnerRepo;
-    private readonly IContractRepository _contractRepo;
+    private readonly ContractManager _contractManager;
 
-    public ContractController(IContractRepository contractRepo, IPartnerRepository partnerRepo)
+    public ContractController(ContractManager contractManager)
     {
-        _contractRepo = contractRepo;
-        _partnerRepo = partnerRepo;
+        _contractManager = contractManager;
     }
 
     [HttpGet("{id}")]
     public ActionResult<ContractQuery> GetById(int id)
     {
-        var contract = _contractRepo.GetById(id);
+        var contract = _contractManager.GetById(id);
         if (contract == null)
         {
             return NotFound();
@@ -29,8 +27,8 @@ public class ContractController : ControllerBase
     public ActionResult<IEnumerable<ContractQuery>> GetByPartnerId(
         string partnerId)
     {
-        return _contractRepo
-            .GetByPartnerId(partnerId)
+        return _contractManager
+            .GetByPartnerExternalId(partnerId)
             .Select(c => new ContractQuery(c))
             .ToList();
     }
@@ -39,26 +37,22 @@ public class ContractController : ControllerBase
     public ActionResult<ContractQuery> SignUpForFixedPeriodContract(
         [FromRoute] string partnerExternalId, [FromBody] FixedPeriodContractCreateCommand command)
     {
-        var partner = _partnerRepo.GetByExternalId(partnerExternalId);
-        if (partner == null)
-            return NotFound(partnerExternalId);
+        var signResult = _contractManager.SignPartnerForFixedPeriod(
+            partnerExternalId, command.SellingPlanId, command.EndDate);
 
-        var contract = command.ToContract(partner.Id);
-        var signUpResult = _contractRepo.CreateFixedPeriod(contract);
-
-        return signUpResult switch
+        return signResult switch
         {
-            ContractSuccessResult =>
+            ContractSuccessResult r =>
                 CreatedAtAction(
                     nameof(GetById),
                     "Contract",
-                    new { id = contract.Id },
-                    new ContractQuery(contract)),
+                    new { id = r.Contract.Id },
+                    new ContractQuery(r.Contract)),
+            PartnerNotFoundError => NotFound(new { partnerExternalId }),
+            SellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
+            PartnerUnderContractError => Conflict("Partner is currently already under contract."),
             ContractEndDateBeforeCurrentDate =>
                 BadRequest(new { error = "Contract end date must be after current date." }),
-            SellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
-            PartnerNotFoundError => NotFound(new { partnerExternalId }),
-            PartnerUnderContractError => Conflict("Partner is currently already under contract."),
             _ => StatusCode(500)
         };
     }
@@ -67,25 +61,19 @@ public class ContractController : ControllerBase
     public ActionResult<ContractQuery> SignUpForIndefiniteContract(
         [FromRoute] string partnerExternalId, [FromBody] IndefiniteContractCreateCommand command)
     {
-        var partner = _partnerRepo.GetByExternalId(partnerExternalId);
-        if (partner == null)
-            return NotFound(partnerExternalId);
+        var signResult = _contractManager.SignPartnerIndefinitely(
+            partnerExternalId, command.SellingPlanId);
 
-        var contract = command.ToContract(partner.Id);
-        var signUpResult = _contractRepo.CreateIndefinite(contract);
-
-        return signUpResult switch
+        return signResult switch
         {
-            ContractSuccessResult =>
+            ContractSuccessResult r =>
                 CreatedAtAction(
                     nameof(GetById),
                     "Contract",
-                    new { id = contract.Id },
-                    new ContractQuery(contract)),
-            ContractEndDateBeforeCurrentDate =>
-                BadRequest(new { error = "Contract start date must be from now on and must be before end date." }),
-            SellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
+                    new { id = r.Contract.Id },
+                    new ContractQuery(r.Contract)),
             PartnerNotFoundError => NotFound(new { partnerExternalId }),
+            SellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
             PartnerUnderContractError => Conflict("Partner is currently already under contract."),
             _ => StatusCode(500)
         };
@@ -98,14 +86,13 @@ public class ContractController : ControllerBase
         if (!command.Ended)
             return NoContent();
 
-        var partner = _partnerRepo.GetByExternalId(partnerExternalId);
-        if (partner is null)
-            return NotFound(partnerExternalId);
+        var endResult = _contractManager
+            .EndCurrentIndefiniteContractWithPartner(partnerExternalId);
 
-        var endContractResult = _contractRepo.EndIndefiniteContract(partner.Id);
-        return endContractResult switch
+        return endResult switch
         {
             ContractSuccessResult r => new ContractQuery(r.Contract!),
+            PartnerNotFoundError => NotFound(new { error = "Partner not found." }),
             ContractNotFoundError => NotFound(new { error = "Partner has no contract." }),
             ContractNotIndefiniteError =>
                 BadRequest(new { error = "Partner currently has a contract, but it is not indefinite." }),
@@ -117,26 +104,19 @@ public class ContractController : ControllerBase
     public ActionResult<ContractQuery> ExtendFixedPeriodContract(
         string partnerExternalId, ContractExtension extension)
     {
-        var partner = _partnerRepo.GetByExternalId(partnerExternalId);
-        if (partner is null)
-            return NotFound(new { partnerExternalId });
-
-        var contract = partner.CurrentContract;
-        if (contract is null)
-            return NotFound(new { error = "Partner has no current contract." });
-
-        var extendResult = _contractRepo.ExtendFixedPeriodContract(
-            contract.Id, extension.ExtendedEndDate);
+        var extendResult = _contractManager
+            .ExtendCurrentFixedPeriodContractWithPartner(
+                partnerExternalId, extension.ExtendedEndDate);
 
         return extendResult switch
         {
             ContractSuccessResult r => new ContractQuery(r.Contract!),
+            PartnerNotFoundError => NotFound(new { error = "Partner not found." }),
+            ContractNotFoundError => NotFound(new { error = "Partner has no contract." }),
             EndDateNotAfterOldEndDateError => BadRequest(
                 new { error = "Extended end date must be after old end date." }),
             ContractNotFixedPeriodError => Conflict(
                 new { error = "Contract is not fixed-period." }),
-            ContractEndedError => Conflict(
-                new { error = "Contract ended." }),
             _ => StatusCode(500)
         };
     }

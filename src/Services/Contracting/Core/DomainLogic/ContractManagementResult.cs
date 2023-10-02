@@ -1,12 +1,12 @@
-﻿namespace Bazaar.Contracting.Core.Usecases;
+﻿namespace Bazaar.Contracting.Core.DomainLogic;
 
-public abstract class ContractRepositoryResult { }
+public abstract class ContractManagementResult { }
 
 // Concrete results
 public class ContractSuccessResult :
-    ContractRepositoryResult,
-    ICreateFixedPeriodResult,
-    ICreateIndefiniteResult,
+    ContractManagementResult,
+    ISignFixedPeriodContractResult,
+    ISignIndefiniteContractResult,
     IEndContractResult,
     IExtendContractResult
 {
@@ -18,44 +18,43 @@ public class ContractSuccessResult :
 }
 
 public class ContractEndDateBeforeCurrentDate :
-    ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult
+    ContractManagementResult, ISignFixedPeriodContractResult, ISignIndefiniteContractResult
 { }
 
 public class PartnerNotFoundError :
-    ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult, IEndContractResult
+    ContractManagementResult,
+    ISignFixedPeriodContractResult,
+    ISignIndefiniteContractResult,
+    IEndContractResult,
+    IExtendContractResult
 { }
 
 public class PartnerUnderContractError :
-    ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult
+    ContractManagementResult, ISignFixedPeriodContractResult, ISignIndefiniteContractResult
 { }
 
 public class SellingPlanNotFoundError :
-    ContractRepositoryResult, ICreateFixedPeriodResult, ICreateIndefiniteResult
+    ContractManagementResult, ISignFixedPeriodContractResult, ISignIndefiniteContractResult
 { }
 
 public class ContractNotFoundError :
-    ContractRepositoryResult, IEndContractResult, IExtendContractResult
+    ContractManagementResult, IEndContractResult, IExtendContractResult
 { }
 
 public class ContractNotIndefiniteError :
-    ContractRepositoryResult, IEndContractResult
+    ContractManagementResult, IEndContractResult
 { }
 
 public class EndDateNotAfterOldEndDateError :
-    ContractRepositoryResult, IExtendContractResult
+    ContractManagementResult, IExtendContractResult
 { }
 
 public class ContractNotFixedPeriodError :
-    ContractRepositoryResult, IExtendContractResult
+    ContractManagementResult, IExtendContractResult
 { }
-
-public class ContractEndedError :
-    ContractRepositoryResult, IExtendContractResult
-{ }
-
 
 // Method return interfaces
-public interface ICreateFixedPeriodResult
+public interface ISignFixedPeriodContractResult
 {
     static ContractSuccessResult Success(Contract c) => new(c);
     static ContractEndDateBeforeCurrentDate ContractEndDateBeforeCurrentDate => new();
@@ -64,7 +63,7 @@ public interface ICreateFixedPeriodResult
     static SellingPlanNotFoundError SellingPlanNotFoundError => new();
 }
 
-public interface ICreateIndefiniteResult
+public interface ISignIndefiniteContractResult
 {
     static ContractSuccessResult Success(Contract c) => new(c);
     static PartnerNotFoundError PartnerNotFoundError => new();
@@ -83,8 +82,8 @@ public interface IEndContractResult
 public interface IExtendContractResult
 {
     static ContractSuccessResult Success(Contract c) => new(c);
-    static EndDateNotAfterOldEndDateError EndDateNotAfterOldEndDateError => new();
+    static PartnerNotFoundError PartnerNotFoundError => new();
     static ContractNotFoundError ContractNotFoundError => new();
+    static EndDateNotAfterOldEndDateError EndDateNotAfterOldEndDateError => new();
     static ContractNotFixedPeriodError ContractNotFixedPeriodError => new();
-    static ContractEndedError ContractEndedError => new();
 }

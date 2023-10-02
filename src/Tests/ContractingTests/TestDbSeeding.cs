@@ -74,15 +74,7 @@ public static class TestDbSeeding
             EndDate = DateTime.Now.Date + TimeSpan.FromDays(14)
         };
 
-        var contract3p3FpEnded = new Contract
-        {
-            Partner = partner3FpContracted,
-            SellingPlan = plan,
-            StartDate = DateTime.Now.Date - TimeSpan.FromDays(30),
-            EndDate = DateTime.Now.Date - TimeSpan.FromDays(15)
-        };
-
-        var contract4p4FpEndsToday = new Contract
+        var contract3p4FpEndsToday = new Contract
         {
             Partner = partner4FpContracted,
             SellingPlan = plan,
@@ -101,8 +93,7 @@ public static class TestDbSeeding
         context.Contracts.AddRange(
             contract1p2In,
             contract2p3Fp,
-            contract3p3FpEnded,
-            contract4p4FpEndsToday);
+            contract3p4FpEndsToday);
         context.SaveChanges();
     }
 }

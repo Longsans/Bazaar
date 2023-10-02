@@ -14,7 +14,7 @@ public class PartnerController : ControllerBase
     [HttpGet("{id}")]
     public ActionResult<PartnerQuery> GetById(int id)
     {
-        var partner = _partnerRepo.GetById(id);
+        var partner = _partnerRepo.GetWithContractsById(id);
         if (partner == null)
             return NotFound();
 
@@ -24,7 +24,7 @@ public class PartnerController : ControllerBase
     [HttpGet]
     public ActionResult<PartnerQuery> GetByExternalId(string externalId)
     {
-        var partner = _partnerRepo.GetByExternalId(externalId);
+        var partner = _partnerRepo.GetWithContractsByExternalId(externalId);
         if (partner == null)
             return NotFound();
 

@@ -9,18 +9,18 @@ public class PartnerRepository : IPartnerRepository
         _context = context;
     }
 
-    public Partner? GetByExternalId(string externalId)
-    {
-        return _context.Partners
-            .Include(p => p.Contracts)
-            .FirstOrDefault(p => p.ExternalId == externalId);
-    }
-
-    public Partner? GetById(int id)
+    public Partner? GetWithContractsById(int id)
     {
         return _context.Partners
             .Include(p => p.Contracts)
             .FirstOrDefault(p => p.Id == id);
+    }
+
+    public Partner? GetWithContractsByExternalId(string externalId)
+    {
+        return _context.Partners
+            .Include(p => p.Contracts)
+            .FirstOrDefault(p => p.ExternalId == externalId);
     }
 
     public Partner Create(Partner partner)
