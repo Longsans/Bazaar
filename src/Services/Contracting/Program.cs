@@ -16,9 +16,13 @@ builder.Services.AddDbContext<ContractingDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
+
 builder.Services.AddScoped<IPartnerRepository, PartnerRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<ISellingPlanRepository, SellingPlanRepository>();
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
+
+builder.Services.AddScoped<ContractManager>();
 
 builder.Services.AddAuthentication()
     .AddJwtBearer("Bearer", options =>
