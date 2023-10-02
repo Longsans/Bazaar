@@ -49,16 +49,13 @@ public class ContractRepository : IContractRepository
 
         partner.Contracts.Add(contract);
         _context.SaveChanges();
-        return ICreateFixedPeriodResult.Success;
+        return ICreateFixedPeriodResult.Success(contract);
     }
 
     public ICreateIndefiniteResult CreateIndefinite(Contract contract)
     {
         contract.StartDate = DateTime.Now.Date;
         contract.EndDate = null;
-
-        if (!contract.HasValidEndDate)
-            return ICreateIndefiniteResult.ContractStartDateInPastOrAfterEndDateError;
 
         var partner = _context.Partners
             .Include(p => p.Contracts)
@@ -76,7 +73,7 @@ public class ContractRepository : IContractRepository
 
         partner.Contracts.Add(contract);
         _context.SaveChanges();
-        return ICreateIndefiniteResult.Success;
+        return ICreateIndefiniteResult.Success(contract);
     }
 
     public IEndContractResult EndIndefiniteContract(int partnerId)

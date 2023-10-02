@@ -7,7 +7,7 @@ public static class TestDbSeeding
         context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
 
-        var uncontractedPartner = new Partner
+        var partner1NoContract = new Partner
         {
             ExternalId = "PNER-1",
             FirstName = "Test1",
@@ -18,7 +18,7 @@ public static class TestDbSeeding
             Gender = Gender.Male,
         };
 
-        var contractedPartner = new Partner
+        var partner2InContracted = new Partner
         {
             ExternalId = "PNER-2",
             FirstName = "Test2",
@@ -29,6 +29,28 @@ public static class TestDbSeeding
             Gender = Gender.Female,
         };
 
+        var partner3FpContracted = new Partner
+        {
+            ExternalId = "PNER-3",
+            FirstName = "Test3",
+            LastName = "Test3",
+            Email = "Test3@testmail.com",
+            PhoneNumber = "0123123123",
+            DateOfBirth = new DateTime(1979, 11, 10),
+            Gender = Gender.Female,
+        };
+
+        var partner4FpContracted = new Partner
+        {
+            ExternalId = "PNER-4",
+            FirstName = "Test4",
+            LastName = "Test4",
+            Email = "Test4@testmail.com",
+            PhoneNumber = "0123123123",
+            DateOfBirth = new DateTime(1969, 11, 10),
+            Gender = Gender.Male,
+        };
+
         var plan = new SellingPlan
         {
             Name = "Test plan",
@@ -37,18 +59,50 @@ public static class TestDbSeeding
             RegularPerSaleFeePercent = 0.05f,
         };
 
-        var contract = new Contract
+        var contract1p2In = new Contract
         {
-            Partner = contractedPartner,
+            Partner = partner2InContracted,
             SellingPlan = plan,
             StartDate = DateTime.Now.Date - TimeSpan.FromDays(7),
         };
 
-        context.Partners.AddRange(uncontractedPartner, contractedPartner);
+        var contract2p3Fp = new Contract
+        {
+            Partner = partner3FpContracted,
+            SellingPlan = plan,
+            StartDate = DateTime.Now.Date - TimeSpan.FromDays(14),
+            EndDate = DateTime.Now.Date + TimeSpan.FromDays(14)
+        };
+
+        var contract3p3FpEnded = new Contract
+        {
+            Partner = partner3FpContracted,
+            SellingPlan = plan,
+            StartDate = DateTime.Now.Date - TimeSpan.FromDays(30),
+            EndDate = DateTime.Now.Date - TimeSpan.FromDays(15)
+        };
+
+        var contract4p4FpEndsToday = new Contract
+        {
+            Partner = partner4FpContracted,
+            SellingPlan = plan,
+            StartDate = DateTime.Now.Date - TimeSpan.FromDays(14),
+            EndDate = DateTime.Now.Date
+        };
+
+        context.Partners.AddRange(
+            partner1NoContract,
+            partner2InContracted,
+            partner3FpContracted,
+            partner4FpContracted);
         context.SellingPlans.Add(plan);
         context.SaveChanges();
 
-        context.Contracts.Add(contract);
+        context.Contracts.AddRange(
+            contract1p2In,
+            contract2p3Fp,
+            contract3p3FpEnded,
+            contract4p4FpEndsToday);
         context.SaveChanges();
     }
 }

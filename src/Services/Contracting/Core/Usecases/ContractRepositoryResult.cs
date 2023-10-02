@@ -57,7 +57,7 @@ public class ContractEndedError :
 // Method return interfaces
 public interface ICreateFixedPeriodResult
 {
-    static ContractSuccessResult Success => new();
+    static ContractSuccessResult Success(Contract c) => new(c);
     static ContractEndDateBeforeCurrentDate ContractEndDateBeforeCurrentDate => new();
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
@@ -66,8 +66,7 @@ public interface ICreateFixedPeriodResult
 
 public interface ICreateIndefiniteResult
 {
-    static ContractSuccessResult Success => new();
-    static ContractEndDateBeforeCurrentDate ContractStartDateInPastOrAfterEndDateError => new();
+    static ContractSuccessResult Success(Contract c) => new(c);
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
     static SellingPlanNotFoundError SellingPlanNotFoundError => new();
