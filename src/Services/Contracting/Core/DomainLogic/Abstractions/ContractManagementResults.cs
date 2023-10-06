@@ -1,10 +1,7 @@
 ﻿namespace Bazaar.Contracting.Core.DomainLogic;
 
-public abstract class ContractManagementResult { }
-
 // Concrete results
 public class ContractSuccessResult :
-    ContractManagementResult,
     ISignFixedPeriodContractResult,
     ISignIndefiniteContractResult,
     IEndContractResult,
@@ -18,39 +15,31 @@ public class ContractSuccessResult :
 }
 
 public class ContractEndDateBeforeCurrentDate :
-    ContractManagementResult, ISignFixedPeriodContractResult, ISignIndefiniteContractResult
-{ }
-
-public class PartnerNotFoundError :
-    ContractManagementResult,
-    ISignFixedPeriodContractResult,
-    ISignIndefiniteContractResult,
-    IEndContractResult,
-    IExtendContractResult
+    ISignFixedPeriodContractResult, ISignIndefiniteContractResult
 { }
 
 public class PartnerUnderContractError :
-    ContractManagementResult, ISignFixedPeriodContractResult, ISignIndefiniteContractResult
+    ISignFixedPeriodContractResult, ISignIndefiniteContractResult
 { }
 
-public class SellingPlanNotFoundError :
-    ContractManagementResult, ISignFixedPeriodContractResult, ISignIndefiniteContractResult
+public class ContractSellingPlanNotFoundError :
+    ISignFixedPeriodContractResult, ISignIndefiniteContractResult
 { }
 
 public class ContractNotFoundError :
-    ContractManagementResult, IEndContractResult, IExtendContractResult
+    IEndContractResult, IExtendContractResult
 { }
 
 public class ContractNotIndefiniteError :
-    ContractManagementResult, IEndContractResult
+    IEndContractResult
 { }
 
 public class EndDateNotAfterOldEndDateError :
-    ContractManagementResult, IExtendContractResult
+    IExtendContractResult
 { }
 
 public class ContractNotFixedPeriodError :
-    ContractManagementResult, IExtendContractResult
+    IExtendContractResult
 { }
 
 // Method return interfaces
@@ -60,7 +49,7 @@ public interface ISignFixedPeriodContractResult
     static ContractEndDateBeforeCurrentDate ContractEndDateBeforeCurrentDate => new();
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
-    static SellingPlanNotFoundError SellingPlanNotFoundError => new();
+    static ContractSellingPlanNotFoundError SellingPlanNotFoundError => new();
 }
 
 public interface ISignIndefiniteContractResult
@@ -68,7 +57,7 @@ public interface ISignIndefiniteContractResult
     static ContractSuccessResult Success(Contract c) => new(c);
     static PartnerNotFoundError PartnerNotFoundError => new();
     static PartnerUnderContractError PartnerUnderContractError => new();
-    static SellingPlanNotFoundError SellingPlanNotFoundError => new();
+    static ContractSellingPlanNotFoundError SellingPlanNotFoundError => new();
 }
 
 public interface IEndContractResult

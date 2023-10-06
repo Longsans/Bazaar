@@ -4,17 +4,17 @@ namespace Bazaar.Contracting.Controllers;
 [ApiController]
 public class PartnerController : ControllerBase
 {
-    private readonly IPartnerRepository _partnerRepo;
+    private readonly PartnerManager _partnerManager;
 
-    public PartnerController(IPartnerRepository partnerRepo)
+    public PartnerController(PartnerManager partnerManager)
     {
-        _partnerRepo = partnerRepo;
+        _partnerManager = partnerManager;
     }
 
     [HttpGet("{id}")]
     public ActionResult<PartnerQuery> GetById(int id)
     {
-        var partner = _partnerRepo.GetWithContractsById(id);
+        var partner = _partnerManager.GetWithContractsById(id);
         if (partner == null)
             return NotFound();
 
@@ -24,7 +24,7 @@ public class PartnerController : ControllerBase
     [HttpGet]
     public ActionResult<PartnerQuery> GetByExternalId(string externalId)
     {
-        var partner = _partnerRepo.GetWithContractsByExternalId(externalId);
+        var partner = _partnerManager.GetWithContractsByExternalId(externalId);
         if (partner == null)
             return NotFound();
 
@@ -32,30 +32,33 @@ public class PartnerController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<PartnerQuery> CreateNew(PartnerWriteCommand createCommand)
+    public ActionResult<PartnerQuery> Register(PartnerWriteCommand command)
     {
-        var created = _partnerRepo.Create(createCommand.ToPartnerInfo());
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, new PartnerQuery(created));
+        var registerResult = _partnerManager.RegisterPartner(command.ToPartnerInfo());
+
+        return registerResult switch
+        {
+            PartnerSuccessResult r => CreatedAtAction(
+                nameof(GetById), new { r.Partner.Id }, new PartnerQuery(r.Partner)),
+            PartnerUnderEighteenError => BadRequest(new { error = "Partner must be 18 or older." }),
+            PartnerEmailAlreadyExistsError => Conflict(new { error = "This email already exists." }),
+            _ => StatusCode(500)
+        };
     }
 
-    [HttpPut("{id}")]
-    public IActionResult UpdateInfo(int id, PartnerWriteCommand updateCommand)
+    [HttpPut("{externalId}")]
+    public ActionResult<PartnerQuery> UpdateInfo(string externalId, PartnerWriteCommand command)
     {
-        var update = updateCommand.ToPartnerInfo();
-        update.Id = id;
+        var updatePartner = command.ToPartner(externalId);
+        var updateResult = _partnerManager.UpdatePartnerInfoByExternalId(updatePartner);
 
-        if (!_partnerRepo.UpdateInfo(update))
-            return NotFound();
-
-        return Ok();
-    }
-
-    [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
-    {
-        if (!_partnerRepo.Delete(id))
-            return NotFound(id);
-
-        return Ok();
+        return updateResult switch
+        {
+            PartnerSuccessResult r => new PartnerQuery(r.Partner),
+            PartnerUnderEighteenError => BadRequest(new { error = "Partner must be 18 or older." }),
+            PartnerEmailAlreadyExistsError => Conflict(new { error = "This email already exists." }),
+            PartnerNotFoundError => NotFound(new { externalId }),
+            _ => StatusCode(500)
+        };
     }
 }

@@ -13,14 +13,21 @@ public class PartnerRepository : IPartnerRepository
     {
         return _context.Partners
             .Include(p => p.Contracts)
-            .FirstOrDefault(p => p.Id == id);
+            .SingleOrDefault(p => p.Id == id);
     }
 
     public Partner? GetWithContractsByExternalId(string externalId)
     {
         return _context.Partners
             .Include(p => p.Contracts)
-            .FirstOrDefault(p => p.ExternalId == externalId);
+            .SingleOrDefault(p => p.ExternalId == externalId);
+    }
+
+    public Partner? GetWithContractsByEmail(string email)
+    {
+        return _context.Partners
+            .Include(p => p.Contracts)
+            .SingleOrDefault(p => p.Email == email);
     }
 
     public Partner Create(Partner partner)
@@ -30,23 +37,23 @@ public class PartnerRepository : IPartnerRepository
         return partner;
     }
 
-    public bool UpdateInfo(Partner update)
+    public Partner? UpdateInfoByExternalId(Partner update)
     {
-        var partner = _context.Partners.FirstOrDefault(p => p.Id == update.Id);
-        if (partner == null)
+        var partner = _context.Partners
+            .SingleOrDefault(p => p.ExternalId == update.ExternalId);
+
+        if (partner != null)
         {
-            return false;
+            partner.FirstName = update.FirstName;
+            partner.LastName = update.LastName;
+            partner.Email = update.Email;
+            partner.PhoneNumber = update.PhoneNumber;
+            partner.DateOfBirth = update.DateOfBirth;
+            partner.Gender = update.Gender;
+            _context.SaveChanges();
         }
 
-        partner.FirstName = update.FirstName;
-        partner.LastName = update.LastName;
-        partner.Email = update.Email;
-        partner.PhoneNumber = update.PhoneNumber;
-        partner.DateOfBirth = update.DateOfBirth;
-        partner.Gender = update.Gender;
-        _context.SaveChanges();
-
-        return true;
+        return partner;
     }
 
     public bool Delete(int id)

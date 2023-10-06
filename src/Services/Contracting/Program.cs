@@ -17,13 +17,18 @@ builder.Services.AddDbContext<ContractingDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
+// Data services
 builder.Services.AddScoped<IPartnerRepository, PartnerRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<ISellingPlanRepository, SellingPlanRepository>();
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 
+// Domain logic managers
 builder.Services.AddScoped<ContractManager>();
+builder.Services.AddScoped<PartnerManager>();
+builder.Services.AddScoped<SellingPlanManager>();
 
+// AuthN and AuthZ
 builder.Services.AddAuthentication()
     .AddJwtBearer("Bearer", options =>
     {

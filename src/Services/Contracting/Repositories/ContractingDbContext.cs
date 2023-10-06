@@ -33,6 +33,9 @@ public class ContractingDbContext : DbContext
             partner.HasIndex(p => p.ExternalId)
                 .IsUnique();
 
+            partner.HasIndex(p => p.Email)
+                .IsUnique();
+
             partner.Property(p => p.ExternalId)
                 .HasComputedColumnSql("CONCAT('PNER-', [Id])", stored: true)
                 .HasColumnName("ExternalId");
@@ -40,6 +43,21 @@ public class ContractingDbContext : DbContext
             partner.ToTable(p => p.HasCheckConstraint(
                 "CK_Partner_18AndOlder",
                 "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()"));
+        });
+
+        modelBuilder.Entity<SellingPlan>(plan =>
+        {
+            plan.ToTable(p =>
+            {
+                p.HasCheckConstraint(
+                    "CK_SellingPlan_PerSaleOrMonthlyFeePositive",
+                    "[PerSaleFee] > 0 OR [MonthlyFee] > 0");
+
+                p.HasCheckConstraint(
+                    "CK_SellingPlan_RegularFeePositive",
+                    "[RegularPerSaleFeePercent] > 0");
+            });
+
         });
     }
 

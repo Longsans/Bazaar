@@ -121,7 +121,7 @@ public class ContractManagerTests
             UnsignedPartnerExternalId, sellingPlanId, ValidExtendedEndDate);
 
         // assert
-        Assert.IsType<SellingPlanNotFoundError>(createResult);
+        Assert.IsType<ContractSellingPlanNotFoundError>(createResult);
         AssertNotCreated(UnsignedPartnerId, sellingPlanId);
     }
 
@@ -177,7 +177,7 @@ public class ContractManagerTests
             UnsignedPartnerExternalId, sellingPlanId);
 
         // assert
-        Assert.IsType<SellingPlanNotFoundError>(createResult);
+        Assert.IsType<ContractSellingPlanNotFoundError>(createResult);
         AssertNotCreated(UnsignedPartnerId, sellingPlanId);
     }
 

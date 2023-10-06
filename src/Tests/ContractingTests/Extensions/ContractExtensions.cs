@@ -1,6 +1,6 @@
 ﻿namespace ContractingTests.Extensions;
 
-public static class ContractingExtensions
+public static class ContractExtensions
 {
     private const int INVALID_PARTNER_ID = 0;
     private const int INVALID_PLAN_ID = 0;

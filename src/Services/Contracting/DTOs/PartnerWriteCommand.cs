@@ -18,4 +18,15 @@ public class PartnerWriteCommand
         DateOfBirth = DateOfBirth,
         Gender = Gender,
     };
+
+    public Partner ToPartner(string externalId) => new()
+    {
+        ExternalId = externalId,
+        FirstName = FirstName,
+        LastName = LastName,
+        Email = Email,
+        PhoneNumber = PhoneNumber,
+        DateOfBirth = DateOfBirth,
+        Gender = Gender,
+    };
 }

@@ -49,7 +49,7 @@ public class ContractController : ControllerBase
                     new { id = r.Contract.Id },
                     new ContractQuery(r.Contract)),
             PartnerNotFoundError => NotFound(new { partnerExternalId }),
-            SellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
+            ContractSellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
             PartnerUnderContractError => Conflict("Partner is currently already under contract."),
             ContractEndDateBeforeCurrentDate =>
                 BadRequest(new { error = "Contract end date must be after current date." }),
@@ -73,7 +73,7 @@ public class ContractController : ControllerBase
                     new { id = r.Contract.Id },
                     new ContractQuery(r.Contract)),
             PartnerNotFoundError => NotFound(new { partnerExternalId }),
-            SellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
+            ContractSellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
             PartnerUnderContractError => Conflict("Partner is currently already under contract."),
             _ => StatusCode(500)
         };
