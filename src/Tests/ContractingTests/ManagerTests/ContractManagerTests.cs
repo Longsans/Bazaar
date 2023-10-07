@@ -77,7 +77,7 @@ public class ContractManagerTests
                 UnsignedPartnerExternalId, ValidSellingPlanId, ValidExtendedEndDate);
 
         // assert
-        AssertCreated(createResult as ContractManagementResult, ValidExtendedEndDate);
+        AssertCreated(createResult, ValidExtendedEndDate);
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public class ContractManagerTests
             UnsignedPartnerExternalId, sellingPlanId, ValidExtendedEndDate);
 
         // assert
-        Assert.IsType<ContractSellingPlanNotFoundError>(createResult);
+        Assert.IsType<SellingPlanNotFoundError>(createResult);
         AssertNotCreated(UnsignedPartnerId, sellingPlanId);
     }
 
@@ -148,7 +148,7 @@ public class ContractManagerTests
             UnsignedPartnerExternalId, ValidSellingPlanId);
 
         // assert
-        AssertCreated(createResult as ContractManagementResult);
+        AssertCreated(createResult);
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public class ContractManagerTests
             UnsignedPartnerExternalId, sellingPlanId);
 
         // assert
-        Assert.IsType<ContractSellingPlanNotFoundError>(createResult);
+        Assert.IsType<SellingPlanNotFoundError>(createResult);
         AssertNotCreated(UnsignedPartnerId, sellingPlanId);
     }
 
@@ -349,7 +349,7 @@ public class ContractManagerTests
         };
 
     private void AssertCreated(
-        ContractManagementResult result, DateTime? endDate = null)
+        object result, DateTime? endDate = null)
     {
         var successResult = Assert.IsType<ContractSuccessResult>(result);
         Assert.NotNull(successResult.Contract);

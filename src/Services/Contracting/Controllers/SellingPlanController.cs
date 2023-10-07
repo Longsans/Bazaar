@@ -4,9 +4,9 @@
 [ApiController]
 public class SellingPlanController : ControllerBase
 {
-    private readonly SellingPlanManager _planManager;
+    private readonly ISellingPlanManager _planManager;
 
-    public SellingPlanController(SellingPlanManager planManager)
+    public SellingPlanController(ISellingPlanManager planManager)
     {
         _planManager = planManager;
     }

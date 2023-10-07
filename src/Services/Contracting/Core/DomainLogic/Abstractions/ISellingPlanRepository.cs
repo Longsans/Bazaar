@@ -4,6 +4,6 @@ public interface ISellingPlanRepository
 {
     SellingPlan? GetById(int id);
     SellingPlan Create(SellingPlan plan);
-    SellingPlan? Update(SellingPlan updatedPlan);
+    SellingPlan? FindAndUpdate(SellingPlan updatedPlan);
     void Delete(int id);
 }

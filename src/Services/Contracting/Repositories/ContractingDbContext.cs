@@ -61,7 +61,7 @@ public class ContractingDbContext : DbContext
         });
     }
 
-    public DbSet<Contract> Contracts { get; set; }
-    public DbSet<Partner> Partners { get; set; }
-    public DbSet<SellingPlan> SellingPlans { get; set; }
+    public virtual DbSet<Contract> Contracts { get; set; }
+    public virtual DbSet<Partner> Partners { get; set; }
+    public virtual DbSet<SellingPlan> SellingPlans { get; set; }
 }

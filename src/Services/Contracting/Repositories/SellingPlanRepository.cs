@@ -21,7 +21,7 @@ public class SellingPlanRepository : ISellingPlanRepository
         return plan;
     }
 
-    public SellingPlan? Update(SellingPlan updatedPlan)
+    public SellingPlan? FindAndUpdate(SellingPlan updatedPlan)
     {
         var existing = _context.SellingPlans.Find(updatedPlan.Id);
 

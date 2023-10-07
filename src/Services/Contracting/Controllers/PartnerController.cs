@@ -4,9 +4,9 @@ namespace Bazaar.Contracting.Controllers;
 [ApiController]
 public class PartnerController : ControllerBase
 {
-    private readonly PartnerManager _partnerManager;
+    private readonly IPartnerManager _partnerManager;
 
-    public PartnerController(PartnerManager partnerManager)
+    public PartnerController(IPartnerManager partnerManager)
     {
         _partnerManager = partnerManager;
     }

@@ -24,9 +24,9 @@ builder.Services.AddScoped<ISellingPlanRepository, SellingPlanRepository>();
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 
 // Domain logic managers
-builder.Services.AddScoped<ContractManager>();
-builder.Services.AddScoped<PartnerManager>();
-builder.Services.AddScoped<SellingPlanManager>();
+builder.Services.AddScoped<IContractManager, ContractManager>();
+builder.Services.AddScoped<IPartnerManager, PartnerManager>();
+builder.Services.AddScoped<ISellingPlanManager, SellingPlanManager>();
 
 // AuthN and AuthZ
 builder.Services.AddAuthentication()

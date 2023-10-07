@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Contracting.Core.DomainLogic;
 
-public class ContractManager
+public class ContractManager : IContractManager
 {
     private readonly IContractRepository _contractRepo;
     private readonly IPartnerRepository _partnerRepo;
@@ -43,7 +43,8 @@ public class ContractManager
             return ISignFixedPeriodContractResult.PartnerNotFoundError;
 
         if (partner.IsUnderContract)
-            return ISignFixedPeriodContractResult.PartnerUnderContractError;
+            return ISignFixedPeriodContractResult
+                .PartnerUnderContractError(partner.CurrentContract!);
 
         var sellPlan = _sellPlanRepo.GetById(sellingPlanId);
         if (sellPlan is null)
@@ -63,7 +64,8 @@ public class ContractManager
             return ISignIndefiniteContractResult.PartnerNotFoundError;
 
         if (partner.IsUnderContract)
-            return ISignIndefiniteContractResult.PartnerUnderContractError;
+            return ISignIndefiniteContractResult
+                .PartnerUnderContractError(partner.CurrentContract!);
 
         var sellPlan = _sellPlanRepo.GetById(sellingPlanId);
         if (sellPlan is null)

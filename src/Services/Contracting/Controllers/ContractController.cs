@@ -4,9 +4,9 @@
 [ApiController]
 public class ContractController : ControllerBase
 {
-    private readonly ContractManager _contractManager;
+    private readonly IContractManager _contractManager;
 
-    public ContractController(ContractManager contractManager)
+    public ContractController(IContractManager contractManager)
     {
         _contractManager = contractManager;
     }
@@ -34,7 +34,7 @@ public class ContractController : ControllerBase
     }
 
     [HttpPost("/api/partners/{partnerExternalId}/fixed-period-contracts")]
-    public ActionResult<ContractQuery> SignUpForFixedPeriodContract(
+    public ActionResult<ContractQuery> SignPartnerForFixedPeriodContract(
         [FromRoute] string partnerExternalId, [FromBody] FixedPeriodContractCreateCommand command)
     {
         var signResult = _contractManager.SignPartnerForFixedPeriod(
@@ -49,16 +49,25 @@ public class ContractController : ControllerBase
                     new { id = r.Contract.Id },
                     new ContractQuery(r.Contract)),
             PartnerNotFoundError => NotFound(new { partnerExternalId }),
-            ContractSellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
-            PartnerUnderContractError => Conflict("Partner is currently already under contract."),
-            ContractEndDateBeforeCurrentDate =>
-                BadRequest(new { error = "Contract end date must be after current date." }),
+            SellingPlanNotFoundError => NotFound(new { sellingPlanId = command.SellingPlanId }),
+            PartnerUnderContractError e => Conflict(
+                new
+                {
+                    error = "Partner is currently already under contract.",
+                    contract = e.Contract
+                }),
+            ContractEndDateBeforeCurrentDate => BadRequest(
+                new
+                {
+                    error = "Contract end date must be after current date.",
+                    endDate = command.EndDate
+                }),
             _ => StatusCode(500)
         };
     }
 
     [HttpPost("/api/partners/{partnerExternalId}/indefinite-contracts")]
-    public ActionResult<ContractQuery> SignUpForIndefiniteContract(
+    public ActionResult<ContractQuery> SignPartnerForIndefiniteContract(
         [FromRoute] string partnerExternalId, [FromBody] IndefiniteContractCreateCommand command)
     {
         var signResult = _contractManager.SignPartnerIndefinitely(
@@ -73,8 +82,13 @@ public class ContractController : ControllerBase
                     new { id = r.Contract.Id },
                     new ContractQuery(r.Contract)),
             PartnerNotFoundError => NotFound(new { partnerExternalId }),
-            ContractSellingPlanNotFoundError => NotFound(new { command.SellingPlanId }),
-            PartnerUnderContractError => Conflict("Partner is currently already under contract."),
+            SellingPlanNotFoundError => NotFound(new { sellingPlanId = command.SellingPlanId }),
+            PartnerUnderContractError e => Conflict(
+                new
+                {
+                    error = "Partner is currently already under contract.",
+                    contract = e.Contract
+                }),
             _ => StatusCode(500)
         };
     }
@@ -92,16 +106,21 @@ public class ContractController : ControllerBase
         return endResult switch
         {
             ContractSuccessResult r => new ContractQuery(r.Contract!),
-            PartnerNotFoundError => NotFound(new { error = "Partner not found." }),
-            ContractNotFoundError => NotFound(new { error = "Partner has no contract." }),
+            PartnerNotFoundError => NotFound(new { partnerExternalId }),
+            ContractNotFoundError => Conflict(
+                new
+                {
+                    error = "Partner is not currently under any contract.",
+                    contracts = Array.Empty<Contract>()
+                }),
             ContractNotIndefiniteError =>
-                BadRequest(new { error = "Partner currently has a contract, but it is not indefinite." }),
+                Conflict(new { error = "Current contract is not indefinite." }),
             _ => StatusCode(500)
         };
     }
 
     [HttpPatch("/api/partners/{partnerExternalId}/fixed-period-contracts/current")]
-    public ActionResult<ContractQuery> ExtendFixedPeriodContract(
+    public ActionResult<ContractQuery> ExtendCurrentFixedPeriodContract(
         string partnerExternalId, ContractExtension extension)
     {
         var extendResult = _contractManager
@@ -111,12 +130,21 @@ public class ContractController : ControllerBase
         return extendResult switch
         {
             ContractSuccessResult r => new ContractQuery(r.Contract!),
-            PartnerNotFoundError => NotFound(new { error = "Partner not found." }),
-            ContractNotFoundError => NotFound(new { error = "Partner has no contract." }),
+            PartnerNotFoundError => NotFound(new { partnerExternalId }),
+            ContractNotFoundError => Conflict(
+                new
+                {
+                    error = "Partner is not currently under any contract.",
+                    contracts = Array.Empty<Contract>()
+                }),
             EndDateNotAfterOldEndDateError => BadRequest(
-                new { error = "Extended end date must be after old end date." }),
+                new
+                {
+                    error = "Extended end date must be after old end date.",
+                    extendedEndDate = extension.ExtendedEndDate
+                }),
             ContractNotFixedPeriodError => Conflict(
-                new { error = "Contract is not fixed-period." }),
+                new { error = "Current contract is not fixed-period." }),
             _ => StatusCode(500)
         };
     }

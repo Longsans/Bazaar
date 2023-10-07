@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Contracting.Core.DomainLogic;
 
-public class PartnerManager
+public class PartnerManager : IPartnerManager
 {
     private readonly IPartnerRepository _partnerRepo;
 

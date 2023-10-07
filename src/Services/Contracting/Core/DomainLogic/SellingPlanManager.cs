@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Contracting.Core.DomainLogic;
 
-public class SellingPlanManager
+public class SellingPlanManager : ISellingPlanManager
 {
     private readonly ISellingPlanRepository _planRepo;
 
@@ -34,7 +34,7 @@ public class SellingPlanManager
         if (update.RegularPerSaleFeePercent <= 0f)
             return IUpdateSellingPlanResult.RegularPerSaleFeeNotPositive;
 
-        var updatedPlan = _planRepo.Update(update);
+        var updatedPlan = _planRepo.FindAndUpdate(update);
         if (updatedPlan == null)
             return IUpdateSellingPlanResult.SellingPlanNotFound;
 
