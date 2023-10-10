@@ -1,11 +1,28 @@
-﻿namespace ContractingTests.Extensions;
+﻿namespace ContractingTests.Helpers;
 
-public static class ContractExtensions
+public static class ContractExtensionsAndHelpers
 {
     private const int INVALID_PARTNER_ID = 0;
     private const int INVALID_PLAN_ID = 0;
     private static readonly DateTime PAST_END_DATE = DateTime.Now.Date - TimeSpan.FromDays(1);
     private const int CONTRACTED_PARTNER_ID = 2;
+
+    public static readonly Contract ValidFpContract = new()
+    {
+        Id = 1,
+        PartnerId = 1,
+        SellingPlanId = 1,
+        StartDate = DateTime.Now.Date - TimeSpan.FromDays(7),
+        EndDate = DateTime.Now.Date + TimeSpan.FromDays(7),
+    };
+
+    public static readonly Contract ValidIndefContract = new()
+    {
+        Id = 1,
+        PartnerId = 1,
+        SellingPlanId = 1,
+        StartDate = DateTime.Now.Date - TimeSpan.FromDays(7),
+    };
 
     public static Contract Clone(this Contract contract)
         => new()

@@ -2,6 +2,8 @@
 
 public class ContractingDbContext : DbContext
 {
+    public ContractingDbContext() : base() { }
+
     public ContractingDbContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

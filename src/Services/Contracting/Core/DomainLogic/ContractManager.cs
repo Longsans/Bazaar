@@ -96,7 +96,7 @@ public class ContractManager : IContractManager
         if (currentContract.EndDate is not null)
             return IEndContractResult.ContractNotIndefiniteError;
 
-        _contractRepo.UpdateEndDate(currentContract.Id, DateTime.Now.Date);
+        _contractRepo.FindAndUpdateEndDate(currentContract.Id, DateTime.Now.Date);
         return IEndContractResult.Success(currentContract);
     }
 
@@ -119,7 +119,7 @@ public class ContractManager : IContractManager
         if (extendedEndDate <= currentContract.EndDate)
             return IExtendContractResult.EndDateNotAfterOldEndDateError;
 
-        _contractRepo.UpdateEndDate(currentContract.Id, extendedEndDate);
+        _contractRepo.FindAndUpdateEndDate(currentContract.Id, extendedEndDate);
         return IExtendContractResult.Success(currentContract);
     }
 }

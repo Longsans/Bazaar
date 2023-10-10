@@ -1,6 +1,4 @@
-﻿using ContractingTests.Extensions;
-
-namespace ContractingTests.ManagerTests;
+﻿namespace ContractingTests.ManagerTests;
 
 public class PartnerManagerTests
 {
@@ -231,18 +229,11 @@ public class PartnerManagerTests
     }
 
     // Constants and helpers
-    private static readonly Partner ValidNewPartner = new()
-    {
-        FirstName = "TestFName",
-        LastName = "TestLName",
-        Email = "Test@testmail.com",
-        PhoneNumber = "0123456789",
-        DateOfBirth = new DateTime(1989, 11, 10),
-        Gender = Gender.Male
-    };
+    private static readonly Partner ValidNewPartner
+        = PartnerExtensionsAndHelpers.ValidNewPartner;
 
     private static readonly Partner ExistingPartner
-        = ValidNewPartner.WithValidId();
+        = PartnerExtensionsAndHelpers.ExistingPartner;
 
     private static void AssertCreated(
         IRegisterPartnerResult result,

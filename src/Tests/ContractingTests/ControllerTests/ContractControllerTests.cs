@@ -1,5 +1,3 @@
-using ContractingTests.Extensions;
-
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace ContractingTests.ControllerTests;
 
@@ -517,22 +515,8 @@ public class ContractControllerTests
 
     #region Constants and helpers
 
-    private static readonly Contract ValidFpContract = new()
-    {
-        Id = 1,
-        PartnerId = 1,
-        SellingPlanId = 1,
-        StartDate = DateTime.Now.Date - TimeSpan.FromDays(7),
-        EndDate = DateTime.Now.Date + TimeSpan.FromDays(7),
-    };
-
-    private static readonly Contract ValidIndefContract = new()
-    {
-        Id = 1,
-        PartnerId = 1,
-        SellingPlanId = 1,
-        StartDate = DateTime.Now.Date - TimeSpan.FromDays(7),
-    };
+    private static readonly Contract ValidFpContract = ContractExtensionsAndHelpers.ValidFpContract;
+    private static readonly Contract ValidIndefContract = ContractExtensionsAndHelpers.ValidIndefContract;
 
     private const string PartnerExternalIdPropName = "partnerExternalId";
     private const string PlanIdPropName = "sellingPlanId";

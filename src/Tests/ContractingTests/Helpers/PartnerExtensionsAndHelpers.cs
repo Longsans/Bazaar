@@ -1,7 +1,20 @@
-﻿namespace ContractingTests.Extensions;
+﻿namespace ContractingTests.Helpers;
 
-public static class PartnerExtensions
+public static class PartnerExtensionsAndHelpers
 {
+    public static readonly Partner ValidNewPartner = new()
+    {
+        FirstName = "TestFName",
+        LastName = "TestLName",
+        Email = "Test@testmail.com",
+        PhoneNumber = "0123456789",
+        DateOfBirth = new DateTime(1989, 11, 10),
+        Gender = Gender.Male
+    };
+
+    public static readonly Partner ExistingPartner
+        = ValidNewPartner.WithValidId();
+
     public static Partner Clone(this Partner partner)
     {
         return new()
@@ -65,6 +78,13 @@ public static class PartnerExtensions
         if (changeEmail)
             clone.Email = "Test123@testmail.com";
 
+        return clone;
+    }
+
+    public static Partner WithContracts(this Partner partner, params Contract[] contracts)
+    {
+        var clone = partner.Clone();
+        clone.Contracts = contracts.ToList();
         return clone;
     }
 }

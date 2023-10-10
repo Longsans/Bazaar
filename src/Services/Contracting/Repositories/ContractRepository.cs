@@ -14,7 +14,7 @@ public class ContractRepository : IContractRepository
         return _context.Contracts
             .Include(c => c.Partner)
             .Include(c => c.SellingPlan)
-            .FirstOrDefault(c => c.Id == id);
+            .SingleOrDefault(c => c.Id == id);
     }
 
     public IEnumerable<Contract> GetByPartnerExternalId(string partnerId)
@@ -25,21 +25,25 @@ public class ContractRepository : IContractRepository
             .Where(c => c.Partner.ExternalId == partnerId);
     }
 
-    public Contract? Create(Contract contract)
+    public Contract Create(Contract contract)
     {
         _context.Contracts.Add(contract);
         _context.SaveChanges();
         return contract;
     }
 
-    public Contract? UpdateEndDate(int id, DateTime endDate)
+    public Contract? FindAndUpdateEndDate(int id, DateTime endDate)
     {
         var contract = _context.Contracts.Find(id);
         if (contract is not null && endDate >= DateTime.Now.Date) // safeguard end date so that no ridiculous accident happens
         {
             contract.EndDate = endDate;
             _context.SaveChanges();
+            return contract;
         }
-        return contract;
+        else
+        {
+            return null;
+        }
     }
 }

@@ -1,6 +1,4 @@
-﻿using ContractingTests.Extensions;
-
-namespace ContractingTests.ManagerTests;
+﻿namespace ContractingTests.ManagerTests;
 
 public class SellingPlanManagerTests
 {
@@ -231,23 +229,13 @@ public class SellingPlanManagerTests
     }
 
     // Constants and helpers
-    private static readonly SellingPlan ExistingPlan = new()
-    {
-        Id = 1,
-        Name = "Individual",
-        MonthlyFee = 0m,
-        PerSaleFee = 0.99m,
-        RegularPerSaleFeePercent = 0.08f
-    };
+    private static readonly SellingPlan ExistingPlan
+        = SellingPlanExtensionsAndHelpers.ExistingPlan;
 
-    private static readonly SellingPlan ValidNewPlan = new()
-    {
-        Name = "Business",
-        MonthlyFee = 39.99m,
-        RegularPerSaleFeePercent = 0.1f
-    };
+    private static readonly SellingPlan ValidNewPlan
+        = SellingPlanExtensionsAndHelpers.ValidNewPlan;
 
-    private (
+    private static (
         SellingPlanManager,
         Mock<ISellingPlanRepository>) GetSutAndMocks()
     {
