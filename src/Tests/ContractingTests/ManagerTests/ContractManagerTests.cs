@@ -1,13 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Bazaar.Contracting.Application;
+using Microsoft.EntityFrameworkCore;
 
 namespace ContractingTests.ManagerTests;
 
 public class ContractManagerTests
 {
-    private readonly ContractManager _contractManager;
+    private readonly ContractUsecases _contractManager;
     private readonly ContractingDbContext _dbContext;
 
-    public ContractManagerTests(ContractManager contractRepo, ContractingDbContext dbContext)
+    public ContractManagerTests(ContractUsecases contractRepo, ContractingDbContext dbContext)
     {
         _contractManager = contractRepo;
         _dbContext = dbContext;

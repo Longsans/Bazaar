@@ -14,19 +14,26 @@ var IF_IDENTITY_ELSE = (Action doWithIdentity, Action doWithoutIdentity) =>
 #region Register app services
 builder.Services.AddDbContext<ContractingDbContext>(options =>
 {
+    //builder.Configuration["ConnectionString"] =
+    //@"Server=.;Database=Bazaar;Trusted_Connection=True;TrustServerCertificate=True;";
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
+
+// Domain services
+builder.Services.AddScoped<
+    IUpdatePartnerEmailAddressService,
+    UpdatePartnerEmailAddressService>();
+
+// Application use-cases
+builder.Services.AddScoped<IContractUsecases, ContractUsecases>();
+builder.Services.AddScoped<IPartnerUsecases, PartnerUsecases>();
+builder.Services.AddScoped<ISellingPlanUsecases, SellingPlanUsecases>();
 
 // Data services
 builder.Services.AddScoped<IPartnerRepository, PartnerRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<ISellingPlanRepository, SellingPlanRepository>();
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
-
-// Domain logic managers
-builder.Services.AddScoped<IContractManager, ContractManager>();
-builder.Services.AddScoped<IPartnerManager, PartnerManager>();
-builder.Services.AddScoped<ISellingPlanManager, SellingPlanManager>();
 
 // AuthN and AuthZ
 builder.Services.AddAuthentication()

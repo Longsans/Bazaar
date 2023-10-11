@@ -51,7 +51,7 @@ public class ContractControllerTests
         var partnerId = ValidFpContract.PartnerId;
         (var partnerExternalId, var planId, var endDate) = GetValidFpContractInfo();
 
-        var command = new FixedPeriodContractCreateCommand()
+        var command = new CreateFixedPeriodContractRequest()
         {
             SellingPlanId = planId,
             EndDate = endDate
@@ -85,7 +85,7 @@ public class ContractControllerTests
         (var partnerExternalId, var planId, _) = GetValidFpContractInfo();
         var endDate = DateTime.Now.Date - TimeSpan.FromDays(1);
 
-        var command = new FixedPeriodContractCreateCommand()
+        var command = new CreateFixedPeriodContractRequest()
         {
             SellingPlanId = planId,
             EndDate = endDate
@@ -111,7 +111,7 @@ public class ContractControllerTests
         var partnerExternalId = "PNER-3";
         (_, var planId, var endDate) = GetValidFpContractInfo();
 
-        var command = new FixedPeriodContractCreateCommand()
+        var command = new CreateFixedPeriodContractRequest()
         {
             SellingPlanId = planId,
             EndDate = endDate
@@ -137,7 +137,7 @@ public class ContractControllerTests
         var planId = 2;
         (var partnerExternalId, _, var endDate) = GetValidFpContractInfo();
 
-        var command = new FixedPeriodContractCreateCommand()
+        var command = new CreateFixedPeriodContractRequest()
         {
             SellingPlanId = planId,
             EndDate = endDate
@@ -165,7 +165,7 @@ public class ContractControllerTests
         var planId = ValidFpContract.SellingPlanId;
         var endDate = ValidFpContract.EndDate.Value;
 
-        var command = new FixedPeriodContractCreateCommand()
+        var command = new CreateFixedPeriodContractRequest()
         {
             SellingPlanId = planId,
             EndDate = endDate
@@ -191,7 +191,7 @@ public class ContractControllerTests
         var partnerId = ValidFpContract.PartnerId;
         (var partnerExternalId, var planId) = GetValidIndefContractInfo();
 
-        var command = new IndefiniteContractCreateCommand()
+        var command = new CreateIndefiniteContractRequest()
         {
             SellingPlanId = planId,
         };
@@ -224,7 +224,7 @@ public class ContractControllerTests
         var partnerExternalId = "PNER-3";
         (_, var planId) = GetValidIndefContractInfo();
 
-        var command = new IndefiniteContractCreateCommand()
+        var command = new CreateIndefiniteContractRequest()
         {
             SellingPlanId = planId,
         };
@@ -249,7 +249,7 @@ public class ContractControllerTests
         var planId = 2;
         (var partnerExternalId, _) = GetValidIndefContractInfo();
 
-        var command = new IndefiniteContractCreateCommand()
+        var command = new CreateIndefiniteContractRequest()
         {
             SellingPlanId = planId,
         };
@@ -274,7 +274,7 @@ public class ContractControllerTests
 
         (var partnerExternalId, var planId) = GetValidIndefContractInfo();
 
-        var command = new IndefiniteContractCreateCommand()
+        var command = new CreateIndefiniteContractRequest()
         {
             SellingPlanId = planId,
         };
@@ -298,7 +298,7 @@ public class ContractControllerTests
 
         (var partnerExternalId, _) = GetValidIndefContractInfo();
         var contractId = ValidIndefContract.Id;
-        var command = new IndefiniteContractEndCommand(true);
+        var command = new EndIndefiniteContractRequest(true);
 
         // act
         var result = controller.EndCurrentIndefiniteContract(
@@ -319,7 +319,7 @@ public class ContractControllerTests
             IEndContractResult.Success(ValidIndefContract));
 
         (var partnerExternalId, _) = GetValidIndefContractInfo();
-        var command = new IndefiniteContractEndCommand(false);
+        var command = new EndIndefiniteContractRequest(false);
 
         // act
         var result = controller.EndCurrentIndefiniteContract(partnerExternalId, command);
@@ -338,7 +338,7 @@ public class ContractControllerTests
             IEndContractResult.PartnerNotFoundError);
 
         (var partnerExternalId, _) = GetValidIndefContractInfo();
-        var command = new IndefiniteContractEndCommand(true);
+        var command = new EndIndefiniteContractRequest(true);
 
         // act
         var result = controller.EndCurrentIndefiniteContract(partnerExternalId, command);
@@ -357,7 +357,7 @@ public class ContractControllerTests
             IEndContractResult.ContractNotFoundError);
 
         (var partnerExternalId, _) = GetValidIndefContractInfo();
-        var command = new IndefiniteContractEndCommand(true);
+        var command = new EndIndefiniteContractRequest(true);
 
         // act
         var result = controller.EndCurrentIndefiniteContract(
@@ -376,7 +376,7 @@ public class ContractControllerTests
             IEndContractResult.ContractNotIndefiniteError);
 
         (var partnerExternalId, _) = GetValidIndefContractInfo();
-        var command = new IndefiniteContractEndCommand(true);
+        var command = new EndIndefiniteContractRequest(true);
 
         // act
         var result = controller.EndCurrentIndefiniteContract(partnerExternalId, command);
@@ -397,7 +397,7 @@ public class ContractControllerTests
         var contractId = ValidFpContract.Id;
         endDate += TimeSpan.FromDays(30);
 
-        var extension = new ContractExtension
+        var extension = new ContractExtensionRequest
         {
             ExtendedEndDate = endDate
         };
@@ -423,7 +423,7 @@ public class ContractControllerTests
         (var partnerExternalId, _, var endDate) = GetValidFpContractInfo();
         endDate += TimeSpan.FromDays(30);
 
-        var extension = new ContractExtension
+        var extension = new ContractExtensionRequest
         {
             ExtendedEndDate = endDate
         };
@@ -448,7 +448,7 @@ public class ContractControllerTests
         (var partnerExternalId, _, var endDate) = GetValidFpContractInfo();
         endDate += TimeSpan.FromDays(30);
 
-        var extension = new ContractExtension
+        var extension = new ContractExtensionRequest
         {
             ExtendedEndDate = endDate
         };
@@ -475,7 +475,7 @@ public class ContractControllerTests
         (var partnerExternalId, _, var endDate) = GetValidFpContractInfo();
         endDate -= TimeSpan.FromDays(daysBeforeNow);
 
-        var extension = new ContractExtension
+        var extension = new ContractExtensionRequest
         {
             ExtendedEndDate = endDate
         };
@@ -500,7 +500,7 @@ public class ContractControllerTests
         (var partnerExternalId, _, var endDate) = GetValidFpContractInfo();
         endDate += TimeSpan.FromDays(30);
 
-        var extension = new ContractExtension
+        var extension = new ContractExtensionRequest
         {
             ExtendedEndDate = endDate
         };

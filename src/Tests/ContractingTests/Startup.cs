@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Bazaar.Contracting.Application;
+using Contracting.Domain.Abstractions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ContractingTests;
@@ -12,7 +14,7 @@ internal class Startup
             options.UseInMemoryDatabase("ContractingTestDb");
         });
 
-        services.AddTransient<ContractManager>();
+        services.AddTransient<ContractUsecases>();
         services.AddTransient<ISellingPlanRepository, SellingPlanRepository>();
         services.AddTransient<IPartnerRepository, PartnerRepository>();
         services.AddTransient<IContractRepository, ContractRepository>();
