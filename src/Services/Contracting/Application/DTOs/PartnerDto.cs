@@ -18,7 +18,7 @@ public class PartnerDto
         Id = partner.Id;
         FirstName = partner.FirstName;
         LastName = partner.LastName;
-        Email = partner.Email;
+        Email = partner.EmailAddress;
         PhoneNumber = partner.PhoneNumber;
         DateOfBirth = partner.DateOfBirth;
         Gender = partner.Gender;

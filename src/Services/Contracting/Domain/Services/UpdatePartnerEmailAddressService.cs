@@ -19,7 +19,7 @@ public class UpdatePartnerEmailAddressService : IUpdatePartnerEmailAddressServic
             return Result.NotFound("Partner not found");
         }
 
-        var emailAddressOwner = _partnerRepo.GetWithContractsByEmail(emailAddress);
+        var emailAddressOwner = _partnerRepo.GetWithContractsByEmailAddress(emailAddress);
         if (emailAddressOwner != null && emailAddressOwner.Id != partner.Id)
         {
             return Result.Conflict(

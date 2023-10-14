@@ -1,4 +1,4 @@
-﻿namespace Bazaar.ShopperInfo.Repositories;
+﻿namespace Bazaar.ShopperInfo.Infrastructure.Repositories;
 
 public static class ShopperInfoDbSeeding
 {

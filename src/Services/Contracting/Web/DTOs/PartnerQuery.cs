@@ -16,7 +16,7 @@ public class PartnerQuery
         ExternalId = partner.ExternalId;
         FirstName = partner.FirstName;
         LastName = partner.LastName;
-        Email = partner.Email;
+        Email = partner.EmailAddress;
         PhoneNumber = partner.PhoneNumber;
         Contracts = partner.Contracts.Select(c => new ContractQuery(c)).ToList();
     }

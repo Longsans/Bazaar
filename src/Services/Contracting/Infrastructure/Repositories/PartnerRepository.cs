@@ -23,11 +23,11 @@ public class PartnerRepository : IPartnerRepository
             .SingleOrDefault(p => p.ExternalId == externalId);
     }
 
-    public Partner? GetWithContractsByEmail(string email)
+    public Partner? GetWithContractsByEmailAddress(string email)
     {
         return _context.Partners
             .Include(p => p.Contracts)
-            .SingleOrDefault(p => p.Email == email);
+            .SingleOrDefault(p => p.EmailAddress == email);
     }
 
     public Partner Create(Partner partner)

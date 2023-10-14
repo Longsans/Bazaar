@@ -36,7 +36,7 @@ public class ContractingDbContext : DbContext
             partner.HasIndex(p => p.ExternalId)
                 .IsUnique();
 
-            partner.HasIndex(p => p.Email)
+            partner.HasIndex(p => p.EmailAddress)
                 .IsUnique();
 
             partner.Property(p => p.ExternalId)

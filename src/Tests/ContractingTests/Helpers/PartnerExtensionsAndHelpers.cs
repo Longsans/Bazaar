@@ -23,7 +23,7 @@ public static class PartnerExtensionsAndHelpers
             ExternalId = partner.ExternalId,
             FirstName = partner.FirstName,
             LastName = partner.LastName,
-            Email = partner.Email,
+            Email = partner.EmailAddress,
             PhoneNumber = partner.PhoneNumber,
             DateOfBirth = partner.DateOfBirth,
             Gender = partner.Gender,

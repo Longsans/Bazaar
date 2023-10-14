@@ -37,7 +37,7 @@ public class PartnerUsecases : IPartnerUsecases
             });
         }
 
-        var possibleExisting = _partnerRepo.GetWithContractsByEmail(partnerDto.Email);
+        var possibleExisting = _partnerRepo.GetWithContractsByEmailAddress(partnerDto.Email);
         if (possibleExisting is not null)
         {
             return Result.Conflict(
@@ -69,7 +69,7 @@ public class PartnerUsecases : IPartnerUsecases
             return Result.NotFound();
         }
 
-        var existingEmailOwner = _partnerRepo.GetWithContractsByEmail(partnerDto.Email);
+        var existingEmailOwner = _partnerRepo.GetWithContractsByEmailAddress(partnerDto.Email);
 
         if (existingEmailOwner != null
             && existingEmailOwner.ExternalId != partner.ExternalId)

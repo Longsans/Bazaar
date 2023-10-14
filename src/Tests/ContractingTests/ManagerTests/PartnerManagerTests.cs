@@ -65,7 +65,7 @@ public class PartnerManagerTests
         (var partnerMgr, var mockPartnerRepo) = GetSutAndMocks();
 
         mockPartnerRepo
-            .Setup(x => x.GetWithContractsByEmail(ValidNewPartner.Email))
+            .Setup(x => x.GetWithContractsByEmail(ValidNewPartner.EmailAddress))
             .Returns(() => null);
 
         mockPartnerRepo
@@ -114,7 +114,7 @@ public class PartnerManagerTests
         var partner = ExistingPartner.WithUsedEmail();
 
         mockPartnerRepo
-            .Setup(x => x.GetWithContractsByEmail(partner.Email))
+            .Setup(x => x.GetWithContractsByEmail(partner.EmailAddress))
             .Returns(() =>
             {
                 var existing = ValidNewPartner.Clone();
@@ -133,7 +133,7 @@ public class PartnerManagerTests
 
         // assert
         Assert.IsType<PartnerEmailAlreadyExistsError>(result);
-        mockPartnerRepo.Verify(repo => repo.GetWithContractsByEmail(partner.Email), Times.Once);
+        mockPartnerRepo.Verify(repo => repo.GetWithContractsByEmail(partner.EmailAddress), Times.Once);
         mockPartnerRepo.Verify(repo => repo.Create(partner), Times.Never);
     }
 
@@ -185,7 +185,7 @@ public class PartnerManagerTests
         var partner = ExistingPartner.WithUsedEmail();
 
         mockPartnerRepo
-            .Setup(x => x.GetWithContractsByEmail(partner.Email))
+            .Setup(x => x.GetWithContractsByEmail(partner.EmailAddress))
             .Returns(() =>
             {
                 var existing = ValidNewPartner.Clone();
@@ -204,7 +204,7 @@ public class PartnerManagerTests
 
         // assert
         Assert.IsType<PartnerEmailAlreadyExistsError>(result);
-        mockPartnerRepo.Verify(repo => repo.GetWithContractsByEmail(partner.Email), Times.Once);
+        mockPartnerRepo.Verify(repo => repo.GetWithContractsByEmail(partner.EmailAddress), Times.Once);
         mockPartnerRepo.Verify(repo => repo.UpdateInfoByExternalId(partner), Times.Never);
     }
 
@@ -246,7 +246,7 @@ public class PartnerManagerTests
         Assert.NotEqual(0, successResult.Partner.Id);
         Assert.Equal(expected.FirstName, successResult.Partner.FirstName);
         Assert.Equal(expected.LastName, successResult.Partner.LastName);
-        Assert.Equal(expected.Email, successResult.Partner.Email);
+        Assert.Equal(expected.EmailAddress, successResult.Partner.Email);
         Assert.Equal(expected.PhoneNumber, successResult.Partner.PhoneNumber);
         Assert.Equal(expected.DateOfBirth, successResult.Partner.DateOfBirth);
         Assert.Equal(expected.Gender, successResult.Partner.Gender);
@@ -264,7 +264,7 @@ public class PartnerManagerTests
         Assert.NotNull(successResult.Partner);
         Assert.Equal(expected.FirstName, successResult.Partner.FirstName);
         Assert.Equal(expected.LastName, successResult.Partner.LastName);
-        Assert.Equal(expected.Email, successResult.Partner.Email);
+        Assert.Equal(expected.EmailAddress, successResult.Partner.Email);
         Assert.Equal(expected.PhoneNumber, successResult.Partner.PhoneNumber);
         Assert.Equal(expected.DateOfBirth, successResult.Partner.DateOfBirth);
         Assert.Equal(expected.Gender, successResult.Partner.Gender);
