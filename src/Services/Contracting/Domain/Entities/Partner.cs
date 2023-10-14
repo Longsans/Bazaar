@@ -13,7 +13,7 @@ public class Partner
     public DateTime DateOfBirth { get; private set; }
     public Gender Gender { get; private set; }
 
-    private List<Contract> _contracts;
+    private readonly List<Contract> _contracts;
     public IReadOnlyCollection<Contract> Contracts => _contracts.AsReadOnly();
 
     public Contract? CurrentContract

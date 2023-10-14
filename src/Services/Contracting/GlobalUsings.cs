@@ -3,7 +3,7 @@ global using Ardalis.Result.AspNetCore;
 global using Bazaar.BuildingBlocks.JsonAdapter;
 global using Bazaar.Contracting.Application;
 global using Bazaar.Contracting.Application.DTOs;
-global using Bazaar.Contracting.Domain.Abstractions;
+global using Bazaar.Contracting.Domain.Interfaces;
 global using Bazaar.Contracting.Domain.Constants;
 global using Bazaar.Contracting.Domain.Entities;
 global using Bazaar.Contracting.Domain.Enums;

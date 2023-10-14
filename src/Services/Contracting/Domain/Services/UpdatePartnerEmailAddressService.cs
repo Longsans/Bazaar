@@ -1,4 +1,4 @@
-﻿using Bazaar.Contracting.Domain.Abstractions;
+﻿using Bazaar.Contracting.Domain.Interfaces;
 
 namespace Bazaar.Contracting.Domain.Services;
 
