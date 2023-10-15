@@ -12,6 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Ardalis.Result" Version="7.1.0" />
+    <PackageReference Include="Ardalis.Result.AspNetCore" Version="7.1.0" />
     <PackageReference Include="EntityFrameworkCore.Triggered" Version="3.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.3" />

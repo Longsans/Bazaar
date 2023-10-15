@@ -18,7 +18,7 @@ builder.Services.AddDbContext<OrderingDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
     options.UseTriggers(triggerOptions =>
     {
-        triggerOptions.AddTrigger<InsertOrderItemsTrigger>();
+        triggerOptions.AddTrigger<AddOrderTrigger>();
     });
 });
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
