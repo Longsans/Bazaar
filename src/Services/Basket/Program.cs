@@ -22,8 +22,12 @@ builder.Services.AddDbContext<BasketDbContext>(options =>
         triggerOptions.AddTrigger<BasketItemChangeTrigger>();
     });
 });
+
+builder.Services.AddScoped<IBasketUseCases, BasketUseCases>();
+
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
+
 builder.Services.RegisterEventBus(builder.Configuration);
 
 builder.Services.AddAuthentication()
@@ -33,6 +37,7 @@ builder.Services.AddAuthentication()
         options.Audience = "basket";
         options.RequireHttpsMetadata = false;
     });
+
 builder.Services.AddAuthorization(builder =>
 {
     builder.AddPolicy("HasBasketScope", policy =>

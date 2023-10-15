@@ -1,13 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Bazaar.Contracting.Application;
+using Microsoft.EntityFrameworkCore;
 
 namespace ContractingTests.ManagerTests;
 
 public class ContractManagerTests
 {
-    private readonly ContractManager _contractManager;
+    private readonly ContractUseCases _contractManager;
     private readonly ContractingDbContext _dbContext;
 
-    public ContractManagerTests(ContractManager contractRepo, ContractingDbContext dbContext)
+    public ContractManagerTests(ContractUseCases contractRepo, ContractingDbContext dbContext)
     {
         _contractManager = contractRepo;
         _dbContext = dbContext;
@@ -77,7 +78,7 @@ public class ContractManagerTests
                 UnsignedPartnerExternalId, ValidSellingPlanId, ValidExtendedEndDate);
 
         // assert
-        AssertCreated(createResult as ContractManagementResult, ValidExtendedEndDate);
+        AssertCreated(createResult, ValidExtendedEndDate);
     }
 
     [Fact]
@@ -148,7 +149,7 @@ public class ContractManagerTests
             UnsignedPartnerExternalId, ValidSellingPlanId);
 
         // assert
-        AssertCreated(createResult as ContractManagementResult);
+        AssertCreated(createResult);
     }
 
     [Fact]
@@ -349,7 +350,7 @@ public class ContractManagerTests
         };
 
     private void AssertCreated(
-        ContractManagementResult result, DateTime? endDate = null)
+        object result, DateTime? endDate = null)
     {
         var successResult = Assert.IsType<ContractSuccessResult>(result);
         Assert.NotNull(successResult.Contract);

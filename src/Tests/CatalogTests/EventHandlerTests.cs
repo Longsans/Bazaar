@@ -102,7 +102,8 @@ public class EventHandlerTests
         });
 
         return (
-            new OrderCreatedIntegrationEventHandler(_dbContext, eventBus),
+            new OrderCreatedIntegrationEventHandler(
+                new CatalogRepository(_dbContext), eventBus),
             eventBusMock,
             orderCreatedEvent);
     }
