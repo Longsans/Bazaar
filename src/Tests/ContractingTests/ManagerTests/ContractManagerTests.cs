@@ -5,10 +5,10 @@ namespace ContractingTests.ManagerTests;
 
 public class ContractManagerTests
 {
-    private readonly ContractUsecases _contractManager;
+    private readonly ContractUseCases _contractManager;
     private readonly ContractingDbContext _dbContext;
 
-    public ContractManagerTests(ContractUsecases contractRepo, ContractingDbContext dbContext)
+    public ContractManagerTests(ContractUseCases contractRepo, ContractingDbContext dbContext)
     {
         _contractManager = contractRepo;
         _dbContext = dbContext;

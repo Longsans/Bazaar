@@ -4,17 +4,17 @@
 [ApiController]
 public class ContractController : ControllerBase
 {
-    private readonly IContractUsecases _contractUsecases;
+    private readonly IContractUseCases _contractUseCases;
 
-    public ContractController(IContractUsecases contractUsecases)
+    public ContractController(IContractUseCases contractUseCases)
     {
-        _contractUsecases = contractUsecases;
+        _contractUseCases = contractUseCases;
     }
 
     [HttpGet("{id}")]
     public ActionResult<ContractDto> GetById(int id)
     {
-        var contract = _contractUsecases.GetById(id);
+        var contract = _contractUseCases.GetById(id);
         if (contract == null)
         {
             return NotFound();
@@ -27,7 +27,7 @@ public class ContractController : ControllerBase
     public ActionResult<IEnumerable<ContractDto>> GetByPartnerId(
         string partnerId)
     {
-        return _contractUsecases
+        return _contractUseCases
             .GetByPartnerExternalId(partnerId)
             .Select(c => new ContractDto(c))
             .ToList();
@@ -37,7 +37,7 @@ public class ContractController : ControllerBase
     public ActionResult<ContractDto> SignPartnerForFixedPeriodContract(
         string partnerExternalId, CreateFixedPeriodContractRequest request)
     {
-        var signResult = _contractUsecases.SignPartnerForFixedPeriod(
+        var signResult = _contractUseCases.SignPartnerForFixedPeriod(
             partnerExternalId, request.SellingPlanId, request.EndDate);
 
         return signResult.ToActionResult(this);
@@ -72,7 +72,7 @@ public class ContractController : ControllerBase
     public ActionResult<ContractDto> SignPartnerForIndefiniteContract(
         string partnerExternalId, CreateIndefiniteContractRequest command)
     {
-        var signResult = _contractUsecases.SignPartnerIndefinitely(
+        var signResult = _contractUseCases.SignPartnerIndefinitely(
             partnerExternalId, command.SellingPlanId);
 
         return signResult.ToActionResult(this);
@@ -104,7 +104,7 @@ public class ContractController : ControllerBase
         if (!command.Ended)
             return NoContent();
 
-        var endResult = _contractUsecases
+        var endResult = _contractUseCases
             .EndCurrentIndefiniteContractWithPartner(partnerExternalId);
 
         return endResult.ToActionResult(this);
@@ -129,7 +129,7 @@ public class ContractController : ControllerBase
     public IActionResult ExtendCurrentFixedPeriodContract(
         string partnerExternalId, ContractExtensionRequest extension)
     {
-        var extendResult = _contractUsecases
+        var extendResult = _contractUseCases
             .ExtendCurrentFixedPeriodContractWithPartner(
                 partnerExternalId, extension.ExtendedEndDate);
 

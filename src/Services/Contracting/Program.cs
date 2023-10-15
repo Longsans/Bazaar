@@ -25,9 +25,9 @@ builder.Services.AddScoped<
     UpdatePartnerEmailAddressService>();
 
 // Application use-cases
-builder.Services.AddScoped<IContractUsecases, ContractUsecases>();
-builder.Services.AddScoped<IPartnerUsecases, PartnerUsecases>();
-builder.Services.AddScoped<ISellingPlanUsecases, SellingPlanUsecases>();
+builder.Services.AddScoped<IContractUseCases, ContractUseCases>();
+builder.Services.AddScoped<IPartnerUseCases, PartnerUseCases>();
+builder.Services.AddScoped<ISellingPlanUseCases, SellingPlanUseCases>();
 
 // Data services
 builder.Services.AddScoped<IPartnerRepository, PartnerRepository>();

@@ -1,11 +1,11 @@
 ﻿namespace Bazaar.Contracting.Application;
 
-public class PartnerUsecases : IPartnerUsecases
+public class PartnerUseCases : IPartnerUseCases
 {
     private readonly IPartnerRepository _partnerRepo;
     private readonly IUpdatePartnerEmailAddressService _updateEmailAddressService;
 
-    public PartnerUsecases(
+    public PartnerUseCases(
         IPartnerRepository partnerRepo,
         IUpdatePartnerEmailAddressService updateEmailService)
     {

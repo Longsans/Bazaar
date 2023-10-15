@@ -1,10 +1,10 @@
 ﻿namespace Bazaar.Contracting.Application;
 
-public class SellingPlanUsecases : ISellingPlanUsecases
+public class SellingPlanUseCases : ISellingPlanUseCases
 {
     private readonly ISellingPlanRepository _planRepo;
 
-    public SellingPlanUsecases(ISellingPlanRepository planRepo)
+    public SellingPlanUseCases(ISellingPlanRepository planRepo)
     {
         _planRepo = planRepo;
     }

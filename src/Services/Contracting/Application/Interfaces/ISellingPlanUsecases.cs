@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Contracting.Application;
 
-public interface ISellingPlanUsecases
+public interface ISellingPlanUseCases
 {
     SellingPlan? GetById(int id);
     Result<SellingPlanDto> CreateSellingPlan(SellingPlanDto planDto);

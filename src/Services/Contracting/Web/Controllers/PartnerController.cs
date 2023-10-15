@@ -4,17 +4,17 @@ namespace Bazaar.Contracting.Web.Controllers;
 [ApiController]
 public class PartnerController : ControllerBase
 {
-    private readonly IPartnerUsecases _partnerUsecases;
+    private readonly IPartnerUseCases _partnerUseCases;
 
-    public PartnerController(IPartnerUsecases partnerUsecases)
+    public PartnerController(IPartnerUseCases partnerUseCases)
     {
-        _partnerUsecases = partnerUsecases;
+        _partnerUseCases = partnerUseCases;
     }
 
     [HttpGet("{id}")]
     public ActionResult<PartnerQuery> GetById(int id)
     {
-        var partner = _partnerUsecases.GetWithContractsById(id);
+        var partner = _partnerUseCases.GetWithContractsById(id);
         if (partner == null)
             return NotFound();
 
@@ -24,7 +24,7 @@ public class PartnerController : ControllerBase
     [HttpGet]
     public ActionResult<PartnerQuery> GetByExternalId(string externalId)
     {
-        var partner = _partnerUsecases.GetWithContractsByExternalId(externalId);
+        var partner = _partnerUseCases.GetWithContractsByExternalId(externalId);
         if (partner == null)
             return NotFound();
 
@@ -43,7 +43,7 @@ public class PartnerController : ControllerBase
             DateOfBirth = command.DateOfBirth,
             Gender = command.Gender
         };
-        var registerResult = _partnerUsecases.RegisterPartner(partnerDto);
+        var registerResult = _partnerUseCases.RegisterPartner(partnerDto);
 
         //return registerResult.Status switch
         //{
@@ -72,7 +72,7 @@ public class PartnerController : ControllerBase
             Gender = command.Gender
         };
 
-        var updateResult = _partnerUsecases.UpdatePartnerInfoByExternalId(partnerUpdateDto);
+        var updateResult = _partnerUseCases.UpdatePartnerInfoByExternalId(partnerUpdateDto);
 
         return updateResult.ToActionResult(this);
     }

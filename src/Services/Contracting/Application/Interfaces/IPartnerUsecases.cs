@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Contracting.Application;
 
-public interface IPartnerUsecases
+public interface IPartnerUseCases
 {
     Partner? GetWithContractsById(int partnerId);
     Partner? GetWithContractsByExternalId(string partnerExternalId);

@@ -4,17 +4,17 @@
 [ApiController]
 public class SellingPlanController : ControllerBase
 {
-    private readonly ISellingPlanUsecases _planUsecases;
+    private readonly ISellingPlanUseCases _planUseCases;
 
-    public SellingPlanController(ISellingPlanUsecases planUsecases)
+    public SellingPlanController(ISellingPlanUseCases planUseCases)
     {
-        _planUsecases = planUsecases;
+        _planUseCases = planUseCases;
     }
 
     [HttpGet("{id}")]
     public ActionResult<SellingPlanDto> GetById(int id)
     {
-        var plan = _planUsecases.GetById(id);
+        var plan = _planUseCases.GetById(id);
 
         if (plan == null)
             return NotFound();
@@ -33,7 +33,7 @@ public class SellingPlanController : ControllerBase
             RegularPerSaleFeePercent = request.RegularPerSaleFeePercent
         };
 
-        var createResult = _planUsecases
+        var createResult = _planUseCases
             .CreateSellingPlan(planDto);
 
         return createResult.ToActionResult(this);
@@ -51,7 +51,7 @@ public class SellingPlanController : ControllerBase
             RegularPerSaleFeePercent = request.RegularPerSaleFeePercent
         };
 
-        var updateResult = _planUsecases
+        var updateResult = _planUseCases
             .UpdateSellingPlan(planDto);
 
         return updateResult.ToActionResult(this);
