@@ -2,7 +2,7 @@ namespace Bazaar.Contracting.Domain.Entities;
 
 public class Contract
 {
-    public int Id { get; set; }
+    public int Id { get; private set; }
 
     public Partner Partner { get; private set; }
     public int PartnerId { get; private set; }
@@ -13,27 +13,37 @@ public class Contract
     public DateTime StartDate { get; private set; }
     public DateTime? EndDate { get; private set; }
 
-    public Contract(int partnerId, int sellingPlanId, DateTime startDate, DateTime? endDate)
+    // For creating new contracts
+    public Contract(int partnerId, int sellingPlanId, DateTime? endDate)
     {
+        if (endDate != null && endDate < DateTime.Now.Date)
+            throw new EndDateBeforeCurrentDateException();
+
         PartnerId = partnerId;
         SellingPlanId = sellingPlanId;
-        StartDate = startDate;
-        EndDate = endDate;
+        StartDate = DateTime.Now.Date;
+        EndDate = endDate?.Date;
     }
 
-    public Contract(Partner partner, SellingPlan sellingPlan, DateTime startDate, DateTime? endDate)
+    public void End()
     {
-        Partner = partner;
-        SellingPlan = sellingPlan;
-        StartDate = startDate;
-        EndDate = endDate;
+        if (EndDate <= DateTime.Now.Date)
+            throw new ContractEndedException();
+
+        EndDate = DateTime.Now.Date;
     }
 
-    public void UpdateEndDate(DateTime endDate)
+    public void Extend(DateTime extendedEndDate)
     {
-        EndDate = endDate.Date > DateTime.Now.Date
-            ? endDate.Date
-            : throw new ArgumentException(
-                "New end date must be after current date", nameof(endDate));
+        if (EndDate == null)
+            throw new ExtendIndefiniteContractException();
+
+        if (EndDate < DateTime.Now.Date)
+            throw new ContractEndedException();
+
+        if (extendedEndDate <= EndDate)
+            throw new ExtendedEndDateNotAfterOriginalEndDateException();
+
+        EndDate = extendedEndDate.Date;
     }
 }

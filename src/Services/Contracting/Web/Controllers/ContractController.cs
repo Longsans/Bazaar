@@ -16,9 +16,7 @@ public class ContractController : ControllerBase
     {
         var contract = _contractUseCases.GetById(id);
         if (contract == null)
-        {
             return NotFound();
-        }
 
         return new ContractDto(contract);
     }
@@ -41,31 +39,6 @@ public class ContractController : ControllerBase
             partnerExternalId, request.SellingPlanId, request.EndDate);
 
         return signResult.ToActionResult(this);
-
-        //return signResult switch
-        //{
-        //    ContractSuccessResult r =>
-        //        CreatedAtAction(
-        //            nameof(GetById),
-        //            "Contract",
-        //            new { id = r.Contract.Id },
-        //            new ContractQuery(r.Contract)),
-        //    PartnerNotFoundError => NotFound(new { partnerExternalId }),
-        //    SellingPlanNotFoundError => NotFound(new { sellingPlanId = command.SellingPlanId }),
-        //    PartnerUnderContractError e => Conflict(
-        //        new
-        //        {
-        //            error = "Partner is currently already under contract.",
-        //            contract = e.Contract
-        //        }),
-        //    ContractEndDateBeforeCurrentDate => BadRequest(
-        //        new
-        //        {
-        //            error = "Contract end date must be after current date.",
-        //            endDate = command.EndDate
-        //        }),
-        //    _ => StatusCode(500)
-        //};
     }
 
     [HttpPost("/api/partners/{partnerExternalId}/indefinite-contracts")]
@@ -76,25 +49,6 @@ public class ContractController : ControllerBase
             partnerExternalId, command.SellingPlanId);
 
         return signResult.ToActionResult(this);
-
-        //return signResult switch
-        //{
-        //    ContractSuccessResult r =>
-        //        CreatedAtAction(
-        //            nameof(GetById),
-        //            "Contract",
-        //            new { id = r.Contract.Id },
-        //            new ContractQuery(r.Contract)),
-        //    PartnerNotFoundError => NotFound(new { partnerExternalId }),
-        //    SellingPlanNotFoundError => NotFound(new { sellingPlanId = command.SellingPlanId }),
-        //    PartnerUnderContractError e => Conflict(
-        //        new
-        //        {
-        //            error = "Partner is currently already under contract.",
-        //            contract = e.Contract
-        //        }),
-        //    _ => StatusCode(500)
-        //};
     }
 
     [HttpPut("/api/partners/{partnerExternalId}/indefinite-contracts/current")]
@@ -108,21 +62,6 @@ public class ContractController : ControllerBase
             .EndCurrentIndefiniteContractWithPartner(partnerExternalId);
 
         return endResult.ToActionResult(this);
-
-        //return endResult switch
-        //{
-        //    ContractSuccessResult r => new ContractQuery(r.Contract!),
-        //    PartnerNotFoundError => NotFound(new { partnerExternalId }),
-        //    ContractNotFoundError => Conflict(
-        //        new
-        //        {
-        //            error = "Partner is not currently under any contract.",
-        //            contracts = Array.Empty<Contract>()
-        //        }),
-        //    ContractNotIndefiniteError =>
-        //        Conflict(new { error = "Current contract is not indefinite." }),
-        //    _ => StatusCode(500)
-        //};
     }
 
     [HttpPatch("/api/partners/{partnerExternalId}/fixed-period-contracts/current")]
@@ -134,26 +73,5 @@ public class ContractController : ControllerBase
                 partnerExternalId, extension.ExtendedEndDate);
 
         return extendResult.ToActionResult(this);
-
-        //return extendResult switch
-        //{
-        //    ContractSuccessResult r => new ContractQuery(r.Contract!),
-        //    PartnerNotFoundError => NotFound(new { partnerExternalId }),
-        //    ContractNotFoundError => Conflict(
-        //        new
-        //        {
-        //            error = "Partner is not currently under any contract.",
-        //            contracts = Array.Empty<Contract>()
-        //        }),
-        //    EndDateNotAfterOldEndDateError => BadRequest(
-        //        new
-        //        {
-        //            error = "Extended end date must be after old end date.",
-        //            extendedEndDate = extension.ExtendedEndDate
-        //        }),
-        //    ContractNotFixedPeriodError => Conflict(
-        //        new { error = "Current contract is not fixed-period." }),
-        //    _ => StatusCode(500)
-        //};
     }
 }

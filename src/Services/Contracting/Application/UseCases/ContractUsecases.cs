@@ -40,11 +40,11 @@ public class ContractUseCases : IContractUseCases
         if (partner.IsUnderContract)
             return PartnerUnderContract;
 
-        var sellPlan = _sellPlanRepo.GetById(sellingPlanId);
-        if (sellPlan is null)
+        var sellingPlan = _sellPlanRepo.GetById(sellingPlanId);
+        if (sellingPlan is null)
             return SellingPlanNotFound;
 
-        var contract = new Contract(partner, sellPlan, DateTime.Now.Date, endDate);
+        var contract = new Contract(partner.Id, sellingPlan.Id, endDate);
         _contractRepo.Create(contract);
         return Result.Success(new ContractDto(contract));
     }
@@ -59,11 +59,11 @@ public class ContractUseCases : IContractUseCases
         if (partner.IsUnderContract)
             return PartnerUnderContract;
 
-        var sellPlan = _sellPlanRepo.GetById(sellingPlanId);
-        if (sellPlan is null)
+        var sellingPlan = _sellPlanRepo.GetById(sellingPlanId);
+        if (sellingPlan is null)
             return SellingPlanNotFound;
 
-        var contract = new Contract(partner, sellPlan, DateTime.Now.Date, null);
+        var contract = new Contract(partner.Id, sellingPlan.Id, null);
         _contractRepo.Create(contract);
         return Result.Success(new ContractDto(contract));
     }
@@ -82,7 +82,7 @@ public class ContractUseCases : IContractUseCases
         if (currentContract.EndDate is not null)
             return CurrentContractNotIndefinite;
 
-        currentContract.UpdateEndDate(DateTime.Now.Date);
+        currentContract.End();
         _contractRepo.Update(currentContract);
         return Result.Success();
     }
@@ -107,7 +107,7 @@ public class ContractUseCases : IContractUseCases
             return EndDateInvalid(
                 nameof(extendedEndDate), "Extended end date must be after old end date.");
 
-        currentContract.UpdateEndDate(extendedEndDate);
+        currentContract.Extend(extendedEndDate);
         _contractRepo.Update(currentContract);
         return Result.Success();
     }

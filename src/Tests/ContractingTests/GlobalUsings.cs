@@ -1,9 +1,6 @@
-global using Bazaar.Contracting.Controllers;
-global using Bazaar.Contracting.Domain.DomainLogic;
+global using Bazaar.Contracting.Domain.Constants;
 global using Bazaar.Contracting.Domain.Entities;
-global using Bazaar.Contracting.DTOs;
-global using Bazaar.Contracting.Repositories;
+global using Bazaar.Contracting.Domain.Enums;
+global using Bazaar.Contracting.Domain.Exceptions;
 global using ContractingTests.Helpers;
-global using Microsoft.AspNetCore.Mvc;
-global using Moq;
 global using Xunit;

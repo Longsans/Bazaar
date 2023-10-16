@@ -10,7 +10,7 @@ global using Bazaar.Contracting.Domain.Enums;
 global using Bazaar.Contracting.Domain.Exceptions;
 global using Bazaar.Contracting.Domain.Services;
 global using Bazaar.Contracting.Infrastructure.Repositories;
-global using Bazaar.Contracting.Web.DTOs;
+global using Bazaar.Contracting.Web.Messages;
 global using FluentValidation;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;

@@ -4,7 +4,7 @@ namespace Bazaar.Contracting.Domain.Entities;
 
 public class SellingPlan
 {
-    public int Id { get; set; }
+    public int Id { get; private set; }
     public string Name { get; set; }
     public decimal MonthlyFee { get; private set; }
     public decimal PerSaleFee { get; private set; }

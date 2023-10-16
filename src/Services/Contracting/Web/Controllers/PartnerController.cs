@@ -43,18 +43,8 @@ public class PartnerController : ControllerBase
             DateOfBirth = command.DateOfBirth,
             Gender = command.Gender
         };
+
         var registerResult = _partnerUseCases.RegisterPartner(partnerDto);
-
-        //return registerResult.Status switch
-        //{
-        //    ResultStatus.Ok => CreatedAtAction(
-        //        nameof(GetById), new { registerResult.Value.Id }, registerResult.Value),
-        //    ResultStatus.Invalid => BadRequest(
-        //        new { errors = registerResult.ValidationErrors.Select(e => e.ErrorMessage) }),
-        //    ResultStatus.Conflict => Conflict(new { errors = registerResult.Errors }),
-        //    _ => StatusCode(500)
-        //};
-
         return registerResult.ToActionResult(this);
     }
 
@@ -72,7 +62,8 @@ public class PartnerController : ControllerBase
             Gender = command.Gender
         };
 
-        var updateResult = _partnerUseCases.UpdatePartnerInfoByExternalId(partnerUpdateDto);
+        var updateResult = _partnerUseCases
+            .UpdatePartnerInfoByExternalId(partnerUpdateDto);
 
         return updateResult.ToActionResult(this);
     }

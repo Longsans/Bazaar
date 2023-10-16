@@ -1,6 +1,4 @@
-﻿using Bazaar.Contracting.Domain.Interfaces;
-
-namespace Bazaar.Contracting.Domain.Services;
+﻿namespace Bazaar.Contracting.Domain.Services;
 
 public class UpdatePartnerEmailAddressService : IUpdatePartnerEmailAddressService
 {
