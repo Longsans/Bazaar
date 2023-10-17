@@ -29,10 +29,6 @@ public class ContractUseCases : IContractUseCases
     public Result<ContractDto> SignPartnerForFixedPeriod(
         string partnerExternalId, int sellingPlanId, DateTime endDate)
     {
-        if (endDate.Date <= DateTime.Now.Date)
-            return EndDateInvalid(
-                nameof(endDate), "End date must be after current date.");
-
         var partner = _partnerRepo.GetWithContractsByExternalId(partnerExternalId);
         if (partner is null)
             return PartnerNotFound;
@@ -44,9 +40,17 @@ public class ContractUseCases : IContractUseCases
         if (sellingPlan is null)
             return SellingPlanNotFound;
 
-        var contract = new Contract(partner.Id, sellingPlan.Id, endDate);
-        _contractRepo.Create(contract);
-        return Result.Success(new ContractDto(contract));
+        try
+        {
+            var contract = new Contract(partner.Id, sellingPlan.Id, endDate);
+            _contractRepo.Create(contract);
+            return Result.Success(new ContractDto(contract));
+        }
+        catch (EndDateBeforeCurrentDateException)
+        {
+            return EndDateInvalid(
+                nameof(endDate), "End date cannot be before current date.");
+        }
     }
 
     public Result<ContractDto> SignPartnerIndefinitely(
@@ -79,10 +83,15 @@ public class ContractUseCases : IContractUseCases
         if (currentContract is null)
             return CurrentContractNotFound;
 
-        if (currentContract.EndDate is not null)
-            return CurrentContractNotIndefinite;
+        try
+        {
+            currentContract.End();
+        }
+        catch (ContractEndedException)
+        {
+            return LatestContractEnded;
+        }
 
-        currentContract.End();
         _contractRepo.Update(currentContract);
         return Result.Success();
     }
@@ -100,21 +109,27 @@ public class ContractUseCases : IContractUseCases
         if (currentContract is null)
             return CurrentContractNotFound;
 
-        if (currentContract.EndDate is null)
-            return CurrentContractNotFixedPeriod;
-
-        if (extendedEndDate <= currentContract.EndDate)
-            return EndDateInvalid(
-                nameof(extendedEndDate), "Extended end date must be after old end date.");
-
-        currentContract.Extend(extendedEndDate);
+        try
+        {
+            currentContract.Extend(extendedEndDate);
+        }
+        catch (Exception ex)
+        {
+            return ex switch
+            {
+                ExtendIndefiniteContractException => CurrentContractNotFixedPeriod,
+                ContractEndedException => LatestContractEnded,
+                ExtendedEndDateNotAfterOriginalEndDateException
+                 => EndDateInvalid(
+                     nameof(extendedEndDate),
+                     "Extended end date must be after old end date.")
+            };
+        }
         _contractRepo.Update(currentContract);
         return Result.Success();
     }
 
-    //
-    // Helpers
-    //
+    #region Helpers
     private static Result PartnerNotFound
         => Result.NotFound($"Partner not found.");
 
@@ -127,11 +142,11 @@ public class ContractUseCases : IContractUseCases
     private static Result CurrentContractNotFound
         => Result.NotFound($"Partner has no current contract.");
 
-    private static Result CurrentContractNotIndefinite
-        => Result.Conflict($"Current contract of partner is not indefinite.");
-
     private static Result CurrentContractNotFixedPeriod
         => Result.Conflict($"Current contract of partner is not fixed period.");
+
+    private static Result LatestContractEnded
+        => Result.Error($"Latest contract has ended.");
 
     private static Result EndDateInvalid(
         string endDatePropName, string message)
@@ -145,4 +160,5 @@ public class ContractUseCases : IContractUseCases
             }
         });
     }
+    #endregion
 }

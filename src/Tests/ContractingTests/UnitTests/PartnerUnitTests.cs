@@ -1,8 +1,6 @@
-﻿
+﻿namespace ContractingTests.UnitTests;
 
-namespace ContractingTests.EntityTests;
-
-public class PartnerTests
+public class PartnerUnitTests
 {
     private readonly Partner _existingPartner = new(
         "Test", "Test", "test@testmail.com", "0901234567",

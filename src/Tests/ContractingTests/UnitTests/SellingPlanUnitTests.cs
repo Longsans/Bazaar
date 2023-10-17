@@ -1,6 +1,6 @@
-﻿namespace ContractingTests.EntityTests;
+﻿namespace ContractingTests.UnitTests;
 
-public class SellingPlanTests
+public class SellingPlanUnitTests
 {
     private readonly SellingPlan _existingPlan = new("Individual", 30m, 0.99m, 0.01f);
 

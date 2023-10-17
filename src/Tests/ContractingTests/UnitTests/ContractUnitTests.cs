@@ -1,6 +1,6 @@
-﻿namespace ContractingTests.EntityTests;
+﻿namespace ContractingTests.UnitTests;
 
-public class ContractTests
+public class ContractUnitTests
 {
     #region Test data and helpers
     private const int _partnerId = 1;

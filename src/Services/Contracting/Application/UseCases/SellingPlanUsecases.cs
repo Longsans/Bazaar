@@ -16,15 +16,21 @@ public class SellingPlanUseCases : ISellingPlanUseCases
 
     public Result<SellingPlanDto> CreateSellingPlan(SellingPlanDto planDto)
     {
-        if (planDto.PerSaleFee <= 0m && planDto.MonthlyFee <= 0m)
+        try
+        {
+            var createdPlan = _planRepo.Create(planDto.ToNewPlan());
+            return Result.Success(new SellingPlanDto(createdPlan));
+        }
+        catch (MonthlyAndPerSaleFeesNotPositiveException)
+        {
             return MonthlyAndPerSaleFeesNotPositive(
                 nameof(planDto.MonthlyFee), nameof(planDto.PerSaleFee));
-
-        if (planDto.RegularPerSaleFeePercent <= 0f)
-            return RegularFeePercentNotPositive(nameof(planDto.RegularPerSaleFeePercent));
-
-        var createdPlan = _planRepo.Create(planDto.ToNewPlan());
-        return Result.Success(new SellingPlanDto(createdPlan));
+        }
+        catch (RegularPerSaleFeePercentNotPositiveException)
+        {
+            return RegularFeePercentNotPositive(
+                nameof(planDto.RegularPerSaleFeePercent));
+        }
     }
 
     public Result UpdateSellingPlan(SellingPlanDto updateDto)
@@ -33,27 +39,30 @@ public class SellingPlanUseCases : ISellingPlanUseCases
         if (plan == null)
             return Result.NotFound("Selling plan not found.");
 
-        if (updateDto.PerSaleFee <= 0m && updateDto.MonthlyFee <= 0m)
+        plan.Name = updateDto.Name;
+        try
+        {
+            plan.ChangeFees(
+                updateDto.MonthlyFee,
+                updateDto.PerSaleFee,
+                updateDto.RegularPerSaleFeePercent);
+        }
+        catch (MonthlyAndPerSaleFeesNotPositiveException)
+        {
             return MonthlyAndPerSaleFeesNotPositive(
                 nameof(updateDto.MonthlyFee), nameof(updateDto.PerSaleFee));
-
-        if (updateDto.RegularPerSaleFeePercent <= 0f)
-            return RegularFeePercentNotPositive(nameof(updateDto.RegularPerSaleFeePercent));
-
-        plan.Name = updateDto.Name;
-        plan.ChangeFees(
-            updateDto.MonthlyFee,
-            updateDto.PerSaleFee,
-            updateDto.RegularPerSaleFeePercent);
+        }
+        catch (RegularPerSaleFeePercentNotPositiveException)
+        {
+            return RegularFeePercentNotPositive(
+                nameof(updateDto.RegularPerSaleFeePercent));
+        }
 
         _planRepo.Update(plan);
-
         return Result.Success();
     }
 
-    //
-    // Helpers
-    //
+    #region Helpers
     private static Result MonthlyAndPerSaleFeesNotPositive(
         string monthlyFeePropName, string perSaleFeePropName)
     {
@@ -87,4 +96,5 @@ public class SellingPlanUseCases : ISellingPlanUseCases
             }
         });
     }
+    #endregion
 }

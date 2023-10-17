@@ -18,10 +18,14 @@ public class UpdatePartnerEmailAddressService : IUpdatePartnerEmailAddressServic
         }
 
         var emailAddressOwner = _partnerRepo.GetWithContractsByEmailAddress(emailAddress);
-        if (emailAddressOwner != null && emailAddressOwner.Id != partner.Id)
+        if (emailAddressOwner != null)
         {
-            return Result.Conflict(
-                PartnerCompliance.UniqueEmailAddressNonComplianceMessage);
+            if (emailAddressOwner.Id != partner.Id)
+            {
+                return Result.Conflict(PartnerCompliance
+                    .UniqueEmailAddressNonComplianceMessage);
+            }
+            return Result.Success();
         }
 
         partner.ChangeEmailAddress(emailAddress);
