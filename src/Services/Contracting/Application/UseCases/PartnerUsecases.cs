@@ -25,51 +25,51 @@ public class PartnerUseCases : IPartnerUseCases
 
     public Result<PartnerDto> RegisterPartner(PartnerDto partnerDto)
     {
-        if (DateTime.Now.Year - partnerDto.DateOfBirth.Year < PartnerCompliance.MinimumAge)
+        Partner partner;
+        try
         {
-            return Result.Invalid(new()
-            {
-                new()
-                {
-                    Identifier = nameof(partnerDto.DateOfBirth),
-                    ErrorMessage = PartnerCompliance.PartnerMinimumAgeStatement
-                }
-            });
+            partner = partnerDto.ToNewPartner();
+        }
+        catch (PartnerUnderMinimumAgeException)
+        {
+            return PartnerUnderMinimumAge(nameof(PartnerDto.DateOfBirth));
         }
 
-        var possibleExisting = _partnerRepo.GetWithContractsByEmailAddress(partnerDto.Email);
-        if (possibleExisting is not null)
+        var existingEmailAddressOwner = _partnerRepo
+            .GetWithContractsByEmailAddress(partnerDto.Email);
+
+        if (existingEmailAddressOwner is not null)
         {
             return Result.Conflict(
                 PartnerCompliance.UniqueEmailAddressNonComplianceMessage);
         }
 
-        var partner = partnerDto.ToNewPartner();
         _partnerRepo.Create(partner);
         return Result.Success(new PartnerDto(partner));
     }
 
     public Result UpdatePartnerInfoByExternalId(PartnerDto partnerDto)
     {
-        if (DateTime.Now.Year - partnerDto.DateOfBirth.Year < PartnerCompliance.MinimumAge)
-        {
-            return Result.Invalid(new()
-            {
-                new()
-                {
-                    Identifier = nameof(partnerDto.DateOfBirth),
-                    ErrorMessage = PartnerCompliance.PartnerMinimumAgeStatement
-                }
-            });
-        }
-
-        var partner = _partnerRepo.GetWithContractsByExternalId(partnerDto.ExternalId!);
+        var partner = _partnerRepo
+            .GetWithContractsByExternalId(partnerDto.ExternalId!);
         if (partner == null)
         {
             return Result.NotFound();
         }
 
-        var existingEmailOwner = _partnerRepo.GetWithContractsByEmailAddress(partnerDto.Email);
+        Partner updatedPartner;
+        partnerDto.Id = partner.Id;
+        try
+        {
+            updatedPartner = partnerDto.ToExistingPartner();
+        }
+        catch (PartnerUnderMinimumAgeException)
+        {
+            return PartnerUnderMinimumAge(nameof(PartnerDto.DateOfBirth));
+        }
+
+        var existingEmailOwner = _partnerRepo
+            .GetWithContractsByEmailAddress(partnerDto.Email);
 
         if (existingEmailOwner != null
             && existingEmailOwner.ExternalId != partner.ExternalId)
@@ -78,8 +78,7 @@ public class PartnerUseCases : IPartnerUseCases
                 PartnerCompliance.UniqueEmailAddressNonComplianceMessage);
         }
 
-        partnerDto.Id = partner.Id;
-        _partnerRepo.Update(partnerDto.ToExistingPartner());
+        _partnerRepo.Update(updatedPartner);
         return Result.Success();
     }
 
@@ -87,5 +86,17 @@ public class PartnerUseCases : IPartnerUseCases
     {
         return _updateEmailAddressService
             .UpdatePartnerEmailAddress(partnerExternalId, newEmail);
+    }
+
+    private static Result PartnerUnderMinimumAge(string dobPropName)
+    {
+        return Result.Invalid(new()
+        {
+            new()
+            {
+                Identifier = dobPropName,
+                ErrorMessage = PartnerCompliance.PartnerMinimumAgeStatement
+            }
+        });
     }
 }

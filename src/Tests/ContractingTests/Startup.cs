@@ -1,5 +1,4 @@
-﻿using Bazaar.Contracting.Application;
-using Contracting.Domain.Abstractions;
+﻿using Bazaar.Contracting.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,13 +10,8 @@ internal class Startup
     {
         services.AddDbContext<ContractingDbContext>(options =>
         {
-            options.UseInMemoryDatabase("ContractingTestDb");
+            options.UseSqlServer(
+                "Server=.;Database=Bazaar_Contracting_Tests;Trusted_Connection=True;Trust Server Certificate=True;");
         });
-
-        services.AddTransient<ContractUseCases>();
-        services.AddTransient<ISellingPlanRepository, SellingPlanRepository>();
-        services.AddTransient<IPartnerRepository, PartnerRepository>();
-        services.AddTransient<IContractRepository, ContractRepository>();
-        services.AddTransient<ContractController>();
     }
 }

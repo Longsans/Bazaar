@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Contracting.Web.DTOs;
+﻿namespace Bazaar.Contracting.Web.Messages;
 
 public class CreateIndefiniteContractRequest
 {
