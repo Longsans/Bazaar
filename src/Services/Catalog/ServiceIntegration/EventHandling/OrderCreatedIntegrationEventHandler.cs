@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Catalog.Domain.EventHandling;
+﻿namespace Bazaar.Catalog.ServiceIntegration.EventHandling;
 
 public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<OrderCreatedIntegrationEvent>
 {
@@ -26,34 +26,46 @@ public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<Orde
                 continue;
             }
 
+            if (stockItem.Quantity == 0)
+            {
+                continue;
+            }
+
             if (catalogItem.AvailableStock < stockItem.Quantity)
             {
-                stockInadequateItems.Add(new OrderStockInadequateItem { ProductId = stockItem.ProductId, });
+                stockInadequateItems.Add(
+                    new OrderStockInadequateItem { ProductId = stockItem.ProductId, });
                 continue;
             }
 
             stockUpdatesList.Add(() =>
             {
-                catalogItem.AvailableStock -= stockItem.Quantity;
+                catalogItem.ReduceStock(stockItem.Quantity);
                 _catalogRepo.Update(catalogItem);
             });
         }
 
         if (unavailableItems.Any())
         {
-            _eventBus.Publish(new OrderItemsUnavailableIntegrationEvent(@event.OrderId, unavailableItems));
+            _eventBus.Publish(
+                new OrderItemsUnavailableIntegrationEvent(
+                    @event.OrderId, unavailableItems));
         }
         else if (stockInadequateItems.Any())
         {
-            _eventBus.Publish(new OrderStocksInadequateIntegrationEvent(@event.OrderId, stockInadequateItems));
+            _eventBus.Publish(
+                new OrderStocksInadequateIntegrationEvent(
+                    @event.OrderId, stockInadequateItems));
         }
-        else
+        else if (stockUpdatesList.Any())
         {
             foreach (var updateStock in stockUpdatesList)
             {
                 updateStock();
             }
-            _eventBus.Publish(new OrderStocksConfirmedIntegrationEvent(@event.OrderId));
+
+            _eventBus.Publish(
+                new OrderStocksConfirmedIntegrationEvent(@event.OrderId));
         }
 
         await Task.CompletedTask;
