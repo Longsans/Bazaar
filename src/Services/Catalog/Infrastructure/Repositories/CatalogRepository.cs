@@ -26,7 +26,7 @@ public class CatalogRepository : ICatalogRepository
 
     public IQueryable<CatalogItem> GetByNameSubstring(string nameSubstring)
     {
-        return _context.CatalogItems.Where(item => item.Name.Contains(nameSubstring));
+        return _context.CatalogItems.Where(item => item.ProductName.Contains(nameSubstring));
     }
 
     public IQueryable<CatalogItem> GetBySellerId(string sellerId)

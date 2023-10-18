@@ -19,7 +19,9 @@ namespace Bazaar.Catalog.Web.Controllers
         {
             var item = _catalogRepo.GetById(id);
             if (item == null)
+            {
                 return NotFound();
+            }
 
             return Ok(item);
         }
@@ -72,22 +74,75 @@ namespace Bazaar.Catalog.Web.Controllers
         [Authorize(Policy = "HasModifyScope")]
         public ActionResult<CatalogItem> Create(CreateCatalogItemRequest command)
         {
-            var createdItem = _catalogRepo.Create(command.ToCatalogItem());
+            var createdItem = _catalogRepo.Create(command.ToNewCatalogItem());
             return CreatedAtAction(nameof(GetById), new { createdItem.Id }, createdItem);
         }
 
-        [HttpPut("{productId}")]
+        [HttpPut("{productId}/product-details")]
         [Authorize(Policy = "HasModifyScope")]
-        public IActionResult Update(string productId, UpdateCatalogItemRequest request)
+        public ActionResult<CatalogItem> UpdateProductDetails(string productId,
+            UpdateProductDetailsRequest request)
         {
-            var existing = _catalogRepo.GetByProductId(productId);
-            if (existing == null)
+            var catalogItem = _catalogRepo.GetByProductId(productId);
+            if (catalogItem == null)
+            {
                 return NotFound();
+            }
 
-            var update = request.ToCatalogItem(productId);
-            _catalogRepo.Update(update);
+            catalogItem.ChangeProductDetails(
+                request.Name, request.Description, request.Price);
 
-            return NoContent();
+            _catalogRepo.Update(catalogItem);
+
+            return catalogItem;
+        }
+
+        [HttpPut("{productId}/stock")]
+        public ActionResult<CatalogItem> Restock(string productId, RestockRequest request)
+        {
+            var catalogItem = _catalogRepo.GetByProductId(productId);
+            if (catalogItem == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                catalogItem.Restock(request.RestockUnits);
+            }
+            catch (Exception ex) when (
+                ex is ArgumentException
+                || ex is ExceedingMaxStockThresholdException)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+
+            return catalogItem;
+        }
+
+        [HttpPut("{productId}/stock-thresholds")]
+        public ActionResult<CatalogItem> UpdateStockThresholds(
+            string productId, UpdateStockThresholdsRequest request)
+        {
+            var catalogItem = _catalogRepo.GetByProductId(productId);
+            if (catalogItem == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                catalogItem.ChangeStockThresholds(
+                    request.RestockThreshold, request.MaxStockThreshold);
+            }
+            catch (Exception ex) when (
+                ex is ArgumentException
+                || ex is ExceedingMaxStockThresholdException)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+
+            return catalogItem;
         }
 
         #region Helpers
@@ -130,7 +185,7 @@ namespace Bazaar.Catalog.Web.Controllers
             }
             else
             {
-                items = items.Where(item => item.Name.Contains(nameSubstring)).ToList();
+                items = items.Where(item => item.ProductName.Contains(nameSubstring)).ToList();
             }
         }
         #endregion

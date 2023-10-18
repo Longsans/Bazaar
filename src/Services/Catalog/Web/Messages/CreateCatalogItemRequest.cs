@@ -5,20 +5,14 @@ public class CreateCatalogItemRequest
     public string Name { get; set; }
     public string Description { get; set; }
     public decimal Price { get; set; }
-    public int AvailableStock { get; set; }
+    public uint AvailableStock { get; set; }
     public string SellerId { get; set; }
 
-    public int RestockThreshold { get; set; }
-    public int MaxStockThreshold { get; set; }
+    public uint RestockThreshold { get; set; }
+    public uint MaxStockThreshold { get; set; }
 
-    public CatalogItem ToCatalogItem() => new()
-    {
-        Name = Name,
-        Description = Description,
-        Price = Price,
-        AvailableStock = AvailableStock,
-        SellerId = SellerId,
-        RestockThreshold = RestockThreshold,
-        MaxStockThreshold = MaxStockThreshold
-    };
+    public CatalogItem ToNewCatalogItem() => new(
+        default, string.Empty, Name, Description,
+        Price, AvailableStock, SellerId,
+        RestockThreshold, MaxStockThreshold);
 }
