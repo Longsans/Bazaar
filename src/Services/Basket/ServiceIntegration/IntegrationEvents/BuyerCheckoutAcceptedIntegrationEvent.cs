@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Basket.Domain.IntegrationEvents;
+﻿namespace Bazaar.Basket.ServiceIntegration.IntegrationEvents;
 
 public record BuyerCheckoutAcceptedIntegrationEvent : IntegrationEvent
 {
@@ -17,7 +17,8 @@ public record BuyerCheckoutAcceptedIntegrationEvent : IntegrationEvent
 
     public BuyerCheckoutAcceptedIntegrationEvent(
         string city, string country, string zipCode, string shippingAdress,
-        string cardNumber, string cardHolderName, DateTime cardExpiration, string cardSecurityNumber,
+        string cardNumber, string cardHolderName,
+        DateTime cardExpiration, string cardSecurityNumber,
         string buyerId, BuyerBasket basket)
     {
         City = city;
@@ -32,7 +33,7 @@ public record BuyerCheckoutAcceptedIntegrationEvent : IntegrationEvent
         Basket = new CheckoutEventBasket(
             basket.BuyerId,
             basket.Items.Select(item => new CheckoutEventBasketItem(
-                item.ProductId, item.ProductName, item.UnitPrice, item.Quantity)));
+                item.ProductId, item.ProductName, item.ProductUnitPrice, item.Quantity)));
     }
 }
 

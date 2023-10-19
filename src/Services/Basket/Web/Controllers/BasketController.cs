@@ -2,71 +2,96 @@
 using Ardalis.Result.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Bazaar.Basket.Web.Controllers
+namespace Bazaar.Basket.Web.Controllers;
+
+[Route("api/buyer-baskets")]
+[ApiController]
+public class BasketController : ControllerBase
 {
-    [Route("api/buyer-baskets")]
-    [ApiController]
-    public class BasketController : ControllerBase
+    private readonly IBasketRepository _basketRepo;
+    private readonly IBasketCheckoutService _checkoutService;
+
+    public BasketController(IBasketRepository basketRepository, IBasketCheckoutService checkoutService)
     {
-        private readonly IBasketUseCases _basketUseCases;
+        _basketRepo = basketRepository;
+        _checkoutService = checkoutService;
+    }
 
-        public BasketController(IBasketUseCases basketUseCases)
+    [HttpGet("{buyerId}")]
+    public ActionResult<BuyerBasketQuery> GetBasketByBuyerId(string buyerId)
+    {
+        var basket = GetWithItemsOrCreateBasketIfNotExist(buyerId);
+        return new BuyerBasketQuery(basket);
+    }
+
+    [HttpGet("{buyerId}/items/{productId}")]
+    public ActionResult<BasketItemQuery> GetBasketItemByBuyerIdAndProductId(
+        [FromRoute] string buyerId, [FromRoute] string productId)
+    {
+        var basketItem = _basketRepo.GetBasketItem(buyerId, productId);
+        if (basketItem == null)
+            return NotFound(new { buyerId, productId });
+
+        return new BasketItemQuery(basketItem);
+    }
+
+    [HttpPost("{buyerId}/items")]
+    public ActionResult<BuyerBasketQuery> AddItemToBasket(
+        [FromRoute] string buyerId, [FromBody] AddBasketItemRequest request)
+    {
+        var basket = GetWithItemsOrCreateBasketIfNotExist(buyerId);
+
+        try
         {
-            _basketUseCases = basketUseCases;
+            var basketItem = new BasketItem(
+                request.ProductId, request.ProductName, request.UnitPrice,
+                request.Quantity, request.ImageUrl, basket);
+
+            basket.AddItem(basketItem);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (ProductAlreadyInBasketException ex)
+        {
+            return Conflict(new { error = ex.Message });
         }
 
-        [HttpGet("{buyerId}")]
-        public ActionResult<BuyerBasketQuery> GetBasketByBuyerId(string buyerId)
+        _basketRepo.Update(basket);
+        return new BuyerBasketQuery(basket);
+    }
+
+    [HttpPatch("{buyerId}/items/{productId}")]
+    public ActionResult<BuyerBasketQuery> ChangeItemQuantity(
+        string buyerId, string productId, [FromBody] uint quantity)
+    {
+        var basket = GetWithItemsOrCreateBasketIfNotExist(buyerId);
+
+        try
         {
-            var basket = _basketUseCases.GetBasketOrCreateIfNotExist(buyerId);
-            return new BuyerBasketQuery(basket);
+            basket.ChangeItemQuantity(productId, quantity);
+        }
+        catch (ProductNotInBasketException ex)
+        {
+            return Conflict(new { error = ex.Message });
         }
 
-        [HttpGet("{buyerId}/items/{productId}")]
-        public ActionResult<BasketItemQuery> GetBasketItemByBuyerIdAndProductId(
-            [FromRoute] string buyerId, [FromRoute] string productId)
-        {
-            var basketItem = _basketUseCases.GetBasketItem(buyerId, productId);
-            if (basketItem == null)
-                return NotFound(new { buyerId, productId });
+        return new BuyerBasketQuery(basket);
+    }
 
-            return new BasketItemQuery(basketItem);
-        }
+    [HttpPost("/api/checkout")]
+    public IActionResult Checkout(BasketCheckout checkout)
+    {
+        var checkoutResult = _checkoutService.Checkout(checkout);
+        return checkoutResult.ToActionResult(this);
+    }
 
-        [HttpPost("{buyerId}/items")]
-        public ActionResult<BuyerBasketQuery> AddItemToBasket(
-            [FromRoute] string buyerId, [FromBody] AddBasketItemRequest request)
-        {
-            var basketItemDto = new BasketItemDto
-            {
-                ProductId = request.ProductId,
-                ProductName = request.ProductName,
-                UnitPrice = request.UnitPrice,
-                Quantity = request.Quantity,
-                ImageUrl = request.ImageUrl,
-            };
+    private BuyerBasket GetWithItemsOrCreateBasketIfNotExist(string buyerId)
+    {
+        var basket = _basketRepo.GetWithItemsByBuyerId(buyerId)
+            ?? _basketRepo.Create(new BuyerBasket(buyerId));
 
-            var addResult = _basketUseCases.AddItemToBasket(buyerId, basketItemDto);
-
-            return addResult.Map(b => new BuyerBasketQuery(b))
-                .ToActionResult(this);
-        }
-
-        [HttpPatch("{buyerId}/items/{productId}")]
-        public ActionResult<BuyerBasketQuery> ChangeItemQuantity(
-            string buyerId, string productId, [FromBody] uint quantity)
-        {
-            var changeItemResult = _basketUseCases.ChangeItemQuantity(buyerId, productId, quantity);
-
-            return changeItemResult.Map(b => new BuyerBasketQuery(b))
-                .ToActionResult(this);
-        }
-
-        [HttpPost("/api/checkout")]
-        public IActionResult Checkout(BasketCheckout checkout)
-        {
-            var checkoutResult = _basketUseCases.Checkout(checkout);
-            return checkoutResult.ToActionResult(this);
-        }
+        return basket;
     }
 }

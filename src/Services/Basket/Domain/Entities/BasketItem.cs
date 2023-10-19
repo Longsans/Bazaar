@@ -7,7 +7,7 @@ public class BasketItem
     public int Id { get; set; }
     public string ProductId { get; private set; }
     public string ProductName { get; private set; }
-    public decimal UnitPrice { get; private set; }
+    public decimal ProductUnitPrice { get; private set; }
     public uint Quantity { get; private set; }
     public string ImageUrl { get; private set; }
     public BuyerBasket Basket { get; private set; }
@@ -16,12 +16,24 @@ public class BasketItem
     [JsonConstructor]
     public BasketItem(
         string productId, string productName,
-        decimal unitPrice, uint quantity,
+        decimal productUnitPrice, uint quantity,
         string imageUrl, int basketId)
     {
+        if (productUnitPrice <= 0m)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(productUnitPrice), "Unit price must be higher than 0.");
+        }
+
+        if (quantity == 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(quantity), "Quantity must be larger than 0.");
+        }
+
         ProductId = productId;
         ProductName = productName;
-        UnitPrice = unitPrice;
+        ProductUnitPrice = productUnitPrice;
         Quantity = quantity;
         ImageUrl = imageUrl;
         BasketId = basketId;
@@ -29,20 +41,18 @@ public class BasketItem
 
     public BasketItem(
         string productId, string productName,
-        decimal unitPrice, uint quantity,
+        decimal productUnitPrice, uint quantity,
         string imageUrl, BuyerBasket basket)
             : this(
-                  productId, productName, unitPrice,
+                  productId, productName, productUnitPrice,
                   quantity, imageUrl, basket.Id)
     {
         Basket = basket;
     }
 
+    // Allow zero quantity here, which will be interpreted as removing item by the basket
     public void ChangeQuantity(uint quantity)
     {
-        if (quantity < 0)
-            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must not be negative.");
-
         Quantity = quantity;
     }
 }

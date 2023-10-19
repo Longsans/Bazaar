@@ -15,7 +15,7 @@ public class BasketItemQuery
         Id = item.Id;
         ProductId = item.ProductId;
         ProductName = item.ProductName;
-        UnitPrice = item.UnitPrice;
+        UnitPrice = item.ProductUnitPrice;
         Quantity = item.Quantity;
         ImageUrl = item.ImageUrl;
         BasketId = item.BasketId;

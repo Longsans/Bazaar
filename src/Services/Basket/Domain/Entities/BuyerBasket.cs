@@ -16,19 +16,36 @@ public class BuyerBasket
         _items = new();
     }
 
-    public void RemoveNoQuantityItems()
+    public void AddItem(BasketItem item)
     {
-        _items.RemoveAll(i => i.Quantity == 0);
+        if (_items.Any(i => i.ProductId == item.ProductId))
+            throw new ProductAlreadyInBasketException();
+
+        _items.Add(item);
+        UpdateTotal();
+    }
+
+    public void ChangeItemQuantity(string productId, uint quantity)
+    {
+        var item = _items.SingleOrDefault(i => i.ProductId == productId)
+            ?? throw new ProductNotInBasketException();
+
+        item.ChangeQuantity(quantity);
+
+        if (item.Quantity == 0)
+            _items.Remove(item);
+
+        UpdateTotal();
     }
 
     public void EmptyBasket()
     {
         _items.Clear();
+        UpdateTotal();
     }
 
-    public void UpdateTotal(decimal total)
+    public void UpdateTotal()
     {
-        Total = total >= 0m ? total : throw new ArgumentException(
-            "Basket total cannot be negative", nameof(total));
+        Total = _items.Sum(x => x.Quantity * x.ProductUnitPrice);
     }
 }

@@ -2,10 +2,8 @@ namespace Bazaar.Basket.Domain.Interfaces;
 
 public interface IBasketRepository
 {
-    BuyerBasket? GetByBuyerId(string buyerId);
+    BuyerBasket? GetWithItemsByBuyerId(string buyerId);
     BasketItem? GetBasketItem(string buyerId, string productId);
-    BuyerBasket Create(string buyerId);
+    BuyerBasket Create(BuyerBasket basket);
     void Update(BuyerBasket basket);
-
-    BasketItem AddBasketItem(BasketItem item);
 }

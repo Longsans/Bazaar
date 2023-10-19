@@ -9,7 +9,7 @@ public class BasketRepository : IBasketRepository
         _context = context;
     }
 
-    public BuyerBasket? GetByBuyerId(string buyerId)
+    public BuyerBasket? GetWithItemsByBuyerId(string buyerId)
     {
         return _context.BuyerBaskets
             .Include(b => b.Items)
@@ -18,14 +18,13 @@ public class BasketRepository : IBasketRepository
 
     public BasketItem? GetBasketItem(string buyerId, string productId)
     {
-        var basket = GetByBuyerId(buyerId);
+        var basket = GetWithItemsByBuyerId(buyerId);
 
         return basket?.Items.SingleOrDefault(x => x.ProductId == productId);
     }
 
-    public BuyerBasket Create(string buyerId)
+    public BuyerBasket Create(BuyerBasket basket)
     {
-        var basket = new BuyerBasket(buyerId);
         _context.BuyerBaskets.Add(basket);
         _context.SaveChanges();
         return basket;
@@ -35,12 +34,5 @@ public class BasketRepository : IBasketRepository
     {
         _context.BuyerBaskets.Update(basket);
         _context.SaveChanges();
-    }
-
-    public BasketItem AddBasketItem(BasketItem item)
-    {
-        _context.BasketItems.Add(item);
-        _context.SaveChanges();
-        return item;
     }
 }

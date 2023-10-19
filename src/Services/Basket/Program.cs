@@ -23,7 +23,7 @@ builder.Services.AddDbContext<BasketDbContext>(options =>
     });
 });
 
-builder.Services.AddScoped<IBasketUseCases, BasketUseCases>();
+builder.Services.AddScoped<IBasketCheckoutService, BasketCheckoutService>();
 
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));

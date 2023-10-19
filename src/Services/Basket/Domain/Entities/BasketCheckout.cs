@@ -13,4 +13,19 @@ public class BasketCheckout
     public string CardHolderName { get; init; }
     public DateTime CardExpiration { get; init; }
     public string CardSecurityNumber { get; init; }
+
+    public BasketCheckout(string buyerId,
+        string city, string country, string zipCode, string shippingAddress,
+        string cardNumber, string cardHolderName, DateTime cardExpiration, string cardSecurityNumber)
+    {
+        BuyerId = buyerId;
+        City = city;
+        Country = country;
+        ZipCode = zipCode;
+        ShippingAddress = shippingAddress;
+        CardNumber = cardNumber;
+        CardHolderName = cardHolderName;
+        CardExpiration = cardExpiration;
+        CardSecurityNumber = cardSecurityNumber;
+    }
 }
