@@ -103,6 +103,7 @@ public class OrderController : ControllerBase
         return new OrderQuery(order);
     }
 
+    #region Helpers
     private void AddOrFilterByBuyerId(ref List<Order> orders, string buyerId)
     {
         if (orders.Count == 0)
@@ -141,4 +142,5 @@ public class OrderController : ControllerBase
             orders = filteredList;
         }
     }
+    #endregion
 }

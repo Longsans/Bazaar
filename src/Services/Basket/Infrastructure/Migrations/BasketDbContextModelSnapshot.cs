@@ -44,11 +44,11 @@ namespace Basket.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("ProductUnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<long>("Quantity")
                         .HasColumnType("bigint");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 

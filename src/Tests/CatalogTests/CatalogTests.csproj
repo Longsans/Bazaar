@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Services\Catalog\Catalog.csproj" />
+    <ProjectReference Include="..\Common\TestingCommon.csproj" />
   </ItemGroup>
 
 </Project>

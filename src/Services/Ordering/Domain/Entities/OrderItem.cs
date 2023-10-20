@@ -16,19 +16,27 @@ public class OrderItem
     public OrderItem(
         int id, string productId, string productName,
         decimal productUnitPrice, uint quantity, int orderId)
+        : this(productId, productName, productUnitPrice, quantity, orderId)
     {
         Id = id;
-        ProductId = productId;
-        ProductName = productName;
-        ProductUnitPrice = productUnitPrice;
-        Quantity = quantity;
-        OrderId = orderId;
     }
 
     public OrderItem(
         string productId, string productName,
         decimal productUnitPrice, uint quantity, int orderId)
     {
+        if (productUnitPrice <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(productUnitPrice), "Product unit price must be greater than 0.");
+        }
+
+        if (quantity == 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(quantity), "Quantity must be larger than 0.");
+        }
+
         ProductId = productId;
         ProductName = productName;
         ProductUnitPrice = productUnitPrice;

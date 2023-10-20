@@ -21,7 +21,19 @@ public class Order
             throw new ArgumentException("Order has no items.", nameof(items));
 
         if (string.IsNullOrWhiteSpace(shippingAddress))
-            throw new ArgumentException("Shipping address cannot be empty", nameof(shippingAddress));
+            throw new ArgumentNullException(nameof(shippingAddress), "Shipping address cannot be empty");
+
+        var duplicateProductIds = new List<string>();
+        foreach (var productIdGroup in items.GroupBy(item => item.ProductId))
+        {
+            if (productIdGroup.Count() > 1)
+            {
+                duplicateProductIds.Add(productIdGroup.Key);
+            }
+        }
+
+        if (duplicateProductIds.Any())
+            throw new DuplicateProductsException(duplicateProductIds);
 
         ShippingAddress = shippingAddress;
         BuyerId = buyerId;
@@ -31,23 +43,19 @@ public class Order
 
     [JsonConstructor]
     private Order(
-        int id, string shippingAddress, string buyerId, OrderStatus status)
+        int id, string shippingAddress, string buyerId,
+        OrderStatus status)
+        : this(shippingAddress, buyerId, Array.Empty<OrderItem>())
     {
-        if (string.IsNullOrWhiteSpace(shippingAddress))
-            throw new ArgumentException("Shipping address cannot be empty", nameof(shippingAddress));
-
         Id = id;
-        _items = new();
-        ShippingAddress = shippingAddress;
-        BuyerId = buyerId;
         Status = status;
     }
 
     #region Domain logic
 
     public bool IsCancellable
-        => Status.HasFlag(OrderStatus.AwaitingSellerConfirmation)
-        || Status.HasFlag(OrderStatus.Postponed);
+        => Status == OrderStatus.AwaitingSellerConfirmation
+        || Status == OrderStatus.Postponed;
 
     public void Cancel(string reason)
     {
@@ -92,10 +100,13 @@ public class Order
 
     public void Postpone()
     {
-        Status = Status != OrderStatus.Cancelled && Status != OrderStatus.Shipped
+        Status = Status == OrderStatus.Shipping
+                || Status == OrderStatus.AwaitingSellerConfirmation
+                || Status == OrderStatus.ProcessingPayment
             ? OrderStatus.Postponed
             : throw new InvalidOperationException(
-                "Can only postpone order if order is not shipped nor cancelled.");
+                "Can only postpone order if order is currently processing payment, " +
+                "awaiting seller confirmation, or shipping.");
     }
 
     public void UpdateTotal()
