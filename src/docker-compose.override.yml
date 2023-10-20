@@ -66,17 +66,6 @@ services:
     ports:
       - "5437:1433"
 
-  # webbff:
-  #   environment:
-  #     - ASPNETCORE_ENVIRONMENT=Development
-  #     - ASPNETCORE_URLS=http://+:80
-  #     - ClusterId=1
-  #     - BasketsUri=http://internallb/b/api/buyer-baskets
-  #     - CatalogUri=http://internallb/ca/api/catalog
-  #     - OrdersUri=http://internallb/o/api/orders
-  #   ports:
-  #     - "5210:80"
-
   identity-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

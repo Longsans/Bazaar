@@ -1,8 +1,11 @@
-﻿global using Bazaar.Basket.Core.Model;
-global using Bazaar.Basket.Core.Usecases;
-global using Bazaar.Basket.DTOs;
-global using Bazaar.Basket.IntegrationEvents.Events;
-global using Bazaar.Basket.Repositories;
+﻿global using Ardalis.Result;
+global using Bazaar.Basket.Domain.Entites;
+global using Bazaar.Basket.Domain.Exceptions;
+global using Bazaar.Basket.ServiceIntegration.IntegrationEvents;
+global using Bazaar.Basket.Domain.Interfaces;
+global using Bazaar.Basket.Domain.Services;
+global using Bazaar.Basket.Infrastructure.Repositories;
+global using Bazaar.Basket.Web.Messages;
 global using Bazaar.BuildingBlocks.EventBus;
 global using Bazaar.BuildingBlocks.EventBus.Abstractions;
 global using Bazaar.BuildingBlocks.EventBus.Events;

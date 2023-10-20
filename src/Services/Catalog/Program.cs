@@ -1,5 +1,4 @@
 using Bazaar.BuildingBlocks.EventBus;
-using Catalog.Repositories;
 using RabbitMQ.Client;
 using System.Text.Json.Serialization;
 
@@ -15,8 +14,10 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
+
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
+
 builder.Services.RegisterEventBus(builder.Configuration);
 
 builder.Services.AddAuthentication()

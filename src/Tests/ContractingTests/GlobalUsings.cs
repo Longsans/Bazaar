@@ -1,0 +1,9 @@
+global using Ardalis.Result;
+global using Bazaar.Contracting.Domain.Constants;
+global using Bazaar.Contracting.Domain.Entities;
+global using Bazaar.Contracting.Domain.Enums;
+global using Bazaar.Contracting.Domain.Exceptions;
+global using Bazaar.Contracting.Domain.Interfaces;
+global using Bazaar.Contracting.Domain.Services;
+global using ContractingTests.Helpers;
+global using Xunit;
