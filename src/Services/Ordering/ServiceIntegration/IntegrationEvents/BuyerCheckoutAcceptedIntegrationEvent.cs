@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Ordering.Domain.IntegrationEvents;
+﻿namespace Bazaar.Ordering.ServiceIntegration.IntegrationEvents;
 
 public record BuyerCheckoutAcceptedIntegrationEvent : IntegrationEvent
 {

@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Ordering.Domain.EventHandling;
+﻿namespace Bazaar.Ordering.ServiceIntegration.EventHandling;
 
 public class OrderStocksConfirmedIntegrationEventHandler : IIntegrationEventHandler<OrderStocksConfirmedIntegrationEvent>
 {

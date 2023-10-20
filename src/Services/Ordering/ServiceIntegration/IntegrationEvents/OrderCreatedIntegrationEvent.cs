@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Ordering.Domain.IntegrationEvents;
+﻿namespace Bazaar.Ordering.ServiceIntegration.IntegrationEvents;
 
 public record OrderCreatedIntegrationEvent(int OrderId, IEnumerable<OrderStockItem> OrderStockItems) : IntegrationEvent;
 
