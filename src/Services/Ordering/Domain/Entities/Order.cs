@@ -44,8 +44,8 @@ public class Order
     [JsonConstructor]
     private Order(
         int id, string shippingAddress, string buyerId,
-        OrderStatus status, IEnumerable<OrderItem> items)
-        : this(shippingAddress, buyerId, items)
+        OrderStatus status)
+        : this(shippingAddress, buyerId, Array.Empty<OrderItem>())
     {
         Id = id;
         Status = status;
@@ -100,10 +100,13 @@ public class Order
 
     public void Postpone()
     {
-        Status = Status == OrderStatus.Shipping || Status == OrderStatus.AwaitingSellerConfirmation
+        Status = Status == OrderStatus.Shipping
+                || Status == OrderStatus.AwaitingSellerConfirmation
+                || Status == OrderStatus.ProcessingPayment
             ? OrderStatus.Postponed
             : throw new InvalidOperationException(
-                "Can only postpone order if order is currently awaiting seller confirmation or shipping.");
+                "Can only postpone order if order is currently processing payment, " +
+                "awaiting seller confirmation, or shipping.");
     }
 
     public void UpdateTotal()

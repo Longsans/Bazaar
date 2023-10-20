@@ -20,12 +20,14 @@ public class OrderStocksConfirmedIntegrationEventHandler : IIntegrationEventHand
         var order = _orderRepo.GetById(@event.OrderId);
         if (order == null)
         {
-            _logger.LogWarning($"[StocksConfirmed] Event handler: Order {@event.OrderId} no longer exists in the system.");
+            _logger.LogWarning(
+                $"[StocksConfirmed] Event handler: Order {@event.OrderId} no longer exists in the system.");
             return;
         }
 
         order.StartPayment();
         _orderRepo.Update(order);
         _eventBus.Publish(new OrderStatusChangedToProcessingPaymentIntegrationEvent(@event.OrderId));
+        await Task.CompletedTask;
     }
 }

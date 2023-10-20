@@ -24,7 +24,8 @@ public class OrderStocksInadequateIntegrationEventHandler : IIntegrationEventHan
 
         _logger.LogCritical(
             $"Event handler for [StocksInadequateEvent]: Order {order.Id} has been removed from database. " +
-            $"Items reported with inadequate stocks: {string.Join(", ", @event.OrderStockInadequateItems.Select(i => i.ProductId))}");
+            $"Items reported with inadequate stocks: " +
+            $"{string.Join(", ", @event.OrderStockInadequateItems.Select(i => i.ProductId))}");
 
         _orderRepo.Delete(order);
         await Task.CompletedTask;

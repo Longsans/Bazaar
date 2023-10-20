@@ -30,7 +30,8 @@ public class OrderUnitTests
         => GetStatusValuesExcluding(OrderStatus.Shipping);
 
     public static IEnumerable<object[]> UnpostponableStatuses
-        => GetStatusValuesExcluding(OrderStatus.AwaitingSellerConfirmation, OrderStatus.Shipping);
+        => GetStatusValuesExcluding(OrderStatus.ProcessingPayment,
+            OrderStatus.AwaitingSellerConfirmation, OrderStatus.Shipping);
 
     private static Order GetTestOrder()
     {
@@ -304,9 +305,10 @@ public class OrderUnitTests
     }
 
     [Theory]
+    [InlineData(OrderStatus.ProcessingPayment)]
     [InlineData(OrderStatus.AwaitingSellerConfirmation)]
     [InlineData(OrderStatus.Shipping)]
-    public void Postpone_Succeeds_WhenCurrentStatusIsAwaitingSellerConfirmationOrShipping(
+    public void Postpone_Succeeds_WhenCurrentStatusIsProcessingPaymentOrAwaitingConfirmationOrShipping(
         OrderStatus status)
     {
         var order = GetTestOrder();
@@ -319,7 +321,7 @@ public class OrderUnitTests
 
     [Theory]
     [MemberData(nameof(UnpostponableStatuses))]
-    public void Postpone_ThrowsInvalidOpException_WhenCurrentStatusNotAwaitingSellerConfirmationNorShipping(
+    public void Postpone_ThrowsInvalidOpException_WhenCurrentStatusNotValid(
         OrderStatus status)
     {
         var order = GetTestOrder();

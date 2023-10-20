@@ -17,12 +17,12 @@ public class BuyerCheckoutAcceptedIntegrationEventHandler : IIntegrationEventHan
             return;
 
         var items = @event.Basket.Items.Select(x => new OrderItem(
-            x.ProductId, x.ProductName, x.UnitPrice, x.Quantity, default));
+            x.ProductId, x.ProductName, x.ProductUnitPrice, x.Quantity, default));
 
         var order = new Order(
-            string.Join(", ", @event.ShippingAddress, @event.City, @event.Country),
-            @event.BuyerId,
-            items);
+            string.Join(", ", @event.ShippingAddress,
+                @event.City, @event.Country),
+            @event.BuyerId, items);
 
         _orderRepo.Create(order);
         _eventBus.Publish(

@@ -15,11 +15,11 @@ public class OrderPaymentSucceededIntegrationEventHandler : IIntegrationEventHan
 
     public async Task Handle(OrderPaymentSucceededIntegrationEvent @event)
     {
-        _logger.LogInformation("Payment success, now waiting for seller's confirmation.");
-
         var order = _orderRepo.GetById(@event.orderId);
         if (order == null)
             return;
+
+        _logger.LogInformation("Payment success, now waiting for seller's confirmation.");
 
         order.AwaitSellerConfirmation();
         _orderRepo.Update(order);

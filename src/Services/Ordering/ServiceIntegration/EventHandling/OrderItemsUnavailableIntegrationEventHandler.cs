@@ -17,14 +17,17 @@ public class OrderItemsUnavailableIntegrationEventHandler : IIntegrationEventHan
         var order = _orderRepo.GetById(@event.OrderId);
         if (order == null)
         {
-            _logger.LogWarning($"[ItemsUnavailableEvent] Event handler: Order {@event.OrderId} no longer exists in the system.");
+            _logger.LogWarning(
+                $"[ItemsUnavailableEvent] Event handler: " +
+                $"Order {@event.OrderId} no longer exists in the system.");
             return;
         }
 
-        _logger.LogCritical($"[ItemsUnavailableEvent] Event handler: Order {order.Id} has been removed from database. " +
+        _orderRepo.Delete(order);
+        _logger.LogCritical($"[ItemsUnavailableEvent] Event handler: " +
+            $"Order {order.Id} has been removed from database. " +
             $"Items reported unavailable: {string.Join(", ", @event.UnavailableProductIds)}");
 
-        _orderRepo.Delete(order);
         await Task.CompletedTask;
     }
 }

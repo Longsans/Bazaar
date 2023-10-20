@@ -1,8 +1,6 @@
-using CatalogTests.TestDoubles;
-
 namespace CatalogTests.IntegrationTests;
 
-public class EventHandlerIntegrationTests
+public class OrderCreatedHandlerIntegrationTests
 {
     private readonly OrderCreatedIntegrationEventHandler _handler;
     private readonly CatalogItem _testCatalogItem;
@@ -10,7 +8,7 @@ public class EventHandlerIntegrationTests
     private readonly EventBusTestDouble _testEventBus;
     private readonly ICatalogRepository _repo;
 
-    public EventHandlerIntegrationTests(CatalogDbContext dbContext, EventBusTestDouble testEventBus)
+    public OrderCreatedHandlerIntegrationTests(CatalogDbContext dbContext, EventBusTestDouble testEventBus)
     {
         dbContext.Database.EnsureDeleted();
         dbContext.Database.EnsureCreated();

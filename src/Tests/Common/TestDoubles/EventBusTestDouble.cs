@@ -1,7 +1,7 @@
 ﻿using Bazaar.BuildingBlocks.EventBus.Abstractions;
 using Bazaar.BuildingBlocks.EventBus.Events;
 
-namespace BasketTests.TestDoubles;
+namespace TestingCommon.TestDoubles;
 
 public class EventBusTestDouble : IEventBus
 {

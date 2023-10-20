@@ -16,11 +16,14 @@ public class Shopper
         string emailAddress, string phoneNumber,
         DateTime dateOfBirth, Gender gender)
     {
+        if (dateOfBirth.Date > DateTime.Now.Date)
+            throw new ArgumentException("Date of birth cannot be a future date.");
+
         FirstName = firstName;
         LastName = lastName;
         EmailAddress = emailAddress;
         PhoneNumber = phoneNumber;
-        DateOfBirth = dateOfBirth;
+        DateOfBirth = dateOfBirth.Date;
         Gender = gender;
     }
 }

@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\BuildingBlocks\EventBus\EventBus\EventBus.csproj" />
     <ProjectReference Include="..\..\Services\Basket\Basket.csproj" />
+    <ProjectReference Include="..\Common\TestingCommon.csproj" />
   </ItemGroup>
 
 </Project>
