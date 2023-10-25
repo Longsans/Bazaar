@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Contracting.Web.Messages;
 
-public record SellingPlanWriteRequest
+public record SellingPlanRequest
 {
     public string Name { get; set; }
     public decimal MonthlyFee { get; set; }

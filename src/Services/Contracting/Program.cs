@@ -21,16 +21,16 @@ builder.Services.AddDbContext<ContractingDbContext>(options =>
 
 // Domain services
 builder.Services.AddScoped<
-    IUpdatePartnerEmailAddressService,
-    UpdatePartnerEmailAddressService>();
+    IUpdateClientEmailAddressService,
+    UpdateClientEmailAddressService>();
 
 // Application use-cases
 builder.Services.AddScoped<IContractUseCases, ContractUseCases>();
-builder.Services.AddScoped<IPartnerUseCases, PartnerUseCases>();
+builder.Services.AddScoped<IClientUseCases, ClientUseCases>();
 builder.Services.AddScoped<ISellingPlanUseCases, SellingPlanUseCases>();
 
 // Data services
-builder.Services.AddScoped<IPartnerRepository, PartnerRepository>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<ISellingPlanRepository, SellingPlanRepository>();
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));

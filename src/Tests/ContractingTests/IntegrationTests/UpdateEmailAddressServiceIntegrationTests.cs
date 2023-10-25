@@ -4,100 +4,100 @@ namespace ContractingTests.IntegrationTests;
 
 public class UpdateEmailAddressServiceIntegrationTests
 {
-    private readonly IPartnerRepository _partnerRepo;
-    private readonly UpdatePartnerEmailAddressService _service;
-    private readonly Partner _testPartner;
+    private readonly IClientRepository _clientRepo;
+    private readonly UpdateClientEmailAddressService _service;
+    private readonly Client _testClient;
 
     public UpdateEmailAddressServiceIntegrationTests(ContractingDbContext dbContext)
     {
         dbContext.Database.EnsureDeleted();
         dbContext.Database.EnsureCreated();
 
-        _partnerRepo = new PartnerRepository(dbContext);
-        _service = new UpdatePartnerEmailAddressService(_partnerRepo);
+        _clientRepo = new ClientRepository(dbContext);
+        _service = new UpdateClientEmailAddressService(_clientRepo);
 
-        _testPartner = new("Test", "Test",
+        _testClient = new("Test", "Test",
             "test@testmail.com", "0901234567",
             new DateTime(1989, 11, 11), Gender.Male);
-        _partnerRepo.Create(_testPartner);
+        _clientRepo.Create(_testClient);
     }
 
     [Fact]
-    public void UpdatePartnerEmailAddress_Succeeds_WhenEmailAddressNotExistYet()
+    public void UpdateClientEmailAddress_Succeeds_WhenEmailAddressNotExistYet()
     {
         var newEmailAddress = "newmail@testmail.com";
 
-        var result = _service.UpdatePartnerEmailAddress(
-            _testPartner.ExternalId, newEmailAddress);
+        var result = _service.UpdateClientEmailAddress(
+            _testClient.ExternalId, newEmailAddress);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(newEmailAddress, _testPartner.EmailAddress);
+        Assert.Equal(newEmailAddress, _testClient.EmailAddress);
 
-        var emailAddressOwner = _partnerRepo
+        var emailAddressOwner = _clientRepo
             .GetWithContractsByEmailAddress(newEmailAddress);
 
         Assert.NotNull(emailAddressOwner);
-        Assert.Equal(emailAddressOwner.Id, _testPartner.Id);
+        Assert.Equal(emailAddressOwner.Id, _testClient.Id);
     }
 
     [Fact]
-    public void UpdatePartnerEmailAddress_Succeeds_WhenEmailAddressDoesNotChange()
+    public void UpdateClientEmailAddress_Succeeds_WhenEmailAddressDoesNotChange()
     {
-        var originalEmailAddress = _testPartner.EmailAddress;
+        var originalEmailAddress = _testClient.EmailAddress;
 
-        var result = _service.UpdatePartnerEmailAddress(
-            _testPartner.ExternalId, originalEmailAddress);
+        var result = _service.UpdateClientEmailAddress(
+            _testClient.ExternalId, originalEmailAddress);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(originalEmailAddress, _testPartner.EmailAddress);
+        Assert.Equal(originalEmailAddress, _testClient.EmailAddress);
 
-        var emailAddressOwner = _partnerRepo
+        var emailAddressOwner = _clientRepo
             .GetWithContractsByEmailAddress(originalEmailAddress);
 
         Assert.NotNull(emailAddressOwner);
-        Assert.Equal(emailAddressOwner.Id, _testPartner.Id);
+        Assert.Equal(emailAddressOwner.Id, _testClient.Id);
     }
 
     [Fact]
-    public void UpdatePartnerEmailAddress_ReturnsNotFound_WhenPartnerNotFound()
+    public void UpdateClientEmailAddress_ReturnsNotFound_WhenClientNotFound()
     {
-        var partnerExternalId = "PNER-1000";
+        var clientExternalId = "CLNT-1000";
         var newEmailAddress = "newmail@testmail.com";
 
-        var result = _service.UpdatePartnerEmailAddress(
-            partnerExternalId, newEmailAddress);
+        var result = _service.UpdateClientEmailAddress(
+            clientExternalId, newEmailAddress);
 
         Assert.Equal(ResultStatus.NotFound, result.Status);
-        Assert.NotEqual(newEmailAddress, _testPartner.EmailAddress);
+        Assert.NotEqual(newEmailAddress, _testClient.EmailAddress);
 
-        var newEmailAddressOwner = _partnerRepo
+        var newEmailAddressOwner = _clientRepo
             .GetWithContractsByEmailAddress(newEmailAddress);
 
         Assert.Null(newEmailAddressOwner);
     }
 
     [Fact]
-    public void UpdatePartnerEmailAddress_ReturnsConflict_WhenEmailAddressAlreadyExists()
+    public void UpdateClientEmailAddress_ReturnsConflict_WhenEmailAddressAlreadyExists()
     {
         // arrange
         var existingEmailAddress = "existing@testmail.com";
-        var existingOwner = _testPartner.Clone()
+        var existingOwner = _testClient.WithDifferentId(2, "CLNT-2")
             .WithEmailAddress(existingEmailAddress);
 
-        _partnerRepo.Create(existingOwner);
+        _clientRepo.Create(existingOwner);
 
         // act
-        var result = _service.UpdatePartnerEmailAddress(
-            _testPartner.ExternalId, existingEmailAddress);
+        var result = _service.UpdateClientEmailAddress(
+            _testClient.ExternalId, existingEmailAddress);
 
         // assert
         Assert.Equal(ResultStatus.Conflict, result.Status);
-        Assert.NotEqual(existingEmailAddress, _testPartner.EmailAddress);
+        Assert.NotEqual(existingEmailAddress, _testClient.EmailAddress);
 
-        var emailAddressOwner = _partnerRepo
+        var emailAddressOwner = _clientRepo
             .GetWithContractsByEmailAddress(existingEmailAddress);
 
         Assert.NotNull(emailAddressOwner);
-        Assert.NotEqual(emailAddressOwner.Id, _testPartner.Id);
+        Assert.NotEqual(emailAddressOwner.Id, _testClient.Id);
     }
 }

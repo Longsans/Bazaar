@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Bazaar.Contracting.Domain.Entities;
 
-public class Partner
+public class Client
 {
     public int Id { get; private set; }
     public string ExternalId { get; private set; }
@@ -18,14 +18,12 @@ public class Partner
 
     public Contract? CurrentContract
         => Contracts.SingleOrDefault(c =>
-            c.StartDate == Contracts.Max(c2 => c2.StartDate)
-            && (c.EndDate is null || c.EndDate >= DateTime.Now.Date));
+            c.StartDate == Contracts.Max(c2 => c2.StartDate) && c.EndDate == null);
 
-    public bool IsUnderContract => CurrentContract != null
-            && (CurrentContract.EndDate == null || CurrentContract.EndDate > DateTime.Now.Date);
+    public bool IsUnderContract => CurrentContract != null;
 
     [JsonConstructor]
-    public Partner(
+    public Client(
         string firstName,
         string lastName,
         string emailAddress,
@@ -38,14 +36,14 @@ public class Partner
         EmailAddress = emailAddress;
         PhoneNumber = phoneNumber;
 
-        DateOfBirth = DateTime.Now.Year - dateOfBirth.Year >= PartnerCompliance.MinimumAge
-            ? dateOfBirth.Date : throw new PartnerUnderMinimumAgeException(PartnerCompliance.MinimumAge);
+        DateOfBirth = DateTime.Now.Year - dateOfBirth.Year >= ClientCompliance.MinimumAge
+            ? dateOfBirth.Date : throw new ClientUnderMinimumAgeException(ClientCompliance.MinimumAge);
 
         Gender = gender;
         _contracts = new();
     }
 
-    public Partner(
+    public Client(
         int id,
         string externalId,
         string firstName,
@@ -62,7 +60,7 @@ public class Partner
     public void SignContract(Contract contract)
     {
         if (IsUnderContract)
-            throw new PartnerAlreadyUnderContractException(ExternalId);
+            throw new ClientAlreadyUnderContractException(ExternalId);
 
         _contracts.Add(contract);
     }
@@ -70,7 +68,7 @@ public class Partner
     public void ChangeEmailAddress(string newEmailAddress)
     {
         if (string.IsNullOrWhiteSpace(newEmailAddress))
-            throw new ArgumentNullException(nameof(newEmailAddress));
+            throw new ArgumentNullException(nameof(newEmailAddress), "Email address cannot be empty.");
 
         EmailAddress = newEmailAddress;
     }

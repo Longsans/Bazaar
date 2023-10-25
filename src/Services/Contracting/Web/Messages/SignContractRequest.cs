@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Contracting.Web.Messages;
 
-public class CreateIndefiniteContractRequest
+public class SignContractRequest
 {
     public int SellingPlanId { get; set; }
 }

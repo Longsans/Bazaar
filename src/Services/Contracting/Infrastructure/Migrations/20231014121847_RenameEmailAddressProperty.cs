@@ -12,13 +12,13 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
         {
             migrationBuilder.RenameColumn(
                 name: "Email",
-                table: "Partners",
+                table: "Clients",
                 newName: "EmailAddress");
 
             migrationBuilder.RenameIndex(
-                name: "IX_Partners_Email",
-                table: "Partners",
-                newName: "IX_Partners_EmailAddress");
+                name: "IX_Clients_Email",
+                table: "Clients",
+                newName: "IX_Clients_EmailAddress");
         }
 
         /// <inheritdoc />
@@ -26,13 +26,13 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
         {
             migrationBuilder.RenameColumn(
                 name: "EmailAddress",
-                table: "Partners",
+                table: "Clients",
                 newName: "Email");
 
             migrationBuilder.RenameIndex(
-                name: "IX_Partners_EmailAddress",
-                table: "Partners",
-                newName: "IX_Partners_Email");
+                name: "IX_Clients_EmailAddress",
+                table: "Clients",
+                newName: "IX_Clients_Email");
         }
     }
 }

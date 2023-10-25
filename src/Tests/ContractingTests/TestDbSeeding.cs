@@ -7,9 +7,9 @@ public static class TestDbSeeding
     //    context.Database.EnsureDeleted();
     //    context.Database.EnsureCreated();
 
-    //    var partner1NoContract = new Partner
+    //    var client1NoContract = new Client
     //    {
-    //        ExternalId = "PNER-1",
+    //        ExternalId = "CLNT-1",
     //        FirstName = "Test1",
     //        LastName = "Test1",
     //        Email = "Test@testmail.com",
@@ -18,9 +18,9 @@ public static class TestDbSeeding
     //        Gender = Gender.Male,
     //    };
 
-    //    var partner2InContracted = new Partner
+    //    var client2InContracted = new Client
     //    {
-    //        ExternalId = "PNER-2",
+    //        ExternalId = "CLNT-2",
     //        FirstName = "Test2",
     //        LastName = "Test2",
     //        Email = "Test2@testmail.com",
@@ -29,9 +29,9 @@ public static class TestDbSeeding
     //        Gender = Gender.Female,
     //    };
 
-    //    var partner3FpContracted = new Partner
+    //    var client3FpContracted = new Client
     //    {
-    //        ExternalId = "PNER-3",
+    //        ExternalId = "CLNT-3",
     //        FirstName = "Test3",
     //        LastName = "Test3",
     //        Email = "Test3@testmail.com",
@@ -40,9 +40,9 @@ public static class TestDbSeeding
     //        Gender = Gender.Female,
     //    };
 
-    //    var partner4FpContracted = new Partner
+    //    var client4FpContracted = new Client
     //    {
-    //        ExternalId = "PNER-4",
+    //        ExternalId = "CLNT-4",
     //        FirstName = "Test4",
     //        LastName = "Test4",
     //        Email = "Test4@testmail.com",
@@ -61,14 +61,14 @@ public static class TestDbSeeding
 
     //    var contract1p2In = new Contract
     //    {
-    //        Partner = partner2InContracted,
+    //        Client = client2InContracted,
     //        SellingPlan = plan,
     //        StartDate = DateTime.Now.Date - TimeSpan.FromDays(7),
     //    };
 
     //    var contract2p3Fp = new Contract
     //    {
-    //        Partner = partner3FpContracted,
+    //        Client = client3FpContracted,
     //        SellingPlan = plan,
     //        StartDate = DateTime.Now.Date - TimeSpan.FromDays(14),
     //        EndDate = DateTime.Now.Date + TimeSpan.FromDays(14)
@@ -76,17 +76,17 @@ public static class TestDbSeeding
 
     //    var contract3p4FpEndsToday = new Contract
     //    {
-    //        Partner = partner4FpContracted,
+    //        Client = client4FpContracted,
     //        SellingPlan = plan,
     //        StartDate = DateTime.Now.Date - TimeSpan.FromDays(14),
     //        EndDate = DateTime.Now.Date
     //    };
 
-    //    context.Partners.AddRange(
-    //        partner1NoContract,
-    //        partner2InContracted,
-    //        partner3FpContracted,
-    //        partner4FpContracted);
+    //    context.Clients.AddRange(
+    //        client1NoContract,
+    //        client2InContracted,
+    //        client3FpContracted,
+    //        client4FpContracted);
     //    context.SellingPlans.Add(plan);
     //    context.SaveChanges();
 

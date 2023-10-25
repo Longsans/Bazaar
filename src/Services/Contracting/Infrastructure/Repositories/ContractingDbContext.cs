@@ -10,7 +10,7 @@ public class ContractingDbContext : DbContext
 
         modelBuilder.Entity<Contract>(contract =>
         {
-            contract.HasOne(c => c.Partner)
+            contract.HasOne(c => c.Client)
                 .WithMany(p => p.Contracts)
                 .IsRequired();
 
@@ -28,23 +28,23 @@ public class ContractingDbContext : DbContext
             });
         });
 
-        modelBuilder.Entity<Partner>(partner =>
+        modelBuilder.Entity<Client>(client =>
         {
-            partner.HasMany(p => p.Contracts)
-                .WithOne(c => c.Partner);
+            client.HasMany(p => p.Contracts)
+                .WithOne(c => c.Client);
 
-            partner.HasIndex(p => p.ExternalId)
+            client.HasIndex(p => p.ExternalId)
                 .IsUnique();
 
-            partner.HasIndex(p => p.EmailAddress)
+            client.HasIndex(p => p.EmailAddress)
                 .IsUnique();
 
-            partner.Property(p => p.ExternalId)
+            client.Property(p => p.ExternalId)
                 .HasComputedColumnSql("CONCAT('PNER-', [Id])", stored: true)
                 .HasColumnName("ExternalId");
 
-            partner.ToTable(p => p.HasCheckConstraint(
-                "CK_Partner_18AndOlder",
+            client.ToTable(p => p.HasCheckConstraint(
+                "CK_Client_18AndOlder",
                 "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()"));
         });
 
@@ -65,6 +65,6 @@ public class ContractingDbContext : DbContext
     }
 
     public virtual DbSet<Contract> Contracts { get; set; }
-    public virtual DbSet<Partner> Partners { get; set; }
+    public virtual DbSet<Client> Clients { get; set; }
     public virtual DbSet<SellingPlan> SellingPlans { get; set; }
 }

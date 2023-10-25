@@ -3,17 +3,11 @@
 public interface IContractUseCases
 {
     Contract? GetById(int id);
-    IEnumerable<Contract> GetByPartnerExternalId(string partnerExternalId);
+    IEnumerable<Contract> GetByClientExternalId(string clientExternalId);
 
-    Result<ContractDto> SignPartnerForFixedPeriod(
-        string partnerExternalId, int sellingPlanId, DateTime endDate);
+    Result<ContractDto> SignClient(
+        string clientExternalId, int sellingPlanId);
 
-    Result<ContractDto> SignPartnerIndefinitely(
-        string partnerExternalId, int sellingPlanId);
-
-    Result EndCurrentIndefiniteContractWithPartner(
-        string partnerExternalId);
-
-    Result ExtendCurrentFixedPeriodContractWithPartner(
-        string partnerExternalId, DateTime extendedEndDate);
+    Result EndCurrentContractWithClient(
+        string clientExternalId);
 }

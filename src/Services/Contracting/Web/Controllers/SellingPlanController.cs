@@ -23,7 +23,7 @@ public class SellingPlanController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<SellingPlanDto> CreatePlan(SellingPlanWriteRequest request)
+    public ActionResult<SellingPlanDto> CreatePlan(SellingPlanRequest request)
     {
         var planDto = new SellingPlanDto()
         {
@@ -40,7 +40,7 @@ public class SellingPlanController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public ActionResult<SellingPlanDto> UpdatePlan(int id, SellingPlanWriteRequest request)
+    public ActionResult<SellingPlanDto> UpdatePlan(int id, SellingPlanRequest request)
     {
         var planDto = new SellingPlanDto()
         {

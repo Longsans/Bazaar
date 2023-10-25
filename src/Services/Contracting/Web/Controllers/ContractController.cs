@@ -22,56 +22,35 @@ public class ContractController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<ContractDto>> GetByPartnerId(
-        string partnerId)
+    public ActionResult<IEnumerable<ContractDto>> GetByClientId(
+        string clientId)
     {
         return _contractUseCases
-            .GetByPartnerExternalId(partnerId)
+            .GetByClientExternalId(clientId)
             .Select(c => new ContractDto(c))
             .ToList();
     }
 
-    [HttpPost("/api/partners/{partnerExternalId}/fixed-period-contracts")]
-    public ActionResult<ContractDto> SignPartnerForFixedPeriodContract(
-        string partnerExternalId, CreateFixedPeriodContractRequest request)
+    [HttpPost("/api/clients/{clientExternalId}/contracts")]
+    public ActionResult<ContractDto> SignContractWithClient(
+        string clientExternalId, SignContractRequest command)
     {
-        var signResult = _contractUseCases.SignPartnerForFixedPeriod(
-            partnerExternalId, request.SellingPlanId, request.EndDate);
+        var signResult = _contractUseCases.SignClient(
+            clientExternalId, command.SellingPlanId);
 
         return signResult.ToActionResult(this);
     }
 
-    [HttpPost("/api/partners/{partnerExternalId}/indefinite-contracts")]
-    public ActionResult<ContractDto> SignPartnerForIndefiniteContract(
-        string partnerExternalId, CreateIndefiniteContractRequest command)
-    {
-        var signResult = _contractUseCases.SignPartnerIndefinitely(
-            partnerExternalId, command.SellingPlanId);
-
-        return signResult.ToActionResult(this);
-    }
-
-    [HttpPut("/api/partners/{partnerExternalId}/indefinite-contracts/current")]
-    public IActionResult EndCurrentIndefiniteContract(
-        string partnerExternalId, EndIndefiniteContractRequest command)
+    [HttpPut("/api/clients/{clientExternalId}/contracts/current")]
+    public IActionResult EndCurrentContractWithClient(
+        string clientExternalId, EndContractRequest command)
     {
         if (!command.Ended)
             return NoContent();
 
         var endResult = _contractUseCases
-            .EndCurrentIndefiniteContractWithPartner(partnerExternalId);
+            .EndCurrentContractWithClient(clientExternalId);
 
         return endResult.ToActionResult(this);
-    }
-
-    [HttpPatch("/api/partners/{partnerExternalId}/fixed-period-contracts/current")]
-    public IActionResult ExtendCurrentFixedPeriodContract(
-        string partnerExternalId, ContractExtensionRequest extension)
-    {
-        var extendResult = _contractUseCases
-            .ExtendCurrentFixedPeriodContractWithPartner(
-                partnerExternalId, extension.ExtendedEndDate);
-
-        return extendResult.ToActionResult(this);
     }
 }

@@ -25,14 +25,4 @@ public class SellingPlanDto
             Name, MonthlyFee,
             PerSaleFee, RegularPerSaleFeePercent);
     }
-
-    public SellingPlan ToExistingPlan()
-    {
-        if (Id is null)
-            throw new NullReferenceException("Id must not be null.");
-
-        return new SellingPlan(
-            Id.Value, Name, MonthlyFee,
-            PerSaleFee, RegularPerSaleFeePercent);
-    }
 }

@@ -1,56 +1,56 @@
 namespace Bazaar.Contracting.Infrastructure.Repositories;
 
-public class PartnerRepository : IPartnerRepository
+public class ClientRepository : IClientRepository
 {
     private readonly ContractingDbContext _context;
 
-    public PartnerRepository(ContractingDbContext context)
+    public ClientRepository(ContractingDbContext context)
     {
         _context = context;
     }
 
-    public Partner? GetWithContractsById(int id)
+    public Client? GetWithContractsById(int id)
     {
-        return _context.Partners
+        return _context.Clients
             .Include(p => p.Contracts)
             .SingleOrDefault(p => p.Id == id);
     }
 
-    public Partner? GetWithContractsByExternalId(string externalId)
+    public Client? GetWithContractsByExternalId(string externalId)
     {
-        return _context.Partners
+        return _context.Clients
             .Include(p => p.Contracts)
             .SingleOrDefault(p => p.ExternalId == externalId);
     }
 
-    public Partner? GetWithContractsByEmailAddress(string email)
+    public Client? GetWithContractsByEmailAddress(string email)
     {
-        return _context.Partners
+        return _context.Clients
             .Include(p => p.Contracts)
             .SingleOrDefault(p => p.EmailAddress == email);
     }
 
-    public Partner Create(Partner partner)
+    public Client Create(Client client)
     {
-        _context.Partners.Add(partner);
+        _context.Clients.Add(client);
         _context.SaveChanges();
-        return partner;
+        return client;
     }
 
-    public void Update(Partner partner)
+    public void Update(Client client)
     {
-        _context.Partners.Update(partner);
+        _context.Clients.Update(client);
         _context.SaveChanges();
     }
 
     public bool Delete(int id)
     {
-        var toRemove = _context.Partners.FirstOrDefault(p => p.Id == id);
+        var toRemove = _context.Clients.FirstOrDefault(p => p.Id == id);
         if (toRemove == null)
         {
             return false;
         }
-        _context.Partners.Remove(toRemove);
+        _context.Clients.Remove(toRemove);
         return true;
     }
 }
