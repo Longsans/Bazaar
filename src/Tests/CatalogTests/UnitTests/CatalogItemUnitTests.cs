@@ -131,6 +131,25 @@ public class CatalogItemUnitTests
         Assert.Equal(newPrice, _testCatalogItem.Price);
     }
 
+    [Fact]
+    public void ChangeProductDetails_ThrowsInvalidOpException_WhenItemIsDeleted()
+    {
+        InitializeTestData();
+        _testCatalogItem.Delete();
+        var newProductName = "Test 2";
+        var newProductDescription = "Test description 2";
+        var newPrice = 9.99m;
+
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            _testCatalogItem.ChangeProductDetails(newProductName, newProductDescription, newPrice);
+        });
+
+        Assert.NotEqual(newProductName, _testCatalogItem.ProductName);
+        Assert.NotEqual(newProductDescription, _testCatalogItem.ProductDescription);
+        Assert.NotEqual(newPrice, _testCatalogItem.Price);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(-29.99)]
@@ -177,6 +196,19 @@ public class CatalogItemUnitTests
     }
 
     [Fact]
+    public void ReduceStock_ThrowsInvalidOpException_WhenItemIsDeleted()
+    {
+        InitializeTestData();
+        _testCatalogItem.Delete();
+        uint unitsToReduce = 2;
+
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            _testCatalogItem.ReduceStock(unitsToReduce);
+        });
+    }
+
+    [Fact]
     public void ReduceStock_ThrowsNotEnoughStockException_WhenReduceUnitsGreaterThanStock()
     {
         InitializeTestData();
@@ -199,6 +231,19 @@ public class CatalogItemUnitTests
         _testCatalogItem.Restock(unitsToRestock);
 
         Assert.Equal(unitsAfterRestock, _testCatalogItem.AvailableStock);
+    }
+
+    [Fact]
+    public void Restock_ThrowsInvalidOpException_WhenItemIsDeleted()
+    {
+        InitializeTestData();
+        _testCatalogItem.Delete();
+        uint unitsToRestock = 2;
+
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            _testCatalogItem.Restock(unitsToRestock);
+        });
     }
 
     [Fact]
@@ -237,6 +282,20 @@ public class CatalogItemUnitTests
 
         Assert.Equal(newRestockThreshold, _testCatalogItem.RestockThreshold);
         Assert.Equal(newMaxStockThreshold, _testCatalogItem.MaxStockThreshold);
+    }
+
+    [Fact]
+    public void ChangeStockThresholds_ThrowsInvalidOpException_WhenItemIsDeleted()
+    {
+        InitializeTestData();
+        _testCatalogItem.Delete();
+        uint newRestockThreshold = 25;
+        uint newMaxStockThreshold = 200;
+
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            _testCatalogItem.ChangeStockThresholds(newRestockThreshold, newMaxStockThreshold);
+        });
     }
 
     [Fact]
