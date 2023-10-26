@@ -1,8 +1,8 @@
 ﻿namespace Bazaar.Contracting.Domain.Exceptions;
 
-public class MonthlyAndPerSaleFeesNotPositiveException
+public class MonthlyAndPerSaleFeesEqualZeroException
     : Exception
 {
-    public MonthlyAndPerSaleFeesNotPositiveException()
+    public MonthlyAndPerSaleFeesEqualZeroException()
         : base(PlanRequirements.MonthlyFeeOrPerSaleFeeGreaterThanZeroStatement) { }
 }

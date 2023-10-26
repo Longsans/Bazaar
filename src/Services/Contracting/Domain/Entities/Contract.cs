@@ -13,6 +13,8 @@ public class Contract
     public DateTime StartDate { get; private set; }
     public DateTime? EndDate { get; private set; }
 
+    public bool Ended => EndDate != null;
+
     // EF Core reads also use this constructor
     public Contract(int clientId, int sellingPlanId)
     {

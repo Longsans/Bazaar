@@ -2,9 +2,18 @@
 
 public class ClientUnitTests
 {
-    private readonly Client _existingClient = new(
-        "Test", "Test", "test@testmail.com", "0901234567",
-        new DateTime(1989, 11, 11), Gender.Male);
+    private readonly Client _existingClient;
+    private readonly SellingPlan _testPlan;
+    private readonly SellingPlan _newPlan;
+
+    public ClientUnitTests()
+    {
+        _testPlan = new(1, "Individual", 0m, 1.99m, 0.05f);
+        _existingClient = new(
+            "Test", "Test", "test@testmail.com", "0901234567",
+            new DateTime(1989, 11, 11), Gender.Male, _testPlan.Id);
+        _newPlan = new(2, "Business", 40m, 0m, 0.01f);
+    }
 
     [Theory]
     [InlineData(1)]
@@ -14,9 +23,11 @@ public class ClientUnitTests
         var dob = DateTime.Now.Date.AddYears(-ClientCompliance.MinimumAge - yearsAfterMinAge);
 
         var client = new Client("Test", "Test", "test@testmail.com",
-            "0901234567", dob, Gender.Male);
+            "0901234567", dob, Gender.Male, _testPlan.Id);
 
         Assert.Equal(dob, client.DateOfBirth);
+        Assert.Equal(_testPlan.Id, client.SellingPlanId);
+        Assert.NotEmpty(client.Contracts);
     }
 
     [Fact]
@@ -27,28 +38,59 @@ public class ClientUnitTests
         Assert.Throws<ClientUnderMinimumAgeException>(() =>
         {
             var client = new Client("Test", "Test", "test@testmail.com",
-                "0901234567", dob, Gender.Male);
+                "0901234567", dob, Gender.Male, _testPlan.Id);
         });
     }
 
     [Fact]
-    public void SignContract_Succeeds_WhenValid()
+    public void ChangeSellingPlan_Succeeds_WhenValid()
     {
-        var contract = new Contract(1, 1);
+        var originalContract = _existingClient.CurrentContract;
+        _existingClient.ChangeSellingPlan(_newPlan);
 
-        _existingClient.SignContract(contract);
-
-        Assert.Equal(contract, _existingClient.Contracts.Last());
+        Assert.Equal(_newPlan, _existingClient.SellingPlan);
+        Assert.NotEqual(originalContract, _existingClient.CurrentContract);
+        Assert.Equal(DateTime.Now.Date, originalContract.EndDate);
     }
 
     [Fact]
-    public void SignContract_ThrowsException_WhenClientUnderContract()
+    public void ChangePersonalInfo_Succeeds_WhenValid()
     {
-        _existingClient.SignContract(new Contract(1, 1));
-        var contract = new Contract(1, 1);
+        var newFirstName = "FirstNameTest";
+        var newLastName = "LastNameTest";
+        var newPhoneNumber = "0123456789";
+        var newDob = new DateTime(1999, 11, 11);
+        var newGender = Gender.Female;
 
-        Assert.Throws<ClientAlreadyUnderContractException>(
-            () => _existingClient.SignContract(contract));
+        _existingClient.ChangePersonalInfo(newFirstName, newLastName,
+            newPhoneNumber, newDob, newGender);
+
+        Assert.Equal(newFirstName, _existingClient.FirstName);
+        Assert.Equal(newLastName, _existingClient.LastName);
+        Assert.Equal(newPhoneNumber, _existingClient.PhoneNumber);
+        Assert.Equal(newDob, _existingClient.DateOfBirth);
+        Assert.Equal(newGender, _existingClient.Gender);
+    }
+
+    [Fact]
+    public void ChangePersonalInfo_ThrowsException_WhenClientUnderMinimumAge()
+    {
+        var newFirstName = "FirstNameTest";
+        var newLastName = "LastNameTest";
+        var newPhoneNumber = "0123456789";
+        var newDob = DateTime.Now.Date.AddYears(-ClientCompliance.MinimumAge + 1);
+        var newGender = Gender.Female;
+
+        Assert.Throws<ClientUnderMinimumAgeException>(() =>
+        {
+            _existingClient.ChangePersonalInfo(newFirstName, newLastName,
+                newPhoneNumber, newDob, newGender);
+        });
+        Assert.NotEqual(newFirstName, _existingClient.FirstName);
+        Assert.NotEqual(newLastName, _existingClient.LastName);
+        Assert.NotEqual(newPhoneNumber, _existingClient.PhoneNumber);
+        Assert.NotEqual(newDob, _existingClient.DateOfBirth);
+        Assert.NotEqual(newGender, _existingClient.Gender);
     }
 
     [Fact]
@@ -70,67 +112,13 @@ public class ClientUnitTests
     {
         Assert.Throws<ArgumentNullException>(
             () => _existingClient.ChangeEmailAddress(newEmailAddress));
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void CurrentContract_ReturnsContract_WhenPresent(bool clientHasMany)
-    {
-        var latestContract = AddTestContractsWithLatest(
-            _existingClient, false, clientHasMany);
-
-        Assert.Equal(latestContract, _existingClient.CurrentContract);
+        Assert.NotEqual(newEmailAddress, _existingClient.EmailAddress);
     }
 
     [Fact]
-    public void CurrentContract_ReturnsNull_WhenNoContract()
+    public void CurrentContract_AlwaysReturnsPresentContract()
     {
-        Assert.Null(_existingClient.CurrentContract);
+        Assert.Equal(_testPlan.Id, _existingClient.CurrentContract.SellingPlanId);
+        Assert.Equal(_existingClient.Id, _existingClient.CurrentContract.ClientId);
     }
-
-    [Fact]
-    public void CurrentContract_ReturnsNull_WhenAllContractsEnded()
-    {
-        var _ = AddTestContractsWithLatest(
-            _existingClient, true);
-
-        Assert.Null(_existingClient.CurrentContract);
-    }
-
-    [Fact]
-    public void IsNotUnderContract_IfCurrentContractEndsToday()
-    {
-        var latestContract = new Contract(1, 1);
-        latestContract.SetStartDate(DateTime.Now.AddMonths(-1));
-        latestContract.End();
-        _existingClient.SignContract(latestContract);
-
-        Assert.False(_existingClient.IsUnderContract);
-    }
-
-    #region Helpers
-    private static Contract AddTestContractsWithLatest(
-        Client client, bool allEnded = false, bool multiple = false)
-    {
-        if (multiple)
-        {
-            var firstContract = new Contract(1, 1);
-            firstContract.SetStartDate(DateTime.Now.AddMonths(-1));
-            firstContract.SetEndDate(DateTime.Now.AddDays(-1));
-            client.SignContract(firstContract);
-        }
-
-        var latestContract = new Contract(1, 1);
-        latestContract.SetStartDate(DateTime.Now.AddDays(-1));
-        if (allEnded)
-        {
-            latestContract.End();
-        }
-
-        client.SignContract(latestContract);
-
-        return latestContract;
-    }
-    #endregion
 }

@@ -16,9 +16,13 @@ public class UpdateEmailAddressServiceIntegrationTests
         _clientRepo = new ClientRepository(dbContext);
         _service = new UpdateClientEmailAddressService(_clientRepo);
 
+        var sellingPlan = new SellingPlan("Individual", 0m, 1.99m, 0.05f);
+        dbContext.SellingPlans.Add(sellingPlan);
+        dbContext.SaveChanges();
+
         _testClient = new("Test", "Test",
             "test@testmail.com", "0901234567",
-            new DateTime(1989, 11, 11), Gender.Male);
+            new DateTime(1989, 11, 11), Gender.Male, sellingPlan.Id);
         _clientRepo.Create(_testClient);
     }
 
@@ -34,7 +38,7 @@ public class UpdateEmailAddressServiceIntegrationTests
         Assert.Equal(newEmailAddress, _testClient.EmailAddress);
 
         var emailAddressOwner = _clientRepo
-            .GetWithContractsByEmailAddress(newEmailAddress);
+            .GetWithContractsAndPlanByEmailAddress(newEmailAddress);
 
         Assert.NotNull(emailAddressOwner);
         Assert.Equal(emailAddressOwner.Id, _testClient.Id);
@@ -52,7 +56,7 @@ public class UpdateEmailAddressServiceIntegrationTests
         Assert.Equal(originalEmailAddress, _testClient.EmailAddress);
 
         var emailAddressOwner = _clientRepo
-            .GetWithContractsByEmailAddress(originalEmailAddress);
+            .GetWithContractsAndPlanByEmailAddress(originalEmailAddress);
 
         Assert.NotNull(emailAddressOwner);
         Assert.Equal(emailAddressOwner.Id, _testClient.Id);
@@ -71,7 +75,7 @@ public class UpdateEmailAddressServiceIntegrationTests
         Assert.NotEqual(newEmailAddress, _testClient.EmailAddress);
 
         var newEmailAddressOwner = _clientRepo
-            .GetWithContractsByEmailAddress(newEmailAddress);
+            .GetWithContractsAndPlanByEmailAddress(newEmailAddress);
 
         Assert.Null(newEmailAddressOwner);
     }
@@ -81,8 +85,7 @@ public class UpdateEmailAddressServiceIntegrationTests
     {
         // arrange
         var existingEmailAddress = "existing@testmail.com";
-        var existingOwner = _testClient.WithDifferentId(2, "CLNT-2")
-            .WithEmailAddress(existingEmailAddress);
+        var existingOwner = _testClient.WithEmailAddress(existingEmailAddress);
 
         _clientRepo.Create(existingOwner);
 
@@ -95,7 +98,7 @@ public class UpdateEmailAddressServiceIntegrationTests
         Assert.NotEqual(existingEmailAddress, _testClient.EmailAddress);
 
         var emailAddressOwner = _clientRepo
-            .GetWithContractsByEmailAddress(existingEmailAddress);
+            .GetWithContractsAndPlanByEmailAddress(existingEmailAddress);
 
         Assert.NotNull(emailAddressOwner);
         Assert.NotEqual(emailAddressOwner.Id, _testClient.Id);

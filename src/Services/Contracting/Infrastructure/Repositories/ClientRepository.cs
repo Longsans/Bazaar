@@ -9,25 +9,28 @@ public class ClientRepository : IClientRepository
         _context = context;
     }
 
-    public Client? GetWithContractsById(int id)
+    public Client? GetWithContractsAndPlanById(int id)
     {
         return _context.Clients
-            .Include(p => p.Contracts)
-            .SingleOrDefault(p => p.Id == id);
+            .Include(c => c.Contracts)
+            .Include(c => c.SellingPlan)
+            .SingleOrDefault(c => c.Id == id);
     }
 
-    public Client? GetWithContractsByExternalId(string externalId)
+    public Client? GetWithContractsAndPlanByExternalId(string externalId)
     {
         return _context.Clients
-            .Include(p => p.Contracts)
-            .SingleOrDefault(p => p.ExternalId == externalId);
+            .Include(c => c.Contracts)
+            .Include(c => c.SellingPlan)
+            .SingleOrDefault(c => c.ExternalId == externalId);
     }
 
-    public Client? GetWithContractsByEmailAddress(string email)
+    public Client? GetWithContractsAndPlanByEmailAddress(string emailAddress)
     {
         return _context.Clients
-            .Include(p => p.Contracts)
-            .SingleOrDefault(p => p.EmailAddress == email);
+            .Include(c => c.Contracts)
+            .Include(c => c.SellingPlan)
+            .SingleOrDefault(c => c.EmailAddress == emailAddress);
     }
 
     public Client Create(Client client)
@@ -45,7 +48,7 @@ public class ClientRepository : IClientRepository
 
     public bool Delete(int id)
     {
-        var toRemove = _context.Clients.FirstOrDefault(p => p.Id == id);
+        var toRemove = _context.Clients.FirstOrDefault(c => c.Id == id);
         if (toRemove == null)
         {
             return false;

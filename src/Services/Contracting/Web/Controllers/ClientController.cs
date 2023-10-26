@@ -4,17 +4,24 @@ namespace Bazaar.Contracting.Web.Controllers;
 [ApiController]
 public class ClientController : ControllerBase
 {
-    private readonly IClientUseCases _clientUseCases;
+    private readonly IClientRepository _clientRepo;
+    private readonly ISellingPlanRepository _planRepo;
+    private readonly IUpdateClientEmailAddressService _updateEmailAddressService;
 
-    public ClientController(IClientUseCases clientUseCases)
+    public ClientController(
+        IClientRepository clientRepo,
+        ISellingPlanRepository planRepo,
+        IUpdateClientEmailAddressService updateEmailAddressService)
     {
-        _clientUseCases = clientUseCases;
+        _clientRepo = clientRepo;
+        _planRepo = planRepo;
+        _updateEmailAddressService = updateEmailAddressService;
     }
 
     [HttpGet("{id}")]
     public ActionResult<ClientResponse> GetById(int id)
     {
-        var client = _clientUseCases.GetWithContractsById(id);
+        var client = _clientRepo.GetWithContractsAndPlanById(id);
         if (client == null)
             return NotFound();
 
@@ -24,7 +31,9 @@ public class ClientController : ControllerBase
     [HttpGet]
     public ActionResult<ClientResponse> GetByExternalId(string externalId)
     {
-        var client = _clientUseCases.GetWithContractsByExternalId(externalId);
+        var client = _clientRepo
+            .GetWithContractsAndPlanByExternalId(externalId);
+
         if (client == null)
             return NotFound();
 
@@ -32,46 +41,90 @@ public class ClientController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<ClientDto> Register(RegisterClientRequest command)
+    public ActionResult<ClientResponse> Register(RegisterClientRequest request)
     {
-        var clientDto = new ClientDto()
-        {
-            FirstName = command.FirstName,
-            LastName = command.LastName,
-            EmailAddress = command.Email,
-            PhoneNumber = command.PhoneNumber,
-            DateOfBirth = command.DateOfBirth,
-            Gender = command.Gender
-        };
+        var sellingPlan = _planRepo.GetById(request.SellingPlanId);
+        if (sellingPlan == null)
+            return NotFound(new { error = "Selling plan not found." });
 
-        var registerResult = _clientUseCases.RegisterClient(clientDto);
-        return registerResult.ToActionResult(this);
+        var existingEmailAddressOwner = _clientRepo
+            .GetWithContractsAndPlanByEmailAddress(request.EmailAddress);
+
+        if (existingEmailAddressOwner != null)
+        {
+            return Conflict(new
+            {
+                error = ClientCompliance
+                    .UniqueEmailAddressNonComplianceMessage
+            });
+        }
+
+        try
+        {
+            var client = new Client(request.FirstName, request.LastName,
+                request.EmailAddress, request.PhoneNumber,
+                request.DateOfBirth, request.Gender, sellingPlan.Id);
+
+            _clientRepo.Create(client);
+            return new ClientResponse(client);
+        }
+        catch (ClientUnderMinimumAgeException)
+        {
+            return BadRequest(new { error = ClientCompliance.ClientMinimumAgeStatement });
+        }
     }
 
     [HttpPut("{externalId}")]
-    public IActionResult UpdateInfo(string externalId, UpdateClientInfoRequest command)
+    public IActionResult UpdateInfo(string externalId, UpdateClientInfoRequest request)
     {
-        var clientUpdateDto = new ClientDto()
+        var client = _clientRepo
+            .GetWithContractsAndPlanByExternalId(externalId);
+        if (client == null)
         {
-            ExternalId = externalId,
-            FirstName = command.FirstName,
-            LastName = command.LastName,
-            PhoneNumber = command.PhoneNumber,
-            DateOfBirth = command.DateOfBirth,
-            Gender = command.Gender
-        };
+            return NotFound(new { error = "Client not found." });
+        }
 
-        var updateResult = _clientUseCases
-            .UpdateClientInfoByExternalId(clientUpdateDto);
+        try
+        {
+            client.ChangePersonalInfo(
+                request.FirstName, request.LastName,
+                request.PhoneNumber, request.DateOfBirth, request.Gender);
+        }
+        catch (ClientUnderMinimumAgeException)
+        {
+            return BadRequest(new { error = ClientCompliance.ClientMinimumAgeStatement });
+        }
 
-        return updateResult.ToActionResult(this);
+        _clientRepo.Update(client);
+        return Ok();
     }
 
     [HttpPut("{externalId}/email-address")]
-    public IActionResult UpdateEmailAddress(string externalId, string emailAddress)
+    public IActionResult UpdateEmailAddress(string externalId, string newEmailAddress)
     {
-        return _clientUseCases
-            .UpdateClientEmailAddress(externalId, emailAddress)
+        return _updateEmailAddressService
+            .UpdateClientEmailAddress(externalId, newEmailAddress)
             .ToActionResult(this);
+    }
+
+    [HttpPut("{externalId}/selling-plan")]
+    public ActionResult<ClientResponse> ChangeSellingPlan(
+        string externalId, ChangeSellingPlanRequest request)
+    {
+        var client = _clientRepo.GetWithContractsAndPlanByExternalId(externalId);
+        if (client is null)
+            return NotFound(new { error = "Client not found." });
+
+        var sellingPlan = _planRepo.GetById(request.SellingPlanId);
+        if (sellingPlan is null)
+            return NotFound(new { error = "Selling plan not found." });
+
+        if (sellingPlan.Id == client.SellingPlanId)
+            return NoContent();
+
+        client.ChangeSellingPlan(sellingPlan);
+        _clientRepo.Update(client);
+
+        return new ClientResponse(client);
     }
 }

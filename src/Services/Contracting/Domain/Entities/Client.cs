@@ -13,16 +13,43 @@ public class Client
     public DateTime DateOfBirth { get; private set; }
     public Gender Gender { get; private set; }
 
+    public int SellingPlanId { get; private set; }
+    public SellingPlan SellingPlan { get; private set; }
+
     private readonly List<Contract> _contracts;
     public IReadOnlyCollection<Contract> Contracts => _contracts.AsReadOnly();
 
-    public Contract? CurrentContract
-        => Contracts.SingleOrDefault(c =>
+    public Contract CurrentContract
+        => Contracts.Single(c =>
             c.StartDate == Contracts.Max(c2 => c2.StartDate) && c.EndDate == null);
 
-    public bool IsUnderContract => CurrentContract != null;
-
+    // Create constructor
     [JsonConstructor]
+    public Client(
+        string firstName,
+        string lastName,
+        string emailAddress,
+        string phoneNumber,
+        DateTime dateOfBirth,
+        Gender gender,
+        int sellingPlanId)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+        EmailAddress = emailAddress;
+        PhoneNumber = phoneNumber;
+
+        DateOfBirth = DateTime.Now.Year - dateOfBirth.Year >= ClientCompliance.MinimumAge
+            ? dateOfBirth.Date : throw new ClientUnderMinimumAgeException(ClientCompliance.MinimumAge);
+
+        Gender = gender;
+        SellingPlanId = sellingPlanId;
+
+        var contract = new Contract(default, sellingPlanId);
+        _contracts = new() { contract };
+    }
+
+    // EF Core read constructor
     public Client(
         string firstName,
         string lastName,
@@ -43,26 +70,26 @@ public class Client
         _contracts = new();
     }
 
-    public Client(
-        int id,
-        string externalId,
-        string firstName,
-        string lastName,
-        string emailAddress,
-        string phoneNumber,
-        DateTime dateOfBirth,
-        Gender gender) : this(firstName, lastName, emailAddress, phoneNumber, dateOfBirth, gender)
+    public void ChangeSellingPlan(SellingPlan plan)
     {
-        Id = id;
-        ExternalId = externalId;
+        SellingPlan = plan;
+        SellingPlanId = plan.Id;
+        CurrentContract.End();
+        var newContract = new Contract(Id, plan.Id);
+        _contracts.Add(newContract);
     }
 
-    public void SignContract(Contract contract)
+    public void ChangePersonalInfo(
+        string firstName, string lastName, string phoneNumber,
+        DateTime dateOfBirth, Gender gender)
     {
-        if (IsUnderContract)
-            throw new ClientAlreadyUnderContractException(ExternalId);
+        DateOfBirth = DateTime.Now.Year - dateOfBirth.Year >= ClientCompliance.MinimumAge
+            ? dateOfBirth.Date : throw new ClientUnderMinimumAgeException(ClientCompliance.MinimumAge);
 
-        _contracts.Add(contract);
+        FirstName = firstName;
+        LastName = lastName;
+        PhoneNumber = phoneNumber;
+        Gender = gender;
     }
 
     public void ChangeEmailAddress(string newEmailAddress)

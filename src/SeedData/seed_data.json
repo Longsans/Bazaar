@@ -37,16 +37,6 @@
       "MaxStockThreshold": 1000
     }
   ],
-  "partners": [
-    {
-      "FirstName": "Long",
-      "LastName": "Do",
-      "Email": "philongdo01@gmail.com",
-      "PhoneNumber": "0901234567",
-      "Gender": "Male",
-      "DateOfBirth": "2001-12-11"
-    }
-  ],
   "sellingPlans": [
     {
       "Name": "Individual",
@@ -55,11 +45,22 @@
       "RegularPerSaleFeePercent": 0.1
     }
   ],
+  "clients": [
+    {
+      "FirstName": "Long",
+      "LastName": "Do",
+      "EmailAddress": "philongdo01@gmail.com",
+      "PhoneNumber": "0901234567",
+      "Gender": "Male",
+      "DateOfBirth": "2001-12-11",
+      "SellingPlanId": 1
+    }
+  ],
   "shoppers": [
     {
       "FirstName": "Walter",
       "LastName": "White",
-      "Email": "heisenberg@gmail.com",
+      "EmailAddress": "heisenberg@gmail.com",
       "PhoneNumber": "0901222333",
       "Gender": "Male",
       "DateOfBirth": "1956-03-07"

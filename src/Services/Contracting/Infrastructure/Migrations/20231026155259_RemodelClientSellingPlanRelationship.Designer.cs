@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bazaar.Contracting.Infrastructure.Migrations
 {
     [DbContext(typeof(ContractingDbContext))]
-    [Migration("20231025150506_RenameEntities")]
-    partial class RenameEntities
+    [Migration("20231026155259_RemodelClientSellingPlanRelationship")]
+    partial class RemodelClientSellingPlanRelationship
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,7 +45,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("ExternalId")
-                        .HasComputedColumnSql("CONCAT('PNER-', [Id])", true);
+                        .HasComputedColumnSql("CONCAT('CLNT-', [Id])", true);
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -62,6 +62,9 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("SellingPlanId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmailAddress")
@@ -69,6 +72,8 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
 
                     b.HasIndex("ExternalId")
                         .IsUnique();
+
+                    b.HasIndex("SellingPlanId");
 
                     b.ToTable("Clients", t =>
                         {
@@ -141,12 +146,23 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Client", b =>
+                {
+                    b.HasOne("Bazaar.Contracting.Domain.Entities.SellingPlan", "SellingPlan")
+                        .WithMany()
+                        .HasForeignKey("SellingPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SellingPlan");
+                });
+
             modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Contract", b =>
                 {
                     b.HasOne("Bazaar.Contracting.Domain.Entities.Client", "Client")
                         .WithMany("Contracts")
                         .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.HasOne("Bazaar.Contracting.Domain.Entities.SellingPlan", "SellingPlan")

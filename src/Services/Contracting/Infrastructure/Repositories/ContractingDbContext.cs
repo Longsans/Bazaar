@@ -30,22 +30,28 @@ public class ContractingDbContext : DbContext
 
         modelBuilder.Entity<Client>(client =>
         {
-            client.HasMany(p => p.Contracts)
-                .WithOne(c => c.Client);
+            client.HasOne(c => c.SellingPlan)
+                .WithMany()
+                .IsRequired();
 
-            client.HasIndex(p => p.ExternalId)
+            client.HasMany(c => c.Contracts)
+                .WithOne(c => c.Client)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.ClientCascade);
+
+            client.HasIndex(c => c.ExternalId)
                 .IsUnique();
 
-            client.HasIndex(p => p.EmailAddress)
+            client.HasIndex(c => c.EmailAddress)
                 .IsUnique();
 
-            client.Property(p => p.ExternalId)
-                .HasComputedColumnSql("CONCAT('PNER-', [Id])", stored: true)
+            client.Property(c => c.ExternalId)
+                .HasComputedColumnSql("CONCAT('CLNT-', [Id])", stored: true)
                 .HasColumnName("ExternalId");
 
-            client.ToTable(p => p.HasCheckConstraint(
-                "CK_Client_18AndOlder",
-                "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()"));
+            client.ToTable(c => c.HasCheckConstraint(
+                $"CK_Client_{ClientCompliance.MinimumAge}AndOlder",
+                $"DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= {ClientCompliance.MinimumAge} AND [DateOfBirth] < GETDATE()"));
         });
 
         modelBuilder.Entity<SellingPlan>(plan =>

@@ -11,14 +11,14 @@ public class UpdateClientEmailAddressService : IUpdateClientEmailAddressService
 
     public Result UpdateClientEmailAddress(string clientExternalId, string emailAddress)
     {
-        var client = _clientRepo.GetWithContractsByExternalId(clientExternalId);
+        var client = _clientRepo.GetWithContractsAndPlanByExternalId(clientExternalId);
         if (client == null)
         {
             return Result.NotFound("Client not found");
         }
 
         var emailAddressOwner = _clientRepo
-            .GetWithContractsByEmailAddress(emailAddress);
+            .GetWithContractsAndPlanByEmailAddress(emailAddress);
         if (emailAddressOwner != null)
         {
             return emailAddressOwner.Id == client.Id

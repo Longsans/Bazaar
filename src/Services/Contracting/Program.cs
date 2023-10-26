@@ -24,10 +24,6 @@ builder.Services.AddScoped<
     IUpdateClientEmailAddressService,
     UpdateClientEmailAddressService>();
 
-// Application use-cases
-builder.Services.AddScoped<IContractUseCases, ContractUseCases>();
-builder.Services.AddScoped<IClientUseCases, ClientUseCases>();
-builder.Services.AddScoped<ISellingPlanUseCases, SellingPlanUseCases>();
 
 // Data services
 builder.Services.AddScoped<IClientRepository, ClientRepository>();

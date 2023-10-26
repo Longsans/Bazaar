@@ -4,56 +4,85 @@
 [ApiController]
 public class SellingPlanController : ControllerBase
 {
-    private readonly ISellingPlanUseCases _planUseCases;
+    private readonly ISellingPlanRepository _planRepo;
 
-    public SellingPlanController(ISellingPlanUseCases planUseCases)
+    public SellingPlanController(ISellingPlanRepository planRepository)
     {
-        _planUseCases = planUseCases;
+        _planRepo = planRepository;
     }
 
     [HttpGet("{id}")]
-    public ActionResult<SellingPlanDto> GetById(int id)
+    public ActionResult<SellingPlan> GetById(int id)
     {
-        var plan = _planUseCases.GetById(id);
+        var plan = _planRepo.GetById(id);
 
         if (plan == null)
             return NotFound();
 
-        return new SellingPlanDto(plan);
+        return plan;
     }
 
     [HttpPost]
-    public ActionResult<SellingPlanDto> CreatePlan(SellingPlanRequest request)
+    public ActionResult<SellingPlan> CreatePlan(SellingPlanRequest request)
     {
-        var planDto = new SellingPlanDto()
+        try
         {
-            Name = request.Name,
-            MonthlyFee = request.MonthlyFee,
-            PerSaleFee = request.PerSaleFee,
-            RegularPerSaleFeePercent = request.RegularPerSaleFeePercent
-        };
-
-        var createResult = _planUseCases
-            .CreateSellingPlan(planDto);
-
-        return createResult.ToActionResult(this);
+            var plan = new SellingPlan(request.Name, request.MonthlyFee,
+                request.PerSaleFee, request.RegularPerSaleFeePercent);
+            _planRepo.Create(plan);
+            return plan;
+        }
+        catch (MonthlyAndPerSaleFeesEqualZeroException)
+        {
+            return BadRequest(new
+            {
+                error = PlanRequirements
+                    .MonthlyFeeOrPerSaleFeeGreaterThanZeroStatement
+            });
+        }
+        catch (RegularPerSaleFeePercentNotPositiveException)
+        {
+            return BadRequest(new
+            {
+                error = PlanRequirements
+                    .RegularPerSaleFeePercentGreaterThanZeroStatement
+            });
+        }
     }
 
     [HttpPut("{id}")]
-    public ActionResult<SellingPlanDto> UpdatePlan(int id, SellingPlanRequest request)
+    public IActionResult UpdatePlan(int id, SellingPlanRequest request)
     {
-        var planDto = new SellingPlanDto()
+        var plan = _planRepo.GetById(id);
+        if (plan == null)
+            return NotFound(new { error = "Selling plan not found." });
+
+        plan.Name = request.Name;
+        try
         {
-            Id = id,
-            Name = request.Name,
-            MonthlyFee = request.MonthlyFee,
-            PerSaleFee = request.PerSaleFee,
-            RegularPerSaleFeePercent = request.RegularPerSaleFeePercent
-        };
+            plan.ChangeFees(
+                request.MonthlyFee,
+                request.PerSaleFee,
+                request.RegularPerSaleFeePercent);
+        }
+        catch (MonthlyAndPerSaleFeesEqualZeroException)
+        {
+            return BadRequest(new
+            {
+                error = PlanRequirements
+                    .MonthlyFeeOrPerSaleFeeGreaterThanZeroStatement
+            });
+        }
+        catch (RegularPerSaleFeePercentNotPositiveException)
+        {
+            return BadRequest(new
+            {
+                error = PlanRequirements
+                    .RegularPerSaleFeePercentGreaterThanZeroStatement
+            });
+        }
 
-        var updateResult = _planUseCases
-            .UpdateSellingPlan(planDto);
-
-        return updateResult.ToActionResult(this);
+        _planRepo.Update(plan);
+        return Ok();
     }
 }

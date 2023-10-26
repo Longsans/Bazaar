@@ -10,12 +10,12 @@ public class UpdateClientEmailAddressServiceUnitTests
     public UpdateClientEmailAddressServiceUnitTests()
     {
         var mock = new Mock<IClientRepository>();
-        _testClient = new(
-            1, "CLNT-1", "Test", "Test",
+        var sellingPlan = new SellingPlan("Individual", 0m, 1.99m, 0.05f);
+        _testClient = new("Test", "Test",
             "test@testmail.com", "0901234567",
-            new DateTime(1989, 11, 11), Gender.Male);
+            new DateTime(1989, 11, 11), Gender.Male, sellingPlan.Id);
 
-        mock.Setup(x => x.GetWithContractsByExternalId(It.IsAny<string>()))
+        mock.Setup(x => x.GetWithContractsAndPlanByExternalId(It.IsAny<string>()))
             .Returns(_testClient);
 
         _mockClientRepo = mock;
@@ -26,7 +26,7 @@ public class UpdateClientEmailAddressServiceUnitTests
     {
         // arrange
         _mockClientRepo.Setup(
-            x => x.GetWithContractsByEmailAddress(It.IsAny<string>()))
+            x => x.GetWithContractsAndPlanByEmailAddress(It.IsAny<string>()))
             .Returns(() => null);
 
         var service = new UpdateClientEmailAddressService(_mockClientRepo.Object);
@@ -44,7 +44,7 @@ public class UpdateClientEmailAddressServiceUnitTests
     {
         // arrange
         _mockClientRepo.Setup(
-            x => x.GetWithContractsByEmailAddress(_testClient.EmailAddress))
+            x => x.GetWithContractsAndPlanByEmailAddress(_testClient.EmailAddress))
             .Returns(_testClient);
 
         var service = new UpdateClientEmailAddressService(_mockClientRepo.Object);
@@ -62,11 +62,11 @@ public class UpdateClientEmailAddressServiceUnitTests
     {
         // arrange
         _mockClientRepo.Setup(
-            x => x.GetWithContractsByExternalId(It.IsAny<string>()))
+            x => x.GetWithContractsAndPlanByExternalId(It.IsAny<string>()))
             .Returns(() => null);
 
         _mockClientRepo.Setup(
-            x => x.GetWithContractsByEmailAddress(_testClient.EmailAddress))
+            x => x.GetWithContractsAndPlanByEmailAddress(_testClient.EmailAddress))
             .Returns(_testClient);
 
         var service = new UpdateClientEmailAddressService(_mockClientRepo.Object);
@@ -86,7 +86,7 @@ public class UpdateClientEmailAddressServiceUnitTests
         var emailAddressOwner = _testClient.WithDifferentId(2, "CLNT-2");
 
         _mockClientRepo.Setup(
-            x => x.GetWithContractsByEmailAddress(It.IsAny<string>()))
+            x => x.GetWithContractsAndPlanByEmailAddress(It.IsAny<string>()))
             .Returns(emailAddressOwner);
 
         var service = new UpdateClientEmailAddressService(_mockClientRepo.Object);
