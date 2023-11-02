@@ -8,5 +8,5 @@ public interface ICatalogRepository
     IQueryable<CatalogItem> GetBySellerId(string sellerId);
     CatalogItem Create(CatalogItem item);
     void Update(CatalogItem item);
-    bool Delete(int id);
+    void Delete(int id);
 }

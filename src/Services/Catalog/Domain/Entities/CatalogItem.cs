@@ -17,6 +17,11 @@ public class CatalogItem
     // (due to physicial/logistical constraints in warehouses)
     public uint MaxStockThreshold { get; private set; }
 
+    // The following 3 properties are used in service integration
+    public bool IsFulfilledByBazzar { get; private set; }
+    public bool IsOfficiallyListed { get; private set; }
+    public bool HasNoOrdersInProgress { get; private set; }
+
     public bool IsDeleted { get; private set; }
 
     public CatalogItem(

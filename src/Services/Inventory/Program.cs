@@ -1,76 +1,48 @@
 var builder = WebApplication.CreateBuilder(args);
-var IF_ENABLED_IDENTITY = (Action doWithIdentity) =>
-{
-    if (string.IsNullOrWhiteSpace(builder.Configuration["DisableIdentity"]))
-        doWithIdentity();
-};
 
-#region Register app services
-builder.Services.AddDbContext<CatalogDbContext>(options =>
+// Add services to the container.
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+#region Register application services
+builder.Services.AddDbContext<InventoryDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
-builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
-builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
+builder.Services.AddScoped<IUpdateProductStockService, UpdateProductStockService>();
+
+builder.Services.AddScoped<ISellerInventoryRepository, SellerInventoryRepository>();
+builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
 
 builder.Services.RegisterEventBus(builder.Configuration);
-
-builder.Services.AddAuthentication()
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.Authority = builder.Configuration["IdentityApi"];
-        options.Audience = "catalog";
-        options.RequireHttpsMetadata = false;
-    });
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("HasReadScope", policy =>
-    {
-        policy
-            .RequireAuthenticatedUser()
-            .RequireClaim("scope", "catalog.read");
-    });
-
-    options.AddPolicy("HasModifyScope", policy =>
-    {
-        policy.RequireAuthenticatedUser()
-            .RequireClaim("scope", "catalog.modify");
-    });
-});
 #endregion
-
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// DISABLES IDENTITY
-IF_ENABLED_IDENTITY(() =>
-{
-    app.UseAuthentication();
-    app.UseAuthorization();
-});
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
 
 app.MapControllers();
 
+app.ConfigureEventBus();
+
 using (var scope = app.Services.CreateScope())
 {
-    var catalogContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
-    await catalogContext.Seed(scope.ServiceProvider);
+    var dbContext = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+    await dbContext.Seed();
 }
-
-app.ConfigureEventBus();
 
 await app.RunAsync();
 
@@ -127,16 +99,13 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<OrderCreatedIntegrationEventHandler>();
+        services.AddTransient<CatalogItemDeletedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-        eventBus.Subscribe<OrderCreatedIntegrationEvent, OrderCreatedIntegrationEventHandler>();
-        eventBus.Subscribe<
-            ProductInventoryUpdatedIntegrationEvent,
-            ProductInventoryUpdatedIntegrationEventHandler>();
+        eventBus.Subscribe<CatalogItemDeletedIntegrationEvent,
+            CatalogItemDeletedIntegrationEventHandler>();
     }
 }
-

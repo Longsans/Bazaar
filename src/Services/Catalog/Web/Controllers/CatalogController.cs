@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-
 namespace Bazaar.Catalog.Web.Controllers;
 
 [ApiController]
@@ -7,10 +5,14 @@ namespace Bazaar.Catalog.Web.Controllers;
 public class CatalogController : ControllerBase
 {
     private readonly ICatalogRepository _catalogRepo;
+    private readonly IDeleteCatalogItemService _deleteService;
 
-    public CatalogController(ICatalogRepository catalogRepo)
+    public CatalogController(
+        ICatalogRepository catalogRepo,
+        IDeleteCatalogItemService deleteService)
     {
         _catalogRepo = catalogRepo;
+        _deleteService = deleteService;
     }
 
     [HttpGet("{id}")]
@@ -150,22 +152,10 @@ public class CatalogController : ControllerBase
     }
 
     [HttpDelete("{productId}")]
-    public IActionResult Delete(string productId)
+    public IActionResult SoftDelete(string productId)
     {
-        var item = _catalogRepo.GetByProductId(productId);
-
-        if (item == null)
-        {
-            return NotFound();
-        }
-
-        if (!item.IsDeleted)
-        {
-            item.Delete();
-            _catalogRepo.Update(item);
-        }
-
-        return Ok();
+        return _deleteService.SoftDeleteByProductId(productId)
+            .ToActionResult(this);
     }
 
     #region Helpers
