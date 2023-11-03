@@ -54,7 +54,7 @@ public class BasketCheckoutServiceIntegrationTests : IDisposable
         Assert.True(result.IsSuccess);
         Assert.Empty(_testBasket.Items);
 
-        var publishedEvent = _testEventBus.GetEvent<BuyerCheckoutAcceptedIntegrationEvent>();
+        var publishedEvent = _testEventBus.GetEvent<BasketCheckoutAcceptedIntegrationEvent>();
         Assert.NotNull(publishedEvent);
         Assert.Equal(_testBasket.BuyerId, publishedEvent.BuyerId);
 
@@ -79,7 +79,7 @@ public class BasketCheckoutServiceIntegrationTests : IDisposable
         // assert
         Assert.Equal(ResultStatus.Conflict, result.Status);
 
-        var publishedEvent = _testEventBus.GetEvent<BuyerCheckoutAcceptedIntegrationEvent>();
+        var publishedEvent = _testEventBus.GetEvent<BasketCheckoutAcceptedIntegrationEvent>();
         Assert.Null(publishedEvent);
     }
 

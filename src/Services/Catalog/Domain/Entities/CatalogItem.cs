@@ -10,39 +10,19 @@ public class CatalogItem
     public uint AvailableStock { get; private set; }
     public string SellerId { get; private set; }
 
-    // Available stock at which we should reorder
-    public uint RestockThreshold { get; private set; }
-
-    // Maximum number of units that can be in-stock at any time
-    // (due to physicial/logistical constraints in warehouses)
-    public uint MaxStockThreshold { get; private set; }
-
     // The following 3 properties are used in service integration
-    public bool IsFulfilledByBazzar { get; private set; }
+    public bool IsFulfilledByBazaar { get; private set; }
     public bool IsOfficiallyListed { get; private set; }
-    public bool HasNoOrdersInProgress { get; private set; }
+    public bool HasOrdersInProgress { get; private set; }
 
     public bool IsDeleted { get; private set; }
 
     public CatalogItem(
         int id, string productId, string productName, string productDescription,
-        decimal price, uint availableStock, string sellerId,
-        uint restockThreshold, uint maxStockThreshold)
+        decimal price, uint availableStock, string sellerId, bool isFulfilledByBazaar)
     {
         if (price <= 0m)
             throw new ArgumentException("Product price cannot be 0 or negative.");
-
-        if (availableStock == 0)
-            throw new ArgumentException("Available stock cannot be 0.");
-
-        if (maxStockThreshold == 0)
-            throw new ArgumentException("Max stock threshold cannot be 0.");
-
-        if (restockThreshold >= maxStockThreshold)
-            throw new ArgumentException("Restock threshold must be less than max stock threshold.");
-
-        if (maxStockThreshold < availableStock)
-            throw new ExceedingMaxStockThresholdException();
 
         Id = id;
         ProductId = productId;
@@ -51,8 +31,8 @@ public class CatalogItem
         Price = price;
         AvailableStock = availableStock;
         SellerId = sellerId;
-        RestockThreshold = restockThreshold;
-        MaxStockThreshold = maxStockThreshold;
+        IsFulfilledByBazaar = isFulfilledByBazaar;
+        IsOfficiallyListed = !isFulfilledByBazaar;
     }
 
     public void ChangeProductDetails(string productName, string productDescription, decimal price)
@@ -90,28 +70,12 @@ public class CatalogItem
         if (units == 0)
             throw new ArgumentException("Number of units to restock must be greater than 0.");
 
-        if (AvailableStock + units > MaxStockThreshold)
-            throw new ExceedingMaxStockThresholdException();
-
         AvailableStock += units;
     }
 
-    public void ChangeStockThresholds(uint restockThreshold, uint maxStockThreshold)
+    public void UpdateHasOrdersInProgressStatus(bool hasOrdersInProgress)
     {
-        if (IsDeleted)
-            throw new InvalidOperationException("Item deleted.");
-
-        if (maxStockThreshold == 0)
-            throw new ArgumentException("Max stock threshold cannot be 0.");
-
-        if (restockThreshold >= maxStockThreshold)
-            throw new ArgumentException("Restock threshold must be less than max stock threshold.");
-
-        if (maxStockThreshold < AvailableStock)
-            throw new ExceedingMaxStockThresholdException();
-
-        RestockThreshold = restockThreshold;
-        MaxStockThreshold = maxStockThreshold;
+        HasOrdersInProgress = hasOrdersInProgress;
     }
 
     public void Delete()

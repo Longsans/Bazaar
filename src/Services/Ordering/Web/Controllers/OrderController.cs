@@ -5,11 +5,14 @@ namespace Bazaar.Ordering.Web.Controllers;
 public class OrderController : ControllerBase
 {
     private readonly IOrderRepository _orderRepo;
+    private readonly IHandleOrderService _handleOrderService;
 
     public OrderController(
-        IOrderRepository orderRepository)
+        IOrderRepository orderRepository,
+        IHandleOrderService handleOrderService)
     {
         _orderRepo = orderRepository;
+        _handleOrderService = handleOrderService;
     }
 
     [HttpGet("{id}")]
@@ -41,10 +44,12 @@ public class OrderController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<OrderQuery> CreateOrder(PlaceOrderRequest request)
+    public ActionResult<OrderQuery> PlaceOrder(PlaceOrderRequest request)
     {
         if (!request.Items.Any())
             return BadRequest(new { error = "Order must have at least 1 item." });
+        if (request.Items.Any(x => x.Quantity == 0))
+            return BadRequest(new { error = "Items must have quantities of at least 1." });
 
         var order = new Order(
             request.ShippingAddress,
@@ -52,55 +57,15 @@ public class OrderController : ControllerBase
             request.Items.Select(x => new OrderItem(
                 x.ProductId, x.ProductName, x.ProductUnitPrice, x.Quantity, default)));
 
-        _orderRepo.Create(order);
+        _handleOrderService.PlaceOrder(order);
         return new OrderQuery(order);
     }
 
     [HttpPatch("{id}")]
-    public ActionResult<OrderQuery> UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusRequest request)
+    public IActionResult UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusRequest request)
     {
-        var order = _orderRepo.GetById(id);
-        if (order == null)
-            return NotFound(new { id });
-
-        try
-        {
-            switch (request.Status)
-            {
-                case OrderStatus.ProcessingPayment:
-                    order.StartPayment();
-                    break;
-                case OrderStatus.AwaitingSellerConfirmation:
-                    order.AwaitSellerConfirmation();
-                    break;
-                case OrderStatus.Shipping:
-                    order.Ship();
-                    break;
-                case OrderStatus.Shipped:
-                    order.ConfirmShipped();
-                    break;
-
-                case OrderStatus.Postponed:
-                    order.Postpone();
-                    break;
-
-                case OrderStatus.Cancelled when request.CancelReason != null:
-                    order.Cancel(request.CancelReason);
-                    break;
-                case OrderStatus.Cancelled when request.CancelReason == null:
-                    return BadRequest(new { error = "Order cancellation reason is required." });
-
-                default:
-                    return BadRequest(new { error = "Invalid status for order." });
-            }
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-
-        _orderRepo.Update(order);
-        return new OrderQuery(order);
+        return _handleOrderService.UpdateOrderStatus(id, request.Status, request.CancelReason)
+            .ToActionResult(this);
     }
 
     #region Helpers

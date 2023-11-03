@@ -2,7 +2,7 @@ namespace CatalogTests.IntegrationTests;
 
 public class OrderCreatedHandlerIntegrationTests
 {
-    private readonly OrderCreatedIntegrationEventHandler _handler;
+    private readonly BasketCheckoutAcceptedIntegrationEventHandler _handler;
     private readonly CatalogItem _testCatalogItem;
 
     private readonly EventBusTestDouble _testEventBus;
@@ -22,7 +22,7 @@ public class OrderCreatedHandlerIntegrationTests
 
         _repo = new CatalogRepository(dbContext);
         _testEventBus = testEventBus;
-        _handler = new OrderCreatedIntegrationEventHandler(_repo, _testEventBus);
+        _handler = new BasketCheckoutAcceptedIntegrationEventHandler(_repo, _testEventBus);
     }
 
     [Theory]
@@ -32,7 +32,7 @@ public class OrderCreatedHandlerIntegrationTests
     {
         // arrange
         uint remainingUnits = _testCatalogItem.AvailableStock - orderedUnits;
-        var orderCreatedEvent = new OrderCreatedIntegrationEvent(1, new OrderStockItem[]
+        var orderCreatedEvent = new BasketCheckoutAcceptedIntegrationEvent(1, new OrderStockItem[]
         {
             new("PROD-1", orderedUnits)
         });
@@ -43,7 +43,7 @@ public class OrderCreatedHandlerIntegrationTests
         // assert
         Assert.Equal(remainingUnits, _testCatalogItem.AvailableStock);
 
-        var publishedEvent = _testEventBus.GetEvent<OrderStocksConfirmedIntegrationEvent>();
+        var publishedEvent = _testEventBus.GetEvent<BasketCheckoutStocksConfirmedIntegrationEvent>();
         Assert.NotNull(publishedEvent);
         Assert.Equal(orderCreatedEvent.OrderId, publishedEvent.OrderId);
     }
@@ -54,7 +54,7 @@ public class OrderCreatedHandlerIntegrationTests
         // arrange
         uint orderedUnits = 20;
         uint originalStock = _testCatalogItem.AvailableStock;
-        var orderCreatedEvent = new OrderCreatedIntegrationEvent(1, new OrderStockItem[]
+        var orderCreatedEvent = new BasketCheckoutAcceptedIntegrationEvent(1, new OrderStockItem[]
         {
             new("PROD-1000", orderedUnits)
         });
@@ -65,7 +65,7 @@ public class OrderCreatedHandlerIntegrationTests
         // assert
         Assert.Equal(originalStock, _testCatalogItem.AvailableStock);
 
-        var publishedEvent = _testEventBus.GetEvent<OrderItemsUnavailableIntegrationEvent>();
+        var publishedEvent = _testEventBus.GetEvent<BasketCheckoutItemsUnavailableIntegrationEvent>();
         Assert.NotNull(publishedEvent);
         Assert.Equal(orderCreatedEvent.OrderId, publishedEvent.OrderId);
     }
@@ -76,7 +76,7 @@ public class OrderCreatedHandlerIntegrationTests
         // arrange
         uint orderedUnits = 2000;
         uint originalStock = _testCatalogItem.AvailableStock;
-        var orderCreatedEvent = new OrderCreatedIntegrationEvent(1, new OrderStockItem[]
+        var orderCreatedEvent = new BasketCheckoutAcceptedIntegrationEvent(1, new OrderStockItem[]
         {
             new("PROD-1", orderedUnits)
         });
@@ -87,7 +87,7 @@ public class OrderCreatedHandlerIntegrationTests
         // assert
         Assert.Equal(originalStock, _testCatalogItem.AvailableStock);
 
-        var publishedEvent = _testEventBus.GetEvent<OrderStocksInadequateIntegrationEvent>();
+        var publishedEvent = _testEventBus.GetEvent<BasketCheckoutNotEnoughStocksIntegrationEvent>();
         Assert.NotNull(publishedEvent);
         Assert.Equal(orderCreatedEvent.OrderId, publishedEvent.OrderId);
     }
@@ -98,7 +98,7 @@ public class OrderCreatedHandlerIntegrationTests
         // arrange
         uint orderedUnits = 0;
         uint originalStock = _testCatalogItem.AvailableStock;
-        var orderCreatedEvent = new OrderCreatedIntegrationEvent(1, new OrderStockItem[]
+        var orderCreatedEvent = new BasketCheckoutAcceptedIntegrationEvent(1, new OrderStockItem[]
         {
             new("PROD-1", orderedUnits)
         });

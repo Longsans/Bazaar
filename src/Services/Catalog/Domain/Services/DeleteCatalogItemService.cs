@@ -43,16 +43,16 @@ public class DeleteCatalogItemService : IDeleteCatalogItemService
         }
 
         // Each order must have been either shipped or cancelled for us to be able to delete the product
-        if (!item.HasNoOrdersInProgress)
+        if (item.HasOrdersInProgress)
         {
             return Result.Conflict(
-                "This product cannot be deleted while it has orders in progress.");
+                "This product cannot be deleted because it has orders in progress.");
         }
 
-        if (item.IsFulfilledByBazzar && item.AvailableStock > 0)
+        if (item.IsFulfilledByBazaar && item.AvailableStock > 0)
         {
             return Result.Conflict(
-                "Cannot delete an FBB product when FBB inventory has not been emptied.");
+                "Cannot delete a FBB product until its FBB inventory has been emptied.");
         }
 
         item.Delete();

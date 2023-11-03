@@ -1,3 +1,5 @@
+global using Ardalis.Result;
+global using Ardalis.Result.AspNetCore;
 global using Bazaar.BuildingBlocks.EventBus;
 global using Bazaar.BuildingBlocks.EventBus.Abstractions;
 global using Bazaar.BuildingBlocks.EventBus.Events;
@@ -6,6 +8,7 @@ global using Bazaar.BuildingBlocks.JsonAdapter;
 global using Bazaar.Ordering.Domain.Entites;
 global using Bazaar.Ordering.Domain.Exceptions;
 global using Bazaar.Ordering.Domain.Interfaces;
+global using Bazaar.Ordering.Domain.Services;
 global using Bazaar.Ordering.Infrastructure.Repositories;
 global using Bazaar.Ordering.ServiceIntegration.EventHandling;
 global using Bazaar.Ordering.ServiceIntegration.IntegrationEvents;

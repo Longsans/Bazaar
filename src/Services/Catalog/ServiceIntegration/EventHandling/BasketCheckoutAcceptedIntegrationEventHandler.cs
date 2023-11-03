@@ -1,23 +1,24 @@
 ﻿namespace Bazaar.Catalog.ServiceIntegration.EventHandling;
 
-public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<OrderCreatedIntegrationEvent>
+public class BasketCheckoutAcceptedIntegrationEventHandler
+    : IIntegrationEventHandler<BasketCheckoutAcceptedIntegrationEvent>
 {
     private readonly ICatalogRepository _catalogRepo;
     private readonly IEventBus _eventBus;
 
-    public OrderCreatedIntegrationEventHandler(ICatalogRepository catalogRepo, IEventBus eventBus)
+    public BasketCheckoutAcceptedIntegrationEventHandler(ICatalogRepository catalogRepo, IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
         _eventBus = eventBus;
     }
 
-    public async Task Handle(OrderCreatedIntegrationEvent @event)
+    public async Task Handle(BasketCheckoutAcceptedIntegrationEvent @event)
     {
         var unavailableItems = new List<string>();
-        var stockInadequateItems = new List<OrderStockInadequateItem>();
+        var stockInadequateItems = new List<CheckoutItemWithoutEnoughStock>();
         var stockUpdatesList = new List<Action>();
 
-        foreach (var stockItem in @event.OrderStockItems)
+        foreach (var stockItem in @event.BasketItems)
         {
             var catalogItem = _catalogRepo.GetByProductId(stockItem.ProductId);
             if (catalogItem == null)
@@ -34,7 +35,12 @@ public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<Orde
             if (catalogItem.AvailableStock < stockItem.Quantity)
             {
                 stockInadequateItems.Add(
-                    new OrderStockInadequateItem { ProductId = stockItem.ProductId, });
+                    new CheckoutItemWithoutEnoughStock
+                    {
+                        ProductId = stockItem.ProductId,
+                        PurchaseQuantity = stockItem.Quantity,
+                        AvailableStock = catalogItem.AvailableStock
+                    });
                 continue;
             }
 
@@ -48,14 +54,14 @@ public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<Orde
         if (unavailableItems.Any())
         {
             _eventBus.Publish(
-                new OrderItemsUnavailableIntegrationEvent(
-                    @event.OrderId, unavailableItems));
+                new BasketCheckoutItemsUnavailableIntegrationEvent(
+                    @event.BuyerId, unavailableItems));
         }
         else if (stockInadequateItems.Any())
         {
             _eventBus.Publish(
-                new OrderStocksInadequateIntegrationEvent(
-                    @event.OrderId, stockInadequateItems));
+                new BasketCheckoutNotEnoughStocksIntegrationEvent(
+                    @event.BuyerId, stockInadequateItems));
         }
         else if (stockUpdatesList.Any())
         {
@@ -65,7 +71,7 @@ public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<Orde
             }
 
             _eventBus.Publish(
-                new OrderStocksConfirmedIntegrationEvent(@event.OrderId));
+                new BasketCheckoutStocksConfirmedIntegrationEvent(@event.BuyerId));
         }
 
         await Task.CompletedTask;

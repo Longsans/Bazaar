@@ -19,9 +19,7 @@ public class BasketCheckoutService : IBasketCheckoutService
         if (!basket.Items.Any())
             return Result.Conflict("Basket has no items.");
 
-        var checkoutEvent = new BuyerCheckoutAcceptedIntegrationEvent(
-            checkout.City, checkout.Country, checkout.ZipCode, checkout.ShippingAddress,
-            checkout.CardNumber, checkout.CardHolderName, checkout.CardExpiration, checkout.CardSecurityNumber,
+        var checkoutEvent = new BasketCheckoutAcceptedIntegrationEvent(
             checkout.BuyerId, basket);
 
         _eventBus.Publish(checkoutEvent);

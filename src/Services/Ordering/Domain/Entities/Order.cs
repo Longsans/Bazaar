@@ -15,6 +15,7 @@ public class Order
     public OrderStatus Status { get; private set; }
     public string? CancelReason { get; private set; }
 
+    // Create constructor
     public Order(string shippingAddress, string buyerId, IEnumerable<OrderItem> items)
     {
         if (!items.Any())
@@ -42,14 +43,17 @@ public class Order
     }
 
     [JsonConstructor]
-    private Order(
-        int id, string shippingAddress, string buyerId,
-        OrderStatus status)
-        : this(shippingAddress, buyerId, Array.Empty<OrderItem>())
+    private Order(string buyerId, string shippingAddress, OrderStatus status)
     {
-        Id = id;
+        BuyerId = buyerId;
+        ShippingAddress = shippingAddress;
         Status = status;
+        _items = new List<OrderItem>();
     }
+
+    // EF requires this to read from DB correctly, otherwise the damn thing tries to use
+    // the create constructor and fails to provide order items
+    private Order() { }
 
     #region Domain logic
 

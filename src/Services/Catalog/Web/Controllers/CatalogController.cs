@@ -16,7 +16,7 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Policy = "HasReadScope")]
+    //[Authorize(Policy = "HasReadScope")]
     public IActionResult GetById(int id, bool includeDeleted = false)
     {
         var item = _catalogRepo.GetById(id);
@@ -29,7 +29,7 @@ public class CatalogController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = "HasReadScope")]
+    //[Authorize(Policy = "HasReadScope")]
     public ActionResult<IEnumerable<CatalogItem>> GetByCriteria(
         string? productId = null, string? sellerId = null,
         string? nameSubstring = null, bool includeDeleted = false)
@@ -115,31 +115,6 @@ public class CatalogController : ControllerBase
         try
         {
             catalogItem.Restock(request.RestockUnits);
-        }
-        catch (Exception ex) when (
-            ex is ArgumentException
-            || ex is ExceedingMaxStockThresholdException)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-
-        return catalogItem;
-    }
-
-    [HttpPut("{productId}/stock-thresholds")]
-    public ActionResult<CatalogItem> UpdateStockThresholds(
-        string productId, UpdateStockThresholdsRequest request)
-    {
-        var catalogItem = _catalogRepo.GetByProductId(productId);
-        if (catalogItem == null || catalogItem.IsDeleted)
-        {
-            return NotFound();
-        }
-
-        try
-        {
-            catalogItem.ChangeStockThresholds(
-                request.RestockThreshold, request.MaxStockThreshold);
         }
         catch (Exception ex) when (
             ex is ArgumentException
