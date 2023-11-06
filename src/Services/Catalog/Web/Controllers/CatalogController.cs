@@ -129,8 +129,18 @@ public class CatalogController : ControllerBase
     [HttpDelete("{productId}")]
     public IActionResult SoftDelete(string productId)
     {
-        return _deleteService.SoftDeleteByProductId(productId)
-            .ToActionResult(this);
+        try
+        {
+            _deleteService.SoftDeleteByProductId(productId);
+        }
+        catch (Exception ex) when
+            (ex is DeleteProductWithOrdersInProgressException
+            || ex is DeleteFbbProductWhenFbbInventoryNotEmptyException)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+
+        return NoContent();
     }
 
     #region Helpers

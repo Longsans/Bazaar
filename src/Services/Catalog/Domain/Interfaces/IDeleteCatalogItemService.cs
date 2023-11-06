@@ -2,6 +2,7 @@
 
 public interface IDeleteCatalogItemService
 {
-    Result SoftDeleteById(int id);
-    Result SoftDeleteByProductId(string productId);
+    void AssertCanBeDeleted(CatalogItem item);
+    void SoftDeleteById(int id);
+    void SoftDeleteByProductId(string productId);
 }

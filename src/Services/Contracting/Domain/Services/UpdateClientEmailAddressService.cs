@@ -12,7 +12,7 @@ public class UpdateClientEmailAddressService : IUpdateClientEmailAddressService
     public Result UpdateClientEmailAddress(string clientExternalId, string emailAddress)
     {
         var client = _clientRepo.GetWithContractsAndPlanByExternalId(clientExternalId);
-        if (client == null)
+        if (client == null || client.IsAccountClosed)
         {
             return Result.NotFound("Client not found");
         }

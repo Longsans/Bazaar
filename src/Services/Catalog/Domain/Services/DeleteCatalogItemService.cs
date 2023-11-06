@@ -13,53 +13,58 @@ public class DeleteCatalogItemService : IDeleteCatalogItemService
         _eventBus = eventBus;
     }
 
-    public Result SoftDeleteById(int id)
+    public void AssertCanBeDeleted(CatalogItem item)
+    {
+        // Each order must have been either shipped or cancelled for us to be able to delete the product
+        if (item.HasOrdersInProgress)
+        {
+            throw new DeleteProductWithOrdersInProgressException();
+        }
+
+        // If the product is fulfilled by Bazaar then all FBB stock must be moved out before deleting the product
+        if (item.IsFulfilledByBazaar && item.AvailableStock > 0)
+        {
+            throw new DeleteFbbProductWhenFbbInventoryNotEmptyException();
+        }
+    }
+
+    public void SoftDeleteById(int id)
     {
         var catalogItem = _catalogRepo.GetById(id);
         if (catalogItem == null)
         {
-            return Result.NotFound("Catalog item not found.");
+            return;
         }
 
-        return TrySoftDelete(catalogItem);
+        TrySoftDelete(catalogItem);
     }
 
-    public Result SoftDeleteByProductId(string productId)
+    public void SoftDeleteByProductId(string productId)
     {
         var catalogItem = _catalogRepo.GetByProductId(productId);
         if (catalogItem == null)
         {
-            return Result.NotFound("Catalog item not found.");
+            return;
         }
 
-        return TrySoftDelete(catalogItem);
+        TrySoftDelete(catalogItem);
     }
 
-    private Result TrySoftDelete(CatalogItem item)
+    private void TrySoftDelete(CatalogItem item)
     {
         if (item.IsDeleted)
         {
-            return Result.Success();
+            return;
         }
 
-        // Each order must have been either shipped or cancelled for us to be able to delete the product
-        if (item.HasOrdersInProgress)
-        {
-            return Result.Conflict(
-                "This product cannot be deleted because it has orders in progress.");
-        }
+        AssertCanBeDeleted(item);
 
-        if (item.IsFulfilledByBazaar && item.AvailableStock > 0)
-        {
-            return Result.Conflict(
-                "Cannot delete a FBB product until its FBB inventory has been emptied.");
-        }
-
+        item.ReduceStock(item.AvailableStock);
         item.Delete();
         _catalogRepo.Update(item);
         _eventBus.Publish(
             new CatalogItemDeletedIntegrationEvent(item.ProductId));
 
-        return Result.Success();
+        return;
     }
 }

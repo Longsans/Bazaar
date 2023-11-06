@@ -23,6 +23,8 @@ public class Client
         => Contracts.Single(c =>
             c.StartDate == Contracts.Max(c2 => c2.StartDate) && c.EndDate == null);
 
+    public bool IsAccountClosed { get; private set; }
+
     // Create constructor
     [JsonConstructor]
     public Client(
@@ -98,5 +100,15 @@ public class Client
             throw new ArgumentNullException(nameof(newEmailAddress), "Email address cannot be empty.");
 
         EmailAddress = newEmailAddress;
+    }
+
+    public void CloseAccount()
+    {
+        IsAccountClosed = true;
+    }
+
+    public void ReopenAccount()
+    {
+        IsAccountClosed = false;
     }
 }

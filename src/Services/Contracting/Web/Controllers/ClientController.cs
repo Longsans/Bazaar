@@ -7,22 +7,25 @@ public class ClientController : ControllerBase
     private readonly IClientRepository _clientRepo;
     private readonly ISellingPlanRepository _planRepo;
     private readonly IUpdateClientEmailAddressService _updateEmailAddressService;
+    private readonly ICloseClientAccountService _closeClientAccountService;
 
     public ClientController(
         IClientRepository clientRepo,
         ISellingPlanRepository planRepo,
-        IUpdateClientEmailAddressService updateEmailAddressService)
+        IUpdateClientEmailAddressService updateEmailAddressService,
+        ICloseClientAccountService closeClientAccountService)
     {
         _clientRepo = clientRepo;
         _planRepo = planRepo;
         _updateEmailAddressService = updateEmailAddressService;
+        _closeClientAccountService = closeClientAccountService;
     }
 
     [HttpGet("{id}")]
     public ActionResult<ClientResponse> GetById(int id)
     {
         var client = _clientRepo.GetWithContractsAndPlanById(id);
-        if (client == null)
+        if (client == null || client.IsAccountClosed)
             return NotFound();
 
         return new ClientResponse(client);
@@ -34,7 +37,7 @@ public class ClientController : ControllerBase
         var client = _clientRepo
             .GetWithContractsAndPlanByExternalId(externalId);
 
-        if (client == null)
+        if (client == null || client.IsAccountClosed)
             return NotFound();
 
         return new ClientResponse(client);
@@ -79,7 +82,7 @@ public class ClientController : ControllerBase
     {
         var client = _clientRepo
             .GetWithContractsAndPlanByExternalId(externalId);
-        if (client == null)
+        if (client == null || client.IsAccountClosed)
         {
             return NotFound(new { error = "Client not found." });
         }
@@ -112,7 +115,7 @@ public class ClientController : ControllerBase
         string externalId, ChangeSellingPlanRequest request)
     {
         var client = _clientRepo.GetWithContractsAndPlanByExternalId(externalId);
-        if (client is null)
+        if (client is null || client.IsAccountClosed)
             return NotFound(new { error = "Client not found." });
 
         var sellingPlan = _planRepo.GetById(request.SellingPlanId);
@@ -126,5 +129,12 @@ public class ClientController : ControllerBase
         _clientRepo.Update(client);
 
         return new ClientResponse(client);
+    }
+
+    [HttpDelete("{externalId}")]
+    public IActionResult CloseAccount(string externalId)
+    {
+        return _closeClientAccountService.CloseAccount(externalId)
+            .ToActionResult(this);
     }
 }

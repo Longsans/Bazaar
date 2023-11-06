@@ -35,6 +35,15 @@ public class CatalogItem
         IsOfficiallyListed = !isFulfilledByBazaar;
     }
 
+    [Newtonsoft.Json.JsonConstructor]
+    private CatalogItem(
+        int id, string productId, string productName, string productDescription,
+        decimal price, uint availableStock, string sellerId, bool isFulfilledByBazaar, bool hasOrdersInProgress)
+        : this(id, productId, productName, productDescription, price, availableStock, sellerId, isFulfilledByBazaar)
+    {
+        HasOrdersInProgress = hasOrdersInProgress;
+    }
+
     public void ChangeProductDetails(string productName, string productDescription, decimal price)
     {
         if (IsDeleted)

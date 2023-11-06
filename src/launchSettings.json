@@ -7,7 +7,8 @@
         "includes": [
           "inventory",
           "catalog",
-          "ordering"
+          "ordering",
+          "contracting"
         ]
       }
     }
