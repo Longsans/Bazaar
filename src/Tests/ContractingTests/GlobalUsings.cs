@@ -5,5 +5,8 @@ global using Bazaar.Contracting.Domain.Enums;
 global using Bazaar.Contracting.Domain.Exceptions;
 global using Bazaar.Contracting.Domain.Interfaces;
 global using Bazaar.Contracting.Domain.Services;
+global using Bazaar.Contracting.ServiceIntegration.EventHandling;
 global using ContractingTests.Helpers;
+global using Moq;
+global using TestingCommon.TestDoubles;
 global using Xunit;

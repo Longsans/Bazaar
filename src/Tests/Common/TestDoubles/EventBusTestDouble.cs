@@ -15,6 +15,12 @@ public class EventBusTestDouble : IEventBus
         return _publishedEvents.FirstOrDefault(e => e is T) as T;
     }
 
+    public IEnumerable<T> GetEvents<T>() where T : IntegrationEvent
+    {
+        return _publishedEvents.Where(e => e is T)
+            .Select(e => (T)e);
+    }
+
     public void Publish(IntegrationEvent @event)
     {
         _publishedEvents.Add(@event);

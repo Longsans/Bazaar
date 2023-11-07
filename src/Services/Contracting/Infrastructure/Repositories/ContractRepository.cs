@@ -12,17 +12,17 @@ public class ContractRepository : IContractRepository
     public Contract? GetById(int id)
     {
         return _context.Contracts
-            .Include(c => c.Partner)
+            .Include(c => c.Client)
             .Include(c => c.SellingPlan)
             .SingleOrDefault(c => c.Id == id);
     }
 
-    public IEnumerable<Contract> GetByPartnerExternalId(string partnerId)
+    public IEnumerable<Contract> GetByClientExternalId(string clientId)
     {
         return _context.Contracts
-            .Include(c => c.Partner)
+            .Include(c => c.Client)
             .Include(c => c.SellingPlan)
-            .Where(c => c.Partner.ExternalId == partnerId);
+            .Where(c => c.Client.ExternalId == clientId);
     }
 
     public Contract Create(Contract contract)

@@ -5,7 +5,10 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "ordering"
+          "inventory",
+          "catalog",
+          "ordering",
+          "contracting"
         ]
       }
     }

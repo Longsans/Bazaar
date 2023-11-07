@@ -1,45 +1,26 @@
-﻿namespace Bazaar.Catalog.Infrastructure.Repositories
+﻿namespace Bazaar.Catalog.Infrastructure.Repositories;
+
+public class CatalogDbContext : DbContext
 {
-    public class CatalogDbContext : DbContext
+    public DbSet<CatalogItem> CatalogItems { get; set; }
+
+    public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options) { }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public DbSet<CatalogItem> CatalogItems { get; set; }
+        base.OnModelCreating(modelBuilder);
 
-        public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options) { }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        modelBuilder.Entity<CatalogItem>(item =>
         {
-            base.OnModelCreating(modelBuilder);
+            item.Property(x => x.ProductDescription)
+                .IsRequired(false);
 
-            modelBuilder.Entity<CatalogItem>(item =>
-            {
-                item.Property(x => x.ProductDescription)
-                    .IsRequired(false);
+            item.Property(x => x.ProductId)
+                .HasComputedColumnSql("CONCAT('PROD-', [Id])", stored: true)
+                .HasColumnName("ProductId");
 
-                item.Property(x => x.ProductId)
-                    .HasComputedColumnSql("CONCAT('PROD-', [Id])", stored: true)
-                    .HasColumnName("ProductId");
-
-                item.HasIndex(x => x.ProductId)
-                    .IsUnique();
-            });
-        }
-
-        public void RejectChanges()
-        {
-            foreach (var entry in ChangeTracker.Entries())
-            {
-                switch (entry.State)
-                {
-                    case EntityState.Modified:
-                    case EntityState.Deleted:
-                        entry.State = EntityState.Modified;
-                        entry.State = EntityState.Unchanged;
-                        break;
-                    case EntityState.Added:
-                        entry.State = EntityState.Detached;
-                        break;
-                }
-            }
-        }
+            item.HasIndex(x => x.ProductId)
+                .IsUnique();
+        });
     }
 }

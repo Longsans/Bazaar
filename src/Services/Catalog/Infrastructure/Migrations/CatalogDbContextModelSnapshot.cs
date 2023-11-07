@@ -32,8 +32,17 @@ namespace Catalog.Infrastructure.Migrations
                     b.Property<long>("AvailableStock")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("MaxStockThreshold")
-                        .HasColumnType("bigint");
+                    b.Property<bool>("HasOrdersInProgress")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFulfilledByBazaar")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsOfficiallyListed")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -51,9 +60,6 @@ namespace Catalog.Infrastructure.Migrations
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("RestockThreshold")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("SellerId")
                         .IsRequired()

@@ -3,7 +3,7 @@
 public interface IContractRepository
 {
     Contract? GetById(int id);
-    IEnumerable<Contract> GetByPartnerExternalId(string partnerId);
+    IEnumerable<Contract> GetByClientExternalId(string clientId);
     Contract Create(Contract contract);
     void Update(Contract contract);
 }

@@ -13,5 +13,7 @@ internal class Startup
             options.UseSqlServer(
                 "Server=.;Database=Bazaar_Contracting_Tests;Trusted_Connection=True;Trust Server Certificate=True;");
         });
+
+        services.AddTransient<EventBusTestDouble>();
     }
 }

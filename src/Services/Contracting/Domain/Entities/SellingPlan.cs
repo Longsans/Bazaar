@@ -17,6 +17,23 @@ public class SellingPlan
         decimal perSaleFee,
         float regularPerSaleFeePercent)
     {
+        if (monthlyFee < 0 || perSaleFee < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                $"{nameof(monthlyFee)}, {nameof(perSaleFee)}",
+                "Monthly fee and per sale fee cannot be negative.");
+        }
+
+        if (monthlyFee == 0m && perSaleFee == 0m)
+        {
+            throw new MonthlyAndPerSaleFeesEqualZeroException();
+        }
+
+        if (regularPerSaleFeePercent <= 0f)
+        {
+            throw new RegularPerSaleFeePercentNotPositiveException();
+        }
+
         Name = name;
         MonthlyFee = monthlyFee;
         PerSaleFee = perSaleFee;
@@ -37,11 +54,22 @@ public class SellingPlan
     public void ChangeFees(
         decimal monthlyFee, decimal perSaleFee, float regularPerSaleFeePercent)
     {
-        if (monthlyFee <= 0m && perSaleFee <= 0m)
-            throw new MonthlyAndPerSaleFeesNotPositiveException();
+        if (monthlyFee < 0 || perSaleFee < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                $"{nameof(monthlyFee)}, {nameof(perSaleFee)}",
+                "Monthly fee and per sale fee cannot be negative.");
+        }
+
+        if (monthlyFee == 0m && perSaleFee == 0m)
+        {
+            throw new MonthlyAndPerSaleFeesEqualZeroException();
+        }
 
         if (regularPerSaleFeePercent <= 0f)
+        {
             throw new RegularPerSaleFeePercentNotPositiveException();
+        }
 
         MonthlyFee = monthlyFee;
         PerSaleFee = perSaleFee;

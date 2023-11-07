@@ -11,6 +11,7 @@ services:
     image: rabbitmq:3-management-alpine
     profiles:
       - catalog
+      - inventory
       - ordering
       - basket
       - all
@@ -25,6 +26,12 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - catalog
+      - all
+
+  inventory-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - inventory
       - all
 
   basket-sql:
@@ -74,6 +81,18 @@ services:
       - rabbitmq
     profiles:
       - catalog
+      - all
+
+  inventory-api:
+    image: ${DOCKER_REGISTRY-}inventory-api
+    build:
+      context: .
+      dockerfile: Services/Inventory/Dockerfile
+    depends_on:
+      - inventory-sql
+      - rabbitmq
+    profiles:
+      - inventory
       - all
 
   shopper-info-api:
@@ -159,6 +178,7 @@ services:
       - catalog-api
       - ordering-api
       - contracting-api
+      - inventory-api
     profiles:
       - websell
       - all
