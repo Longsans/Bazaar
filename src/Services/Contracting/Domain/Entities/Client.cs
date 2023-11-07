@@ -52,25 +52,7 @@ public class Client
     }
 
     // EF Core read constructor
-    public Client(
-        string firstName,
-        string lastName,
-        string emailAddress,
-        string phoneNumber,
-        DateTime dateOfBirth,
-        Gender gender)
-    {
-        FirstName = firstName;
-        LastName = lastName;
-        EmailAddress = emailAddress;
-        PhoneNumber = phoneNumber;
-
-        DateOfBirth = DateTime.Now.Year - dateOfBirth.Year >= ClientCompliance.MinimumAge
-            ? dateOfBirth.Date : throw new ClientUnderMinimumAgeException(ClientCompliance.MinimumAge);
-
-        Gender = gender;
-        _contracts = new();
-    }
+    private Client() { }
 
     public void ChangeSellingPlan(SellingPlan plan)
     {

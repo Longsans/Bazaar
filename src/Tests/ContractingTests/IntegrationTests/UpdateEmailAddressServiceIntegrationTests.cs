@@ -2,6 +2,8 @@
 
 namespace ContractingTests.IntegrationTests;
 
+[Collection(Constants.INTEGRATION_TESTS_COLLECTION)]
+[CollectionDefinition(Constants.INTEGRATION_TESTS_COLLECTION, DisableParallelization = true)]
 public class UpdateEmailAddressServiceIntegrationTests
 {
     private readonly IClientRepository _clientRepo;

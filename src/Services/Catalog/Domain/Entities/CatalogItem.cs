@@ -17,12 +17,18 @@ public class CatalogItem
 
     public bool IsDeleted { get; private set; }
 
+    // Create constructor
     public CatalogItem(
         int id, string productId, string productName, string productDescription,
         decimal price, uint availableStock, string sellerId, bool isFulfilledByBazaar)
     {
         if (price <= 0m)
-            throw new ArgumentException("Product price cannot be 0 or negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(price), "Product price cannot be 0 or negative.");
+
+        if (availableStock == 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(availableStock), "Available stock must be larger than 0.");
 
         Id = id;
         ProductId = productId;
@@ -44,13 +50,20 @@ public class CatalogItem
         HasOrdersInProgress = hasOrdersInProgress;
     }
 
+    // EF read constructor
+    private CatalogItem()
+    {
+
+    }
+
     public void ChangeProductDetails(string productName, string productDescription, decimal price)
     {
         if (IsDeleted)
             throw new InvalidOperationException("Item deleted.");
 
         if (price <= 0m)
-            throw new ArgumentException("Product price cannot be 0 or negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(price), "Product price cannot be 0 or negative.");
 
         ProductName = productName;
         ProductDescription = productDescription;
@@ -63,7 +76,8 @@ public class CatalogItem
             throw new InvalidOperationException("Item deleted.");
 
         if (units == 0)
-            throw new ArgumentException("Number of units to reduce must be greater than 0.");
+            throw new ArgumentOutOfRangeException(
+                nameof(units), "Number of units to reduce must be greater than 0.");
 
         if (units > AvailableStock)
             throw new NotEnoughStockException();
@@ -77,7 +91,8 @@ public class CatalogItem
             throw new InvalidOperationException("Item deleted.");
 
         if (units == 0)
-            throw new ArgumentException("Number of units to restock must be greater than 0.");
+            throw new ArgumentOutOfRangeException(
+                nameof(units), "Number of units to restock must be greater than 0.");
 
         AvailableStock += units;
     }
@@ -85,6 +100,11 @@ public class CatalogItem
     public void UpdateHasOrdersInProgressStatus(bool hasOrdersInProgress)
     {
         HasOrdersInProgress = hasOrdersInProgress;
+    }
+
+    public void UpdateFulfillmentByBazaar(bool isFulfilledByBazaar)
+    {
+        IsFulfilledByBazaar = isFulfilledByBazaar;
     }
 
     public void Delete()

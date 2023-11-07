@@ -10,13 +10,10 @@ public class CatalogItemUnitTests
     private const string _productName = "Test";
     private const string _productDescription = "Test description";
     private const decimal _validPrice = 19.99m;
-    private const string _partnerId = "PNER-1";
-
-    private const uint _validRestockThreshold = 10;
-    private const uint _validMaxStockThreshold = 500;
+    private const string _sellerId = "CLNT-1";
 
     private const uint _validStock = 100;
-    private const uint _maxValidStock = _validMaxStockThreshold;
+    private const bool _isNotFbb = false;
 
     private CatalogItem _testCatalogItem;
 
@@ -24,27 +21,27 @@ public class CatalogItemUnitTests
     {
         _testCatalogItem = new(
             _id, _productId, _productName, _productDescription,
-            _validPrice, _validStock, _partnerId,
-            _validRestockThreshold, _validMaxStockThreshold);
+            _validPrice, _validStock, _sellerId, false);
     }
     #endregion
 
     [Theory]
-    [InlineData(_validStock)]
-    [InlineData(_maxValidStock)]
-    public void Constructor_Succeeds_WhenValid(uint stock)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Constructor_Succeeds_WhenValid(bool isFbb)
     {
         _testCatalogItem = new CatalogItem(
             _id, _productId, _productName, _productDescription,
-            _validPrice, stock, _partnerId,
-            _validRestockThreshold, _validMaxStockThreshold);
+            _validPrice, _validStock, _sellerId, isFbb);
 
         Assert.Equal(_id, _testCatalogItem.Id);
         Assert.Equal(_productId, _testCatalogItem.ProductId);
         Assert.Equal(_validPrice, _testCatalogItem.Price);
-        Assert.Equal(stock, _testCatalogItem.AvailableStock);
-        Assert.Equal(_validRestockThreshold, _testCatalogItem.RestockThreshold);
-        Assert.Equal(_validMaxStockThreshold, _testCatalogItem.MaxStockThreshold);
+        Assert.Equal(_validStock, _testCatalogItem.AvailableStock);
+        Assert.Equal(isFbb, _testCatalogItem.IsFulfilledByBazaar);
+        Assert.Equal(!_testCatalogItem.IsFulfilledByBazaar, _testCatalogItem.IsOfficiallyListed);
+        Assert.False(_testCatalogItem.HasOrdersInProgress);
+        Assert.False(_testCatalogItem.IsDeleted);
     }
 
     [Theory]
@@ -52,12 +49,11 @@ public class CatalogItemUnitTests
     [InlineData(-19.99)]
     public void Constructor_ThrowsArgumentException_WhenPriceNotPositive(decimal price)
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             _testCatalogItem = new CatalogItem(
                 _id, _productId, _productName, _productDescription,
-                price, _validStock, _partnerId,
-                _validRestockThreshold, _validMaxStockThreshold);
+                price, _validStock, _sellerId, _isNotFbb);
         });
     }
 
@@ -66,53 +62,11 @@ public class CatalogItemUnitTests
     {
         uint stock = 0;
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             _testCatalogItem = new CatalogItem(
                 _id, _productId, _productName, _productDescription,
-                _validPrice, stock, _partnerId,
-                _validRestockThreshold, _validMaxStockThreshold);
-        });
-    }
-
-    [Fact]
-    public void Constructor_ThrowsArgumentException_WhenMaxStockThresholdIsZero()
-    {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            _testCatalogItem = new CatalogItem(
-                _id, _productId, _productName, _productDescription,
-                _validPrice, _validStock, _partnerId,
-                _validRestockThreshold, 0);
-        });
-    }
-
-    [Theory]
-    [InlineData(_validMaxStockThreshold)]
-    [InlineData(_validMaxStockThreshold + 1)]
-    public void Constructor_ThrowsArgumentException_WhenRestockThresholdNotLessThanMaxStockThreshold(
-        uint restockThreshold)
-    {
-        Assert.Throws<ArgumentException>(() =>
-        {
-            _testCatalogItem = new CatalogItem(
-                _id, _productId, _productName, _productDescription,
-                _validPrice, _validStock, _partnerId,
-                restockThreshold, _validMaxStockThreshold);
-        });
-    }
-
-    [Fact]
-    public void Constructor_ThrowsExceedingMaxStockThresholdException_WhenStockGreaterThanMaxStockThreshold()
-    {
-        uint stock = _validMaxStockThreshold + 1;
-
-        Assert.Throws<ExceedingMaxStockThresholdException>(() =>
-        {
-            _testCatalogItem = new CatalogItem(
-                _id, _productId, _productName, _productDescription,
-                _validPrice, stock, _partnerId,
-                _validRestockThreshold, _validMaxStockThreshold);
+                _validPrice, stock, _sellerId, _isNotFbb);
         });
     }
 
@@ -153,14 +107,14 @@ public class CatalogItemUnitTests
     [Theory]
     [InlineData(0)]
     [InlineData(-29.99)]
-    public void ChangeProductDetails_ThrowsArgumentException_WhenPriceIsZeroOrNegative(
+    public void ChangeProductDetails_ThrowsArgOutOfRangeException_WhenPriceIsZeroOrNegative(
         decimal newPrice)
     {
         InitializeTestData();
         var newProductName = "Test 2";
         var newProductDescription = "Test description 2";
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             _testCatalogItem.ChangeProductDetails(newProductName, newProductDescription, newPrice);
         });
@@ -184,12 +138,12 @@ public class CatalogItemUnitTests
     }
 
     [Fact]
-    public void ReduceStock_ThrowsArgumentException_WhenReduceUnitsIsZero()
+    public void ReduceStock_ThrowsArgOutOfRangeException_WhenReduceUnitsIsZero()
     {
         InitializeTestData();
         uint unitsToReduce = 0;
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             _testCatalogItem.ReduceStock(unitsToReduce);
         });
@@ -222,7 +176,7 @@ public class CatalogItemUnitTests
 
     [Theory]
     [InlineData(100)]
-    [InlineData(_maxValidStock - _validStock)]
+    [InlineData(1000)]
     public void Restock_Succeeds_WhenValid(uint unitsToRestock)
     {
         InitializeTestData();
@@ -247,96 +201,14 @@ public class CatalogItemUnitTests
     }
 
     [Fact]
-    public void Restock_ThrowsArgumentException_WhenRestockUnitsIsZero()
+    public void Restock_ThrowsArgOutOfRangeException_WhenRestockUnitsIsZero()
     {
         InitializeTestData();
         uint unitsToRestock = 0;
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             _testCatalogItem.Restock(unitsToRestock);
-        });
-    }
-
-    [Fact]
-    public void Restock_ThrowsExceedingMaxStockThresholdException_WhenRestockExceedsMaxStockThreshold()
-    {
-        InitializeTestData();
-        uint unitsToRestock = _testCatalogItem.MaxStockThreshold - _testCatalogItem.AvailableStock + 1;
-
-        Assert.Throws<ExceedingMaxStockThresholdException>(() =>
-        {
-            _testCatalogItem.Restock(unitsToRestock);
-        });
-    }
-
-    [Theory]
-    [InlineData(250)]
-    [InlineData(_validStock)]
-    public void ChangeStockThresholds_Succeeds_WhenValid(uint newMaxStockThreshold)
-    {
-        InitializeTestData();
-        uint newRestockThreshold = 25;
-
-        _testCatalogItem.ChangeStockThresholds(newRestockThreshold, newMaxStockThreshold);
-
-        Assert.Equal(newRestockThreshold, _testCatalogItem.RestockThreshold);
-        Assert.Equal(newMaxStockThreshold, _testCatalogItem.MaxStockThreshold);
-    }
-
-    [Fact]
-    public void ChangeStockThresholds_ThrowsInvalidOpException_WhenItemIsDeleted()
-    {
-        InitializeTestData();
-        _testCatalogItem.Delete();
-        uint newRestockThreshold = 25;
-        uint newMaxStockThreshold = 200;
-
-        Assert.Throws<InvalidOperationException>(() =>
-        {
-            _testCatalogItem.ChangeStockThresholds(newRestockThreshold, newMaxStockThreshold);
-        });
-    }
-
-    [Fact]
-    public void ChangeStockThresholds_ThrowsArgumentException_WhenMaxStockThresholdIsZero()
-    {
-        InitializeTestData();
-        uint newRestockThreshold = 25;
-        uint newMaxStockThreshold = 0;
-
-        Assert.Throws<ArgumentException>(() =>
-        {
-            _testCatalogItem.ChangeStockThresholds(newRestockThreshold, newMaxStockThreshold);
-        });
-    }
-
-    [Theory]
-    [InlineData(120)]
-    [InlineData(150)]
-    public void ChangeStockThresholds_ThrowsArgumentException_WhenRestockThresholdNotLessThanMaxStockThreshold(
-        uint newRestockThreshold)
-    {
-        InitializeTestData();
-
-        uint newMaxStockThreshold = 120;
-
-        Assert.Throws<ArgumentException>(() =>
-        {
-            _testCatalogItem.ChangeStockThresholds(newRestockThreshold, newMaxStockThreshold);
-        });
-    }
-
-    [Fact]
-    public void ChangeStockThresholds_ThrowsExceedingMaxStockThresholdException_WhenStockGreaterThanMaxStockThreshold()
-    {
-        InitializeTestData();
-        uint newRestockThreshold = 25;
-        uint newMaxStockThreshold = _testCatalogItem.AvailableStock - 1;
-
-        Assert.Throws<ExceedingMaxStockThresholdException>(() =>
-        {
-            _testCatalogItem.ChangeStockThresholds(newRestockThreshold, newMaxStockThreshold);
         });
     }
 }

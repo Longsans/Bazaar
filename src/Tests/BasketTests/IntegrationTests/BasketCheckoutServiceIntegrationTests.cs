@@ -43,9 +43,10 @@ public class BasketCheckoutServiceIntegrationTests : IDisposable
         _testBasket.AddItem(item2);
         _basketRepo.Update(_testBasket);
 
-        var checkout = new BasketCheckout(_testBasket.BuyerId,
-            "New York", "U.S.", "10005", "11 Wall Street",
-            "123456789", "Warren Buffett", DateTime.Now.AddYears(5), "987654321");
+        //var checkout = new BasketCheckout(_testBasket.BuyerId,
+        //    "New York", "U.S.", "10005", "11 Wall Street",
+        //    "123456789", "Warren Buffett", DateTime.Now.AddYears(5), "987654321");
+        var checkout = new BasketCheckout(_testBasket.BuyerId);
 
         // act
         var result = _checkoutService.Checkout(checkout);
@@ -69,9 +70,10 @@ public class BasketCheckoutServiceIntegrationTests : IDisposable
         string buyerId)
     {
         // arrange
-        var checkout = new BasketCheckout(buyerId,
-            "New York", "U.S.", "10005", "11 Wall Street",
-            "123456789", "Warren Buffett", DateTime.Now.AddYears(5), "987654321");
+        //var checkout = new BasketCheckout(buyerId,
+        //    "New York", "U.S.", "10005", "11 Wall Street",
+        //    "123456789", "Warren Buffett", DateTime.Now.AddYears(5), "987654321");
+        var checkout = new BasketCheckout(buyerId);
 
         // act
         var result = _checkoutService.Checkout(checkout);
