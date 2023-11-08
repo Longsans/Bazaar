@@ -34,6 +34,12 @@ services:
       - inventory
       - all
 
+  transport-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - transport
+      - all
+
   basket-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
@@ -93,6 +99,18 @@ services:
       - rabbitmq
     profiles:
       - inventory
+      - all
+
+  transport-api:
+    image: ${DOCKER_REGISTRY-}transport-api
+    build:
+      context: .
+      dockerfile: Services/Transport/Dockerfile
+    depends_on:
+      - transport-sql
+      - rabbitmq
+    profiles:
+      - transport
       - all
 
   shopper-info-api:

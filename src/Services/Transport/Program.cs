@@ -1,3 +1,5 @@
+using Bazaar.Transport.Infrastructure.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,17 +10,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 #region Register application services
-builder.Services.AddDbContext<InventoryDbContext>(options =>
+builder.Services.AddScoped<ICompleteInventoryPickupService, CompleteInventoryPickupService>();
+builder.Services.AddScoped<IEstimationService, BasicEstimationService>();
+
+builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
+builder.Services.AddScoped<IInventoryPickupRepository, InventoryPickupRepository>();
+
+builder.Services.RegisterEventBus(builder.Configuration);
+
+builder.Services.AddDbContext<TransportDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
-
-builder.Services.AddScoped<IUpdateProductStockService, UpdateProductStockService>();
-
-builder.Services.AddScoped<ISellerInventoryRepository, SellerInventoryRepository>();
-builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
-
-builder.Services.RegisterEventBus(builder.Configuration);
 #endregion
 
 var app = builder.Build();
@@ -40,11 +43,12 @@ app.ConfigureEventBus();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
-    await dbContext.Seed();
+    var dbContext = scope.ServiceProvider.GetRequiredService<TransportDbContext>();
+    await dbContext.Database.EnsureDeletedAsync();
+    await dbContext.Database.MigrateAsync();
 }
 
-await app.RunAsync();
+app.Run();
 
 public static class EventBusExtensionMethods
 {
@@ -99,18 +103,10 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<CatalogItemDeletedIntegrationEventHandler>();
-        services.AddTransient<InventoryPickedUpIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
-        var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-        eventBus.Subscribe<
-            CatalogItemDeletedIntegrationEvent,
-            CatalogItemDeletedIntegrationEventHandler>();
-        eventBus.Subscribe<
-            InventoryPickedUpIntegrationEvent,
-            InventoryPickedUpIntegrationEventHandler>();
+        //var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
     }
 }

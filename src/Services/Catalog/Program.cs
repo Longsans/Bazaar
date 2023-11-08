@@ -132,6 +132,7 @@ public static class EventBusExtensionMethods
         services.AddTransient<ProductInventoryUpdatedIntegrationEventHandler>();
         services.AddTransient<ProductOrdersStatusReportChangedIntegrationEventHandler>();
         services.AddTransient<ClientAccountClosedIntegrationEventHandler>();
+        services.AddTransient<InventoryPickedUpIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -149,6 +150,9 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             ClientAccountClosedIntegrationEvent,
             ClientAccountClosedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            InventoryPickedUpIntegrationEvent,
+            InventoryPickedUpIntegrationEventHandler>();
     }
 }
 

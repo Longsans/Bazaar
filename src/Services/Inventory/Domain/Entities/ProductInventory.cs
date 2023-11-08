@@ -14,6 +14,11 @@ public class ProductInventory
         string productId, uint unitsInStock,
         uint restockThreshold, uint maxStockThreshold, int sellerInventoryId)
     {
+        if (RestockThreshold > maxStockThreshold || unitsInStock > maxStockThreshold)
+        {
+            throw new ExceedingMaxStockThresholdException();
+        }
+
         ProductId = productId;
         UnitsInStock = unitsInStock;
         RestockThreshold = restockThreshold;

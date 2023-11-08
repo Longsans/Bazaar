@@ -107,6 +107,11 @@ public class CatalogItem
         IsFulfilledByBazaar = isFulfilledByBazaar;
     }
 
+    public void UpdateOfficiallyListed(bool listed)
+    {
+        IsOfficiallyListed = listed;
+    }
+
     public void Delete()
     {
         IsDeleted = true;

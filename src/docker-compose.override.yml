@@ -45,6 +45,13 @@ services:
     ports:
       - "5439:1433"
 
+  transport-sql:
+    environment:
+      - SA_PASSWORD=P@ssw0rd
+      - ACCEPT_EULA=Y
+    ports:
+      - "5440:1433"
+
   basket-sql:
     environment:
       - SA_PASSWORD=P@ssw0rd
@@ -117,6 +124,20 @@ services:
       # - ./SeedData:/root/SeedData
     ports:
       - "5252:80"
+
+  transport-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - EventBusConnection=rabbitmq
+      # - SeedDataFilePath=/root/SeedData/seed_data.json
+      - ConnectionString=Server=transport-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - IdentityApi=http://identity-api
+      - DisableIdentity=true
+    # volumes:
+      # - ./SeedData:/root/SeedData
+    ports:
+      - "5254:80"
 
   shopper-info-api:
     environment:

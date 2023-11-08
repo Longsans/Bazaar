@@ -1,0 +1,39 @@
+﻿namespace Bazaar.Transport.Infrastructure.Repositories;
+
+public class InventoryPickupRepository : IInventoryPickupRepository
+{
+    private readonly TransportDbContext _context;
+
+    public InventoryPickupRepository(TransportDbContext context)
+    {
+        _context = context;
+    }
+
+    public InventoryPickup? GetById(int id)
+    {
+        return _context.InventoryPickups
+            .Include(x => x.ProductInventories)
+            .SingleOrDefault(x => x.Id == id);
+    }
+
+    public IEnumerable<InventoryPickup> GetIncomplete()
+    {
+        return _context.InventoryPickups
+            .Include(x => x.ProductInventories)
+            .Where(x => x.Status != InventoryPickupStatus.Completed
+                && x.Status != InventoryPickupStatus.Cancelled);
+    }
+
+    public InventoryPickup Create(InventoryPickup inventoryPickup)
+    {
+        _context.InventoryPickups.Add(inventoryPickup);
+        _context.SaveChanges();
+        return inventoryPickup;
+    }
+
+    public void Update(InventoryPickup inventoryPickup)
+    {
+        _context.InventoryPickups.Update(inventoryPickup);
+        _context.SaveChanges();
+    }
+}
