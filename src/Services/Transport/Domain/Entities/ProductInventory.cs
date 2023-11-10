@@ -10,6 +10,12 @@ public class ProductInventory
 
     public ProductInventory(string productId, uint numberOfUnits)
     {
+        if (numberOfUnits == 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(numberOfUnits), "Number of stock units cannot be 0.");
+        }
+
         ProductId = productId;
         NumberOfUnits = numberOfUnits;
     }

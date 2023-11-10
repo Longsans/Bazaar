@@ -10,7 +10,7 @@ public class InventoryPickup
     public string SchedulerId { get; private set; }
     public InventoryPickupStatus Status { get; private set; }
 
-    public bool IsCancelled { get; private set; }
+    public string? CancelReason { get; private set; }
 
     public InventoryPickup(
         string pickupLocation, IEnumerable<ProductInventory> inventoryItems,
@@ -35,6 +35,22 @@ public class InventoryPickup
                 "Inventory items cannot be empty.", nameof(inventoryItems));
         }
 
+        if (inventoryItems.Any(x => x.NumberOfUnits == 0))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(inventoryItems), "Number of units in product inventory cannot be 0.");
+        }
+
+        bool hasRepeatedProducts = inventoryItems
+            .GroupBy(x => x.ProductId)
+            .Select(g => g.Count())
+            .Any(c => c > 1);
+        if (hasRepeatedProducts)
+        {
+            throw new ArgumentException(
+                "Product inventories cannot be duplicate.", nameof(inventoryItems));
+        }
+
         PickupLocation = pickupLocation;
         ProductInventories = inventoryItems.ToList();
         EstimatedPickupTime = estimatedPickupTime;
@@ -57,7 +73,7 @@ public class InventoryPickup
         EstimatedPickupTime = estimatedTime;
     }
 
-    public void StartPickup()
+    public void Start()
     {
         Status = Status == InventoryPickupStatus.Scheduled
             ? InventoryPickupStatus.EnRouteToPickupLocation
@@ -81,8 +97,14 @@ public class InventoryPickup
                 "Cannot complete pickup until it is confirmed that inventory has been picked up.");
     }
 
-    public void Cancel()
+    public void Cancel(string reason)
     {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ArgumentNullException(
+                nameof(reason), "Cancel reason cannot be empty.");
+        }
+
         Status = Status != InventoryPickupStatus.Completed
             ? InventoryPickupStatus.Cancelled
             : throw new InvalidOperationException(

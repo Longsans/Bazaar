@@ -14,6 +14,7 @@ builder.Services.AddDbContext<InventoryDbContext>(options =>
 });
 
 builder.Services.AddScoped<IUpdateProductStockService, UpdateProductStockService>();
+builder.Services.AddScoped<IDeleteProductInventoryService, DeleteProductInventoryService>();
 
 builder.Services.AddScoped<ISellerInventoryRepository, SellerInventoryRepository>();
 builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
@@ -101,6 +102,7 @@ public static class EventBusExtensionMethods
         });
         services.AddTransient<CatalogItemDeletedIntegrationEventHandler>();
         services.AddTransient<InventoryPickedUpIntegrationEventHandler>();
+        services.AddTransient<ProductInventoryPickupsStatusChangedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -112,5 +114,8 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             InventoryPickedUpIntegrationEvent,
             InventoryPickedUpIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductInventoryPickupsStatusChangedIntegrationEvent,
+            ProductInventoryPickupsStatusChangedIntegrationEventHandler>();
     }
 }

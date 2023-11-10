@@ -9,12 +9,16 @@ public class ProductInventoryController : ControllerBase
 {
     private readonly IProductInventoryRepository _productInventoryRepo;
     private readonly IUpdateProductStockService _updateProductStockService;
+    private readonly IDeleteProductInventoryService _deleteService;
 
     public ProductInventoryController(
-        IProductInventoryRepository productInventoryRepo, IUpdateProductStockService updateStockService)
+        IProductInventoryRepository productInventoryRepo,
+        IUpdateProductStockService updateStockService,
+        IDeleteProductInventoryService deleteService)
     {
         _productInventoryRepo = productInventoryRepo;
         _updateProductStockService = updateStockService;
+        _deleteService = deleteService;
     }
 
     [HttpGet("{productId}")]
@@ -41,6 +45,13 @@ public class ProductInventoryController : ControllerBase
     {
         return _updateProductStockService
             .Restock(productId, request.UnitsToRestock)
+            .ToActionResult(this);
+    }
+
+    [HttpDelete("{productId}")]
+    public IActionResult Delete(string productId)
+    {
+        return _deleteService.DeleteProductInventory(productId)
             .ToActionResult(this);
     }
 }

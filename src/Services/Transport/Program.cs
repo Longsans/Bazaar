@@ -1,5 +1,3 @@
-using Bazaar.Transport.Infrastructure.Repositories;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -10,8 +8,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 #region Register application services
-builder.Services.AddScoped<ICompleteInventoryPickupService, CompleteInventoryPickupService>();
 builder.Services.AddScoped<IEstimationService, BasicEstimationService>();
+builder.Services.AddScoped<IPickupProcessService, PickupProcessService>();
 
 builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
 builder.Services.AddScoped<IInventoryPickupRepository, InventoryPickupRepository>();
@@ -103,10 +101,14 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
+        services.AddTransient<ProductInventoryDeletedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
-        //var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+        var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+        eventBus.Subscribe<
+            ProductInventoryDeletedIntegrationEvent,
+            ProductInventoryDeletedIntegrationEventHandler>();
     }
 }

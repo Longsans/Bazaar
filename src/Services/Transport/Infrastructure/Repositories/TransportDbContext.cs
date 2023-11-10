@@ -10,14 +10,6 @@ public class TransportDbContext : DbContext
             .HasMany(x => x.ProductInventories)
             .WithOne(x => x.Pickup)
             .HasForeignKey(x => x.PickupId);
-
-        modelBuilder.Entity<ProductInventory>()
-            .HasIndex(x => x.ProductId)
-            .IsUnique();
-
-        modelBuilder.Entity<DeliveryPackageItem>()
-            .HasIndex(x => x.ProductId)
-            .IsUnique();
     }
 
     public DbSet<Delivery> Deliveries { get; set; }

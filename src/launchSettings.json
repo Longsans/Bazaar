@@ -6,7 +6,6 @@
       "composeProfile": {
         "includes": [
           "inventory",
-          "catalog",
           "contracting",
           "transport"
         ]

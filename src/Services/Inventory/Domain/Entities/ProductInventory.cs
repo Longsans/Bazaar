@@ -10,6 +10,8 @@ public class ProductInventory
     public SellerInventory SellerInventory { get; private set; }
     public int SellerInventoryId { get; private set; }
 
+    public bool HasPickupsInProgress { get; private set; }
+
     public ProductInventory(
         string productId, uint unitsInStock,
         uint restockThreshold, uint maxStockThreshold, int sellerInventoryId)
@@ -52,5 +54,10 @@ public class ProductInventory
             throw new ExceedingMaxStockThresholdException();
         }
         UnitsInStock += units;
+    }
+
+    public void UpdateHasPickupsInProgress(bool hasPickupsInProgress)
+    {
+        HasPickupsInProgress = hasPickupsInProgress;
     }
 }

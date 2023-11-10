@@ -9,6 +9,12 @@ public class ProductInventoryRepository : IProductInventoryRepository
         _context = context;
     }
 
+    public ProductInventory? GetById(int id)
+    {
+        return _context.ProductInventories
+            .SingleOrDefault(x => x.Id == id);
+    }
+
     public ProductInventory? GetByProductId(string productId)
     {
         return _context.ProductInventories

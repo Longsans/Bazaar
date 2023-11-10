@@ -1,35 +1,20 @@
-﻿using Bazaar.Inventory.Domain.Interfaces;
-
-namespace Bazaar.Inventory.ServiceIntegration.EventHandling;
+﻿namespace Bazaar.Inventory.ServiceIntegration.EventHandling;
 
 public class CatalogItemDeletedIntegrationEventHandler
     : IIntegrationEventHandler<CatalogItemDeletedIntegrationEvent>
 {
-    private readonly IProductInventoryRepository _productInventoryRepo;
-    private readonly ISellerInventoryRepository _sellerInventoryRepo;
+    private readonly IDeleteProductInventoryService _deleteProductInventoryService;
 
     public CatalogItemDeletedIntegrationEventHandler(
-        IProductInventoryRepository productInventoryRepo,
-        ISellerInventoryRepository sellerInventoryRepo)
+        IDeleteProductInventoryService deleteService)
     {
-        _productInventoryRepo = productInventoryRepo;
-        _sellerInventoryRepo = sellerInventoryRepo;
+        _deleteProductInventoryService = deleteService;
     }
 
     public async Task Handle(CatalogItemDeletedIntegrationEvent @event)
     {
-        var productInventory = _productInventoryRepo
-            .GetByProductId(@event.ProductId);
-        if (productInventory == null)
-        {
-            return;
-        }
-
-        var sellerInventory = _sellerInventoryRepo
-            .GetWithProductsById(productInventory.SellerInventoryId)!;
-
-        sellerInventory.ProductInventories.Remove(productInventory);
-        _sellerInventoryRepo.Update(sellerInventory);
+        _deleteProductInventoryService
+            .DeleteProductInventory(@event.ProductId);
         await Task.CompletedTask;
     }
 }

@@ -8,36 +8,32 @@ namespace Bazaar.Transport.Web.Controllers;
 public class InventoryPickupController : ControllerBase
 {
     private readonly IInventoryPickupRepository _pickupRepository;
-    private readonly ICompleteInventoryPickupService _completePickupService;
-    private readonly IEstimationService _estimationService;
+    private readonly IPickupProcessService _pickupProcessService;
 
     public InventoryPickupController(
         IInventoryPickupRepository pickupRepository,
-        ICompleteInventoryPickupService completePickupService,
-        IEstimationService estimationService)
+        IPickupProcessService pickupProcessService)
     {
         _pickupRepository = pickupRepository;
-        _completePickupService = completePickupService;
-        _estimationService = estimationService;
+        _pickupProcessService = pickupProcessService;
     }
 
     [HttpPost]
     public ActionResult<InventoryPickupResponse> SchedulePickup(
         ScheduleInventoryPickupRequest request)
     {
+        if (request.InventoryItems.Any(x => x.NumberOfUnits == 0))
+        {
+            return BadRequest(new { error = "Number of stock units cannot be 0." });
+        }
+
         var pickupItems = request.InventoryItems
             .Select(x => new ProductInventory(x.ProductId, x.NumberOfUnits));
-        var estimatedPickupTime = _estimationService
-            .EstimatePickupCompletion(pickupItems);
 
-        var pickup = new InventoryPickup(
-            request.PickupLocation,
-            pickupItems,
-            estimatedPickupTime,
-            request.SchedulerId);
-
-        _pickupRepository.Create(pickup);
-        return new InventoryPickupResponse(pickup);
+        return _pickupProcessService.SchedulePickup(
+            request.PickupLocation, pickupItems, request.SchedulerId)
+            .Map(x => new InventoryPickupResponse(x))
+            .ToActionResult(this);
     }
 
     [HttpGet("{id}")]
@@ -52,43 +48,31 @@ public class InventoryPickupController : ControllerBase
     }
 
     [HttpPut("{id}/status")]
-    public IActionResult UpdateStatus(int id, [FromBody] InventoryPickupStatus status)
+    public IActionResult UpdateStatus(int id, [FromBody] UpdatePickupStatusRequest request)
     {
-        if (status == InventoryPickupStatus.Completed)
+        return request.Status switch
         {
-            return _completePickupService.CompleteInventoryPickup(id)
-                .ToActionResult(this);
-        }
+            InventoryPickupStatus.EnRouteToPickupLocation => _pickupProcessService.DispatchPickup(id).ToActionResult(this),
+            InventoryPickupStatus.DeliveringToWarehouse => _pickupProcessService.ConfirmPickupInventory(id).ToActionResult(this),
+            InventoryPickupStatus.Completed => _pickupProcessService.CompletePickup(id).ToActionResult(this),
+            InventoryPickupStatus.Cancelled => request.CancelReason != null
+                ? _pickupProcessService.CancelPickup(id, request.CancelReason).ToActionResult(this)
+                : BadRequest(new { error = "Cancel reason cannot be empty." }),
+            _ => Conflict(new { error = "Invalid status for inventory pickup." }),
+        };
+    }
 
-        var pickup = _pickupRepository.GetById(id);
-        if (pickup == null)
+    [HttpDelete]
+    public IActionResult DeleteCancelledPickups(bool cancelled)
+    {
+        if (cancelled)
         {
-            return NotFound();
-        }
-
-        try
-        {
-            switch (status)
+            var cancelledPickups = _pickupRepository.GetAllCancelled();
+            foreach (var pickup in cancelledPickups)
             {
-                case InventoryPickupStatus.EnRouteToPickupLocation:
-                    pickup.StartPickup();
-                    break;
-                case InventoryPickupStatus.DeliveringToWarehouse:
-                    pickup.ConfirmInventoryPickedUp();
-                    break;
-                case InventoryPickupStatus.Completed:
-                    pickup.Complete();
-                    break;
-                default:
-                    throw new InvalidOperationException("Invalid status for inventory pickup.");
+                _pickupRepository.Delete(pickup);
             }
         }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-
-        _pickupRepository.Update(pickup);
-        return Ok();
+        return NoContent();
     }
 }

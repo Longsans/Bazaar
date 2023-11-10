@@ -8,9 +8,7 @@ public class InventoryPickupResponse
     public DateTime EstimatedPickupTime { get; private set; }
     public DateTime ScheduledAt { get; private set; }
     public string SchedulerId { get; private set; }
-    public InventoryPickupStatus Status { get; private set; }
-
-    public bool IsCancelled { get; private set; }
+    public string Status { get; private set; }
 
     public InventoryPickupResponse(InventoryPickup pickup)
     {
@@ -21,7 +19,6 @@ public class InventoryPickupResponse
         EstimatedPickupTime = pickup.EstimatedPickupTime;
         ScheduledAt = pickup.ScheduledAt;
         SchedulerId = pickup.SchedulerId;
-        Status = pickup.Status;
-        IsCancelled = pickup.IsCancelled;
+        Status = Enum.GetName(pickup.Status)!;
     }
 }
