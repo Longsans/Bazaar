@@ -12,6 +12,8 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 });
 
 builder.Services.AddScoped<IDeleteCatalogItemService, DeleteCatalogItemService>();
+builder.Services.AddScoped<IFulfillmentMethodService, FulfillmentMethodService>();
+
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 
@@ -129,10 +131,10 @@ public static class EventBusExtensionMethods
                 retryCount);
         });
         services.AddTransient<BasketCheckoutAcceptedIntegrationEventHandler>();
-        services.AddTransient<ProductInventoryUpdatedIntegrationEventHandler>();
+        services.AddTransient<ProductFbbInventoryUpdatedIntegrationEventHandler>();
         services.AddTransient<ProductOrdersStatusReportChangedIntegrationEventHandler>();
         services.AddTransient<ClientAccountClosedIntegrationEventHandler>();
-        services.AddTransient<InventoryPickedUpIntegrationEventHandler>();
+        services.AddTransient<FbbInventoryPickedUpIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -142,8 +144,8 @@ public static class EventBusExtensionMethods
             BasketCheckoutAcceptedIntegrationEvent,
             BasketCheckoutAcceptedIntegrationEventHandler>();
         eventBus.Subscribe<
-            ProductInventoryUpdatedIntegrationEvent,
-            ProductInventoryUpdatedIntegrationEventHandler>();
+            ProductFbbInventoryUpdatedIntegrationEvent,
+            ProductFbbInventoryUpdatedIntegrationEventHandler>();
         eventBus.Subscribe<
             ProductOrdersStatusReportChangedIntegrationEvent,
             ProductOrdersStatusReportChangedIntegrationEventHandler>();
@@ -151,8 +153,8 @@ public static class EventBusExtensionMethods
             ClientAccountClosedIntegrationEvent,
             ClientAccountClosedIntegrationEventHandler>();
         eventBus.Subscribe<
-            InventoryPickedUpIntegrationEvent,
-            InventoryPickedUpIntegrationEventHandler>();
+            FbbInventoryPickedUpIntegrationEvent,
+            FbbInventoryPickedUpIntegrationEventHandler>();
     }
 }
 

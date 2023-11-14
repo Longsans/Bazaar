@@ -9,6 +9,7 @@ builder.Services.AddSwaggerGen();
 
 #region Register application services
 builder.Services.AddScoped<IEstimationService, BasicEstimationService>();
+builder.Services.AddScoped<IDeliveryProcessService, DeliveryProcessService>();
 builder.Services.AddScoped<IPickupProcessService, PickupProcessService>();
 
 builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
@@ -101,14 +102,14 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<ProductInventoryDeletedIntegrationEventHandler>();
+        services.AddTransient<ProductFbbInventoryDeletedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
         eventBus.Subscribe<
-            ProductInventoryDeletedIntegrationEvent,
-            ProductInventoryDeletedIntegrationEventHandler>();
+            ProductFbbInventoryDeletedIntegrationEvent,
+            ProductFbbInventoryDeletedIntegrationEventHandler>();
     }
 }

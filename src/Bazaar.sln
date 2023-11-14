@@ -51,7 +51,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestingCommon", "Tests\Comm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShopperInfoTests", "Tests\ShopperInfoTests\ShopperInfoTests.csproj", "{3E90454F-7C60-43F6-9674-BBAF793E7D62}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inventory", "Services\Inventory\Inventory.csproj", "{F55DA475-7FB2-4FB7-9CB9-C32D09E74672}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FbbInventory", "Services\FbbInventory\FbbInventory.csproj", "{F55DA475-7FB2-4FB7-9CB9-C32D09E74672}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Transport", "Services\Transport\Transport.csproj", "{0A6D3E70-16AE-4B74-ACC4-D7CDD878C0DF}"
 EndProject

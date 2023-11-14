@@ -12,14 +12,14 @@ public class DeliveryRepository : IDeliveryRepository
     public Delivery? GetById(int id)
     {
         return _context.Deliveries
-            .Include(x => x.Items)
+            .Include(x => x.PackageItems)
             .SingleOrDefault(x => x.Id == id);
     }
 
     public IEnumerable<Delivery> GetIncomplete()
     {
         return _context.Deliveries
-            .Include(x => x.Items)
+            .Include(x => x.PackageItems)
             .Where(x => x.Status != DeliveryStatus.Completed
                 && x.Status != DeliveryStatus.Postponed);
     }

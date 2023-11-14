@@ -5,9 +5,8 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "inventory",
-          "contracting",
-          "transport"
+          "transport",
+          "fbbinventory"
         ]
       }
     }

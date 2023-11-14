@@ -10,6 +10,10 @@ public class DeliveryPackageItem
 
     public DeliveryPackageItem(string productId, uint quantity)
     {
+        if (quantity == 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(quantity), "Quantity cannot be 0.");
+
         ProductId = productId;
         Quantity = quantity;
     }

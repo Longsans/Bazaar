@@ -30,6 +30,10 @@ namespace Transport.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("DeliveryAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("ExpectedDeliveryDate")
                         .HasColumnType("datetime2");
 
@@ -133,7 +137,7 @@ namespace Transport.Infrastructure.Migrations
             modelBuilder.Entity("Bazaar.Transport.Domain.Entities.DeliveryPackageItem", b =>
                 {
                     b.HasOne("Bazaar.Transport.Domain.Entities.Delivery", "Delivery")
-                        .WithMany("Items")
+                        .WithMany("PackageItems")
                         .HasForeignKey("DeliveryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -154,7 +158,7 @@ namespace Transport.Infrastructure.Migrations
 
             modelBuilder.Entity("Bazaar.Transport.Domain.Entities.Delivery", b =>
                 {
-                    b.Navigation("Items");
+                    b.Navigation("PackageItems");
                 });
 
             modelBuilder.Entity("Bazaar.Transport.Domain.Entities.InventoryPickup", b =>

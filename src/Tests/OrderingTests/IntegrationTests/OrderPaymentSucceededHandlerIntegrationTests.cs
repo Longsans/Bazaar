@@ -34,7 +34,7 @@ public class OrderPaymentSucceededHandlerIntegrationTests : IDisposable
         await _handler.Handle(paymentSuccessEvent);
 
         var orderEntry = _dbContext.Entry(testOrder);
-        Assert.Equal(OrderStatus.AwaitingSellerConfirmation, testOrder.Status);
+        Assert.Equal(OrderStatus.PendingSellerConfirmation, testOrder.Status);
         Assert.Equal(EntityState.Unchanged, orderEntry.State);
     }
 
@@ -46,6 +46,6 @@ public class OrderPaymentSucceededHandlerIntegrationTests : IDisposable
 
         await _handler.Handle(paymentSuccessEvent);
 
-        Assert.NotEqual(OrderStatus.AwaitingSellerConfirmation, testOrder.Status);
+        Assert.NotEqual(OrderStatus.PendingSellerConfirmation, testOrder.Status);
     }
 }

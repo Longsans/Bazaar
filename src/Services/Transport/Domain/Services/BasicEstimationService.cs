@@ -33,7 +33,7 @@ public class BasicEstimationService : IEstimationService
     private TimeSpan EstimateDelayFromCurrentLoad()
     {
         var numOfIncompleteDeliveryItems = _deliveryRepository.GetIncomplete()
-            .Sum(x => x.Items.Sum(item => item.Quantity));
+            .Sum(x => x.PackageItems.Sum(item => item.Quantity));
         var numOfIncompletePickupUnits = _pickupRepository.GetIncomplete()
             .Sum(x => x.ProductInventories.Sum(item => item.NumberOfUnits));
 

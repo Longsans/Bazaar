@@ -1,4 +1,5 @@
 ﻿global using Ardalis.Result;
+global using Ardalis.Result.AspNetCore;
 global using Bazaar.BuildingBlocks.EventBus;
 global using Bazaar.BuildingBlocks.EventBus.Abstractions;
 global using Bazaar.BuildingBlocks.EventBus.Events;
@@ -11,5 +12,6 @@ global using Bazaar.Transport.Infrastructure.Repositories;
 global using Bazaar.Transport.ServiceIntegration.EventHandling;
 global using Bazaar.Transport.ServiceIntegration.IntegrationEvents;
 global using Bazaar.Transport.Web.Messages;
+global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
 global using RabbitMQ.Client;

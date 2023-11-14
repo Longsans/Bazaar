@@ -82,7 +82,7 @@ public class PickupProcessService : IPickupProcessService
             var inProgressCount = (uint)_pickupRepo.GetInProgress(productId).Count();
             var completedCount = (uint)_pickupRepo.GetCompleted(productId).Count();
             var cancelledCount = (uint)_pickupRepo.GetCancelled(productId).Count();
-            var @event = new ProductInventoryPickupsStatusChangedIntegrationEvent(
+            var @event = new ProductFbbInventoryPickupsStatusChangedIntegrationEvent(
                 productId, scheduledCount, inProgressCount, completedCount, cancelledCount);
 
             _eventBus.Publish(@event);
@@ -116,7 +116,7 @@ public class PickupProcessService : IPickupProcessService
         }
         if (publishCompletedEvent)
         {
-            var @event = new InventoryPickedUpIntegrationEvent(
+            var @event = new FbbInventoryPickedUpIntegrationEvent(
                 pickup.ProductInventories.Select(
                     x => new PickupProductInventory(x.ProductId, x.NumberOfUnits)),
                 pickup.SchedulerId);
