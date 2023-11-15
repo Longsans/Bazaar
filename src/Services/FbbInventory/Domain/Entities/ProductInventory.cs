@@ -19,7 +19,7 @@ public class ProductInventory
         string productId, uint unitsInStock,
         uint restockThreshold, uint maxStockThreshold, int sellerInventoryId)
     {
-        if (RestockThreshold > maxStockThreshold || unitsInStock > maxStockThreshold)
+        if (restockThreshold > maxStockThreshold || unitsInStock > maxStockThreshold)
         {
             throw new ExceedingMaxStockThresholdException();
         }
@@ -36,7 +36,8 @@ public class ProductInventory
         }
         else
         {
-            MarkAsUnfulfillable();
+            Status = InventoryStatus.Unfulfillable;
+            UnfulfillableSince = DateTime.Now.Date;
         }
     }
 
@@ -83,10 +84,10 @@ public class ProductInventory
 
     public void MarkAsUnfulfillable()
     {
-        if (Status == InventoryStatus.ToBeDisposed)
+        if (Status != InventoryStatus.Ready)
         {
             throw new InvalidOperationException(
-                "Cannot change an inventory that has been marked to be disposed");
+                "Can only mark inventory unfulfillable if it's currently in Ready status.");
         }
 
         Status = InventoryStatus.Unfulfillable;
@@ -95,6 +96,12 @@ public class ProductInventory
 
     public void MarkToBeDisposed()
     {
+        if (Status == InventoryStatus.Ready)
+        {
+            throw new InvalidOperationException(
+                "Can only mark inventory to be disposed if it's currently in Unfulfillable status.");
+        }
+
         Status = InventoryStatus.ToBeDisposed;
     }
 

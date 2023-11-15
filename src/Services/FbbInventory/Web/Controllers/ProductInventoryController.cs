@@ -68,7 +68,7 @@ public class ProductInventoryController : ControllerBase
             return BadRequest();
         }
 
-        _disposalService.MarkOverdueUnfulfillableInventoryForDisposal();
+        _disposalService.MarkOverdueUnfulfillableInventoriesForDisposal();
         return NoContent();
     }
 

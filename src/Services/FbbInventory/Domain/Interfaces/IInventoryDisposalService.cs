@@ -2,6 +2,6 @@
 
 public interface IInventoryDisposalService
 {
-    void MarkOverdueUnfulfillableInventoryForDisposal();
+    void MarkOverdueUnfulfillableInventoriesForDisposal();
     void DisposeMarkedInventories();
 }
