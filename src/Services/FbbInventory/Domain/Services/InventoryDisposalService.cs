@@ -9,10 +9,10 @@ public class InventoryDisposalService : IInventoryDisposalService
         _productInventoryRepo = productInventoryRepo;
     }
 
-    public void MarkOverdueUnfulfillableInventoryForDisposal()
+    public void MarkOverdueUnfulfillableInventoriesForDisposal()
     {
         var overdueInventories = _productInventoryRepo.GetAll()
-            .Where(x => x.UnfulfillableSince + StoragePolicy.MaximumUnfulfillableDuration < DateTime.Now)
+            .Where(x => x.UnfulfillableSince + StoragePolicy.MaximumUnfulfillableDuration <= DateTime.Now.Date)
             .ToList();
 
         foreach (var inventory in overdueInventories)
