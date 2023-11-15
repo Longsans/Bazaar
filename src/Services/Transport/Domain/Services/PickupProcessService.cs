@@ -45,7 +45,7 @@ public class PickupProcessService : IPickupProcessService
     {
         return ProceedWithPickup(pickupId, (pickup) =>
         {
-            pickup.Start();
+            pickup.StartPickup();
         }, true);
     }
 

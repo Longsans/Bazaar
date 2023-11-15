@@ -13,7 +13,7 @@ public class InventoryPickup
     public string? CancelReason { get; private set; }
 
     public InventoryPickup(
-        string pickupLocation, IEnumerable<ProductInventory> inventoryItems,
+        string pickupLocation, IEnumerable<ProductInventory> productInventories,
         DateTime estimatedPickupTime, string schedulerId)
     {
         if (string.IsNullOrWhiteSpace(pickupLocation))
@@ -29,30 +29,24 @@ public class InventoryPickup
                 "Estimated pickup time must be after current time.");
         }
 
-        if (!inventoryItems.Any())
+        if (!productInventories.Any())
         {
-            throw new ArgumentException(
-                "Inventory items cannot be empty.", nameof(inventoryItems));
+            throw new ArgumentNullException(nameof(productInventories),
+                "Inventory items cannot be empty.");
         }
 
-        if (inventoryItems.Any(x => x.NumberOfUnits == 0))
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(inventoryItems), "Number of units in product inventory cannot be 0.");
-        }
-
-        bool hasRepeatedProducts = inventoryItems
+        bool hasRepeatedProducts = productInventories
             .GroupBy(x => x.ProductId)
             .Select(g => g.Count())
             .Any(c => c > 1);
         if (hasRepeatedProducts)
         {
             throw new ArgumentException(
-                "Product inventories cannot be duplicate.", nameof(inventoryItems));
+                "Product inventories cannot be duplicate.", nameof(productInventories));
         }
 
         PickupLocation = pickupLocation;
-        ProductInventories = inventoryItems.ToList();
+        ProductInventories = productInventories.ToList();
         EstimatedPickupTime = estimatedPickupTime;
         ScheduledAt = DateTime.Now;
         SchedulerId = schedulerId;
@@ -62,18 +56,7 @@ public class InventoryPickup
     // EF read constructor
     private InventoryPickup() { }
 
-    public void UpdateEstimatedPickupTime(DateTime estimatedTime)
-    {
-        if (estimatedTime < DateTime.Now)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(estimatedTime), "Estimated pickup time must be after current time.");
-        }
-
-        EstimatedPickupTime = estimatedTime;
-    }
-
-    public void Start()
+    public void StartPickup()
     {
         Status = Status == InventoryPickupStatus.Scheduled
             ? InventoryPickupStatus.EnRouteToPickupLocation
@@ -86,7 +69,8 @@ public class InventoryPickup
         Status = Status == InventoryPickupStatus.EnRouteToPickupLocation
             ? InventoryPickupStatus.DeliveringToWarehouse
             : throw new InvalidOperationException(
-                "Cannot confirm that inventory is picked up before pickup is en route.");
+                "Can only confirm inventory picked up if " +
+                "pickup is currently in \"EnRouteToPickupLocation\" status.");
     }
 
     public void Complete()
@@ -94,7 +78,7 @@ public class InventoryPickup
         Status = Status == InventoryPickupStatus.DeliveringToWarehouse
             ? InventoryPickupStatus.Completed
             : throw new InvalidOperationException(
-                "Cannot complete pickup until it is confirmed that inventory has been picked up.");
+                "Can only complete pickup if its currently in \"DeliveringToWarehouse\" status.");
     }
 
     public void Cancel(string reason)
@@ -105,10 +89,11 @@ public class InventoryPickup
                 nameof(reason), "Cancel reason cannot be empty.");
         }
 
-        Status = Status != InventoryPickupStatus.Completed
+        Status = Status != InventoryPickupStatus.Completed && Status != InventoryPickupStatus.Cancelled
             ? InventoryPickupStatus.Cancelled
             : throw new InvalidOperationException(
-                "Cannot cancel a completed inventory pickup.");
+                "Cannot cancel a completed or an already cancelled inventory pickup.");
+        CancelReason = reason;
     }
 }
 

@@ -46,7 +46,7 @@ public class Delivery
         DeliveryAddress = deliveryAddress;
         PackageItems = packageItems.ToList();
         ScheduledAtDate = DateTime.Now.Date;
-        ExpectedDeliveryDate = expectedDeliveryDate;
+        ExpectedDeliveryDate = expectedDeliveryDate.Date;
         Status = DeliveryStatus.Scheduled;
     }
 
@@ -71,10 +71,10 @@ public class Delivery
 
     public void Postpone()
     {
-        Status = Status != DeliveryStatus.Completed
+        Status = Status != DeliveryStatus.Completed && Status != DeliveryStatus.Cancelled
             ? DeliveryStatus.Postponed
             : throw new InvalidOperationException(
-                "Cannot postpone a completed delivery.");
+                "Cannot postpone a completed or cancelled delivery.");
     }
 
     public void Cancel()
