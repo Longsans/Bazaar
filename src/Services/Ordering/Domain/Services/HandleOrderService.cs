@@ -36,8 +36,8 @@ public class HandleOrderService : IHandleOrderService
                 case OrderStatus.ProcessingPayment:
                     order.StartPayment();
                     break;
-                case OrderStatus.AwaitingSellerConfirmation:
-                    order.AwaitSellerConfirmation();
+                case OrderStatus.PendingSellerConfirmation:
+                    order.RequestSellerConfirmation();
                     break;
                 case OrderStatus.Shipping:
                     order.Ship();

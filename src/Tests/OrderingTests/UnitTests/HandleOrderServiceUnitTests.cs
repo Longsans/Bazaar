@@ -51,7 +51,7 @@ public class HandleOrderServiceUnitTests
     }
 
     [Theory]
-    [InlineData(OrderStatus.AwaitingSellerConfirmation)]
+    [InlineData(OrderStatus.PendingSellerConfirmation)]
     [InlineData(OrderStatus.Postponed)]
     public void UpdateOrderStatusToCancelled_PublishesEventsAndReturnsSuccess_WhenValid(
         OrderStatus originalStatus)
@@ -74,9 +74,9 @@ public class HandleOrderServiceUnitTests
     {
         return status switch
         {
-            OrderStatus.ProcessingPayment => OrderStatus.AwaitingValidation,
-            OrderStatus.AwaitingSellerConfirmation => OrderStatus.ProcessingPayment,
-            OrderStatus.Shipping => OrderStatus.AwaitingSellerConfirmation,
+            OrderStatus.ProcessingPayment => OrderStatus.PendingValidation,
+            OrderStatus.PendingSellerConfirmation => OrderStatus.ProcessingPayment,
+            OrderStatus.Shipping => OrderStatus.PendingSellerConfirmation,
             OrderStatus.Shipped => OrderStatus.Shipping,
             _ => throw new InvalidOperationException()
         };

@@ -15,23 +15,23 @@ public class OrderUnitTests
     private const string _orderCancelReason = "Heavy rain flooded the warehouse and ruined most of the stocks.";
 
     public static IEnumerable<object[]> UncancellableStatuses
-        => GetStatusValuesExcluding(OrderStatus.AwaitingSellerConfirmation, OrderStatus.Postponed);
+        => GetStatusValuesExcluding(OrderStatus.PendingSellerConfirmation, OrderStatus.Postponed);
 
     public static IEnumerable<object[]> UnpayableStatuses
-        => GetStatusValuesExcluding(OrderStatus.AwaitingValidation);
+        => GetStatusValuesExcluding(OrderStatus.PendingValidation);
 
     public static IEnumerable<object[]> SellerConfirmationUnawaitableStatuses
         => GetStatusValuesExcluding(OrderStatus.ProcessingPayment);
 
     public static IEnumerable<object[]> UnshippableStatuses
-        => GetStatusValuesExcluding(OrderStatus.AwaitingSellerConfirmation);
+        => GetStatusValuesExcluding(OrderStatus.PendingSellerConfirmation);
 
     public static IEnumerable<object[]> ShippedUnconfirmableStatuses
         => GetStatusValuesExcluding(OrderStatus.Shipping);
 
     public static IEnumerable<object[]> UnpostponableStatuses
         => GetStatusValuesExcluding(OrderStatus.ProcessingPayment,
-            OrderStatus.AwaitingSellerConfirmation, OrderStatus.Shipping);
+            OrderStatus.PendingSellerConfirmation, OrderStatus.Shipping);
 
     private static Order GetTestOrder()
     {
@@ -164,7 +164,7 @@ public class OrderUnitTests
     }
 
     [Theory]
-    [InlineData(OrderStatus.AwaitingSellerConfirmation)]
+    [InlineData(OrderStatus.PendingSellerConfirmation)]
     [InlineData(OrderStatus.Postponed)]
     public void Cancel_Succeeds_WhenCurrentStatusIsAwaitingSellerConfirmationOrPostponed(OrderStatus status)
     {
@@ -229,9 +229,9 @@ public class OrderUnitTests
         var order = GetTestOrder();
         SetStatus(order, OrderStatus.ProcessingPayment);
 
-        order.AwaitSellerConfirmation();
+        order.RequestSellerConfirmation();
 
-        Assert.Equal(OrderStatus.AwaitingSellerConfirmation, order.Status);
+        Assert.Equal(OrderStatus.PendingSellerConfirmation, order.Status);
     }
 
     [Theory]
@@ -242,11 +242,11 @@ public class OrderUnitTests
         var order = GetTestOrder();
         SetStatus(order, status);
 
-        Assert.Throws<InvalidOperationException>(order.AwaitSellerConfirmation);
+        Assert.Throws<InvalidOperationException>(order.RequestSellerConfirmation);
 
-        if (status != OrderStatus.AwaitingSellerConfirmation)
+        if (status != OrderStatus.PendingSellerConfirmation)
         {
-            Assert.NotEqual(OrderStatus.AwaitingSellerConfirmation, order.Status);
+            Assert.NotEqual(OrderStatus.PendingSellerConfirmation, order.Status);
         }
     }
 
@@ -254,7 +254,7 @@ public class OrderUnitTests
     public void Ship_Succeeds_WhenCurrentStatusIsAwaitingSellerConfirmation()
     {
         var order = GetTestOrder();
-        SetStatus(order, OrderStatus.AwaitingSellerConfirmation);
+        SetStatus(order, OrderStatus.PendingSellerConfirmation);
 
         order.Ship();
 
@@ -306,7 +306,7 @@ public class OrderUnitTests
 
     [Theory]
     [InlineData(OrderStatus.ProcessingPayment)]
-    [InlineData(OrderStatus.AwaitingSellerConfirmation)]
+    [InlineData(OrderStatus.PendingSellerConfirmation)]
     [InlineData(OrderStatus.Shipping)]
     public void Postpone_Succeeds_WhenCurrentStatusIsProcessingPaymentOrAwaitingConfirmationOrShipping(
         OrderStatus status)

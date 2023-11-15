@@ -1,6 +1,7 @@
 namespace Bazaar.Ordering.ServiceIntegration.EventHandling;
 
-public class OrderPaymentSucceededIntegrationEventHandler : IIntegrationEventHandler<OrderPaymentSucceededIntegrationEvent>
+public class OrderPaymentSucceededIntegrationEventHandler
+    : IIntegrationEventHandler<OrderPaymentSucceededIntegrationEvent>
 {
     private readonly IOrderRepository _orderRepo;
     private readonly ILogger<OrderPaymentSucceededIntegrationEventHandler> _logger;
@@ -21,7 +22,7 @@ public class OrderPaymentSucceededIntegrationEventHandler : IIntegrationEventHan
 
         _logger.LogInformation("Payment success, now waiting for seller's confirmation.");
 
-        order.AwaitSellerConfirmation();
+        order.RequestSellerConfirmation();
         _orderRepo.Update(order);
         await Task.CompletedTask;
     }

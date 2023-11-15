@@ -11,7 +11,7 @@ services:
     image: rabbitmq:3-management-alpine
     profiles:
       - catalog
-      - inventory
+      - fbbinventory
       - ordering
       - basket
       - all
@@ -28,10 +28,16 @@ services:
       - catalog
       - all
 
-  inventory-sql:
+  fbbinventory-sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
-      - inventory
+      - fbbinventory
+      - all
+
+  transport-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - transport
       - all
 
   basket-sql:
@@ -83,16 +89,28 @@ services:
       - catalog
       - all
 
-  inventory-api:
-    image: ${DOCKER_REGISTRY-}inventory-api
+  fbbinventory-api:
+    image: ${DOCKER_REGISTRY-}fbbinventory-api
     build:
       context: .
-      dockerfile: Services/Inventory/Dockerfile
+      dockerfile: Services/FbbInventory/Dockerfile
     depends_on:
-      - inventory-sql
+      - fbbinventory-sql
       - rabbitmq
     profiles:
-      - inventory
+      - fbbinventory
+      - all
+
+  transport-api:
+    image: ${DOCKER_REGISTRY-}transport-api
+    build:
+      context: .
+      dockerfile: Services/Transport/Dockerfile
+    depends_on:
+      - transport-sql
+      - rabbitmq
+    profiles:
+      - transport
       - all
 
   shopper-info-api:
@@ -178,7 +196,7 @@ services:
       - catalog-api
       - ordering-api
       - contracting-api
-      - inventory-api
+      - fbbinventory-api
     profiles:
       - websell
       - all

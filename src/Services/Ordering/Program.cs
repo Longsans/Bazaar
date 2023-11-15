@@ -137,6 +137,7 @@ public static class EventBusExtensionMethods
 
         services.AddTransient<BuyerCheckoutAcceptedIntegrationEventHandler>();
         services.AddTransient<OrderStocksConfirmedIntegrationEventHandler>();
+        services.AddTransient<DeliveryStatusChangedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -149,6 +150,11 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<OrderStocksInadequateIntegrationEvent, OrderStocksInadequateIntegrationEventHandler>();
 
         //eventBus.Subscribe<BuyerCheckoutAcceptedIntegrationEvent, BuyerCheckoutAcceptedIntegrationEventHandler>();
-        eventBus.Subscribe<OrderStocksConfirmedIntegrationEvent, OrderStocksConfirmedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            OrderStocksConfirmedIntegrationEvent,
+            OrderStocksConfirmedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            DeliveryStatusChangedIntegrationEvent,
+            DeliveryStatusChangedIntegrationEventHandler>();
     }
 }
