@@ -1,5 +1,3 @@
-using Microsoft.Data.SqlClient;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -34,18 +32,24 @@ using (var sqlConn = new SqlConnection(app.Configuration["DbServerConnection"]))
     var sql = @"
         USE master;
 
-        IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = @dbName)
+        IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'Hangfire')
         BEGIN
-            CREATE DATABASE [@dbName];
+            CREATE DATABASE [Hangfire];
         END";
     var command = new SqlCommand(sql, sqlConn);
-    command.Parameters.AddWithValue("@dbName", "Hangfire");
+    //command.Parameters.AddWithValue("@dbName", "Hangfire");
     sqlConn.Open();
     command.ExecuteNonQuery();
     app.Logger.LogInformation("Hangfire database created.");
 }
 
-app.UseHangfireDashboard();
+app.UseHangfireDashboard(options: new DashboardOptions
+{
+    Authorization = new[]
+    {
+        new DisabledAuthorizationFilter()
+    }
+});
 
 RecurringJob.AddOrUpdate(nameof(MarkOverdueUnfulfillableFbbInventoriesJob),
     () => app.Services
