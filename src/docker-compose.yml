@@ -64,6 +64,12 @@ services:
       - contracting
       - all
 
+  task-scheduler-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - fbbinventory
+      - all
+
   identity-api:
     image: ${DOCKER_REGISTRY-}identity-api
     build:
@@ -75,6 +81,17 @@ services:
     profiles:
       - id
       - all
+
+  task-scheduler:
+    image: ${DOCKER_REGISTRY-}task-scheduler
+    build:
+      context: .
+      dockerfile: Services/ScheduledTasks/Dockerfile
+    depends_on:
+      - fbbinventory-api
+      - task-scheduler-sql
+    profiles:
+      - fbbinventory
   
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api

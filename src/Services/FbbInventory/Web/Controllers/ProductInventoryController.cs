@@ -57,7 +57,7 @@ public class ProductInventoryController : ControllerBase
 
     [HttpPatch]
     public IActionResult MarkOverdueUnfulfillableInventoriesForDisposal(
-        bool overdueUnfulfillable, MarkToBeDisposedRequest request)
+        bool overdueUnfulfillable, MarkInventoriesToBeDisposedRequest request)
     {
         if (!request.ToBeDisposed)
         {
