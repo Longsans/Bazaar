@@ -1,16 +1,13 @@
-﻿using Ardalis.Result.AspNetCore;
-using Microsoft.AspNetCore.Mvc;
-
-namespace Bazaar.Transport.Web.Controllers;
+﻿namespace Bazaar.Transport.Web.Controllers;
 
 [Route("api/inventory-pickups")]
 [ApiController]
-public class InventoryPickupController : ControllerBase
+public class InventoryPickupsController : ControllerBase
 {
     private readonly IInventoryPickupRepository _pickupRepository;
     private readonly IPickupProcessService _pickupProcessService;
 
-    public InventoryPickupController(
+    public InventoryPickupsController(
         IInventoryPickupRepository pickupRepository,
         IPickupProcessService pickupProcessService)
     {

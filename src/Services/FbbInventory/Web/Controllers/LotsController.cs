@@ -14,8 +14,15 @@ public class LotsController : ControllerBase
     [HttpPatch("removal-requests")]
     public IActionResult RequestRemovalForLots(LotsRemovalRequest request)
     {
-        return _removalService
-            .RequestRemovalForLots(request.LotNumbers, request.RemovalMethod)
+        if (request.RemovalMethod == RemovalMethod.Return
+            && string.IsNullOrWhiteSpace(request.DeliveryAddress))
+        {
+            return BadRequest(new { error = "Delivery address must be specified for return." });
+        }
+
+        return (request.RemovalMethod == RemovalMethod.Return
+            ? _removalService.RequestReturnForLots(request.LotNumbers, request.DeliveryAddress)
+            : _removalService.RequestDisposalForLots(request.LotNumbers))
             .ToActionResult(this);
     }
 

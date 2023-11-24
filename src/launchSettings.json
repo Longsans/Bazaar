@@ -6,7 +6,8 @@
       "composeProfile": {
         "includes": [
           "disposal",
-          "fbbinventory"
+          "fbbinventory",
+          "transport"
         ]
       }
     }

@@ -1,4 +1,4 @@
-﻿namespace Bazaar.FbbInventory.ServiceIntegration.IntegrationEvents;
+﻿namespace Bazaar.Transport.ServiceIntegration.IntegrationEvents;
 
 public record LotUnitsLabeledForReturnIntegrationEvent(
     IEnumerable<UnitsFromLot> UnitsFromLots,

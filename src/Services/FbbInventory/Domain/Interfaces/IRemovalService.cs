@@ -2,8 +2,11 @@
 
 public interface IRemovalService
 {
-    Result RequestRemovalForStockUnits(
-        IEnumerable<StockUnitsRemovalDto> removalRequests, RemovalMethod removalMethod);
-    Result RequestRemovalForLots(IEnumerable<string> lotNumbers, RemovalMethod removalMethod);
+    Result RequestReturnForProductStocks(
+        IEnumerable<StockUnitsRemovalDto> removalRequests, string deliveryAddress);
+    Result RequestDisposalForProductStocks(
+        IEnumerable<StockUnitsRemovalDto> removalRequests);
+    Result RequestReturnForLots(IEnumerable<string> lotNumbers, string deliveryAddress);
+    Result RequestDisposalForLots(IEnumerable<string> lotNumbers);
     void RequestDisposalForLotsUnfulfillableBeyondPolicyDuration();
 }

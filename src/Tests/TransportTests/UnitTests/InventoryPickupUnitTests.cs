@@ -34,7 +34,7 @@ public class InventoryPickupUnitTests
         var pickup = new InventoryPickup(_validLocation, _validInventories,
             _validPickupTime, _validSchedulerId);
 
-        Assert.True(DateTime.Now - pickup.ScheduledAt < TimeSpan.FromSeconds(1));
+        Assert.True(DateTime.Now - pickup.TimeScheduledAt < TimeSpan.FromSeconds(1));
         Assert.Equal(InventoryPickupStatus.Scheduled, pickup.Status);
         Assert.Null(pickup.CancelReason);
     }

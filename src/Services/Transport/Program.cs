@@ -8,12 +8,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 #region Register application services
+builder.Services.AddScoped<InventoryReturnProcessService>();
 builder.Services.AddScoped<IEstimationService, BasicEstimationService>();
 builder.Services.AddScoped<IDeliveryProcessService, DeliveryProcessService>();
 builder.Services.AddScoped<IPickupProcessService, PickupProcessService>();
 
 builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
 builder.Services.AddScoped<IInventoryPickupRepository, InventoryPickupRepository>();
+builder.Services.AddScoped<IInventoryReturnRepository, InventoryReturnRepository>();
 
 builder.Services.RegisterEventBus(builder.Configuration);
 
@@ -103,6 +105,7 @@ public static class EventBusExtensionMethods
                 retryCount);
         });
         services.AddTransient<ProductFbbInventoryDeletedIntegrationEventHandler>();
+        services.AddTransient<LotUnitsLabeledForReturnIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -111,5 +114,8 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             ProductFbbInventoryDeletedIntegrationEvent,
             ProductFbbInventoryDeletedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            LotUnitsLabeledForReturnIntegrationEvent,
+            LotUnitsLabeledForReturnIntegrationEventHandler>();
     }
 }

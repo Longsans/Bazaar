@@ -20,8 +20,8 @@ public class DeliveryRepository : IDeliveryRepository
     {
         return _context.Deliveries
             .Include(x => x.PackageItems)
-            .Where(x => x.Status != DeliveryStatus.Completed
-                && x.Status != DeliveryStatus.Postponed);
+            .Where(x => x.Status == DeliveryStatus.Scheduled
+                || x.Status == DeliveryStatus.Delivering);
     }
 
     public Delivery Create(Delivery delivery)

@@ -59,12 +59,20 @@ public class ProductInventoryController : ControllerBase
     }
 
     [HttpPatch("request-removal")]
-    public IActionResult RequestRemovalForStockUnits(StockUnitsRemovalRequest request)
+    public IActionResult RequestRemovalForProductStocks(StockUnitsRemovalRequest request)
     {
-        return _removalService.RequestRemovalForStockUnits(
-            request.RemovalQuantities.Select(x => new StockUnitsRemovalDto(
-                x.ProductId, x.FulfillableUnits, x.UnfulfillableUnits)),
-            request.RemovalMethod)
+        if (request.RemovalMethod == RemovalMethod.Return
+            && string.IsNullOrWhiteSpace(request.DeliveryAddress))
+        {
+            return BadRequest(new { error = "Delivery address must be specified for return." });
+        }
+
+        var stockRemovalDtos = request.RemovalQuantities.Select(x => new StockUnitsRemovalDto(
+                x.ProductId, x.FulfillableUnits, x.UnfulfillableUnits));
+
+        return (request.RemovalMethod == RemovalMethod.Return
+            ? _removalService.RequestReturnForProductStocks(stockRemovalDtos, request.DeliveryAddress)
+            : _removalService.RequestDisposalForProductStocks(stockRemovalDtos))
             .ToActionResult(this);
     }
 

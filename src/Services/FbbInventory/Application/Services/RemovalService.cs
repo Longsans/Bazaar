@@ -18,8 +18,63 @@ public class RemovalService : IRemovalService
         _eventBus = eventBus;
     }
 
-    public Result RequestRemovalForStockUnits(
-        IEnumerable<StockUnitsRemovalDto> removalRequests, RemovalMethod removalMethod)
+    public Result RequestReturnForProductStocks(
+        IEnumerable<StockUnitsRemovalDto> removalRequests, string deliveryAddress)
+    {
+        return RequestRemovalForProductStocks(removalRequests, deliveryAddress);
+    }
+
+    public Result RequestDisposalForProductStocks(
+        IEnumerable<StockUnitsRemovalDto> removalRequests)
+    {
+        return RequestRemovalForProductStocks(removalRequests, null);
+    }
+
+    public Result RequestReturnForLots(IEnumerable<string> lotNumbers,
+        string deliveryAddress)
+    {
+        return RequestRemovalForLots(lotNumbers, deliveryAddress);
+    }
+
+    public Result RequestDisposalForLots(IEnumerable<string> lotNumbers)
+    {
+        return RequestRemovalForLots(lotNumbers, null);
+    }
+
+
+    public void RequestDisposalForLotsUnfulfillableBeyondPolicyDuration()
+    {
+        // this needs to be refactored into specs
+        var lotsToBeRemoved = _lotRepo.GetUnfulfillables()
+            .Where(x => x.IsUnfulfillableBeyondPolicyDuration && x.HasUnitsInStock)
+            .ToList();
+
+        // this is bad
+        var sellersWithLotsToBeRemoved = _sellerInventoryRepo.GetAll()
+            .Join(lotsToBeRemoved, s => s.SellerId,
+                lot => lot.ProductInventory.SellerInventory.SellerId,
+                (s, lot) => new { s.SellerId, Lot = lot });
+
+        var disposeQuantities = sellersWithLotsToBeRemoved.Select(x =>
+            new LotUnitsLabeledForDisposal(x.Lot.LotNumber, x.Lot.UnitsInStock, x.SellerId))
+            .ToList();
+
+        foreach (var lot in sellersWithLotsToBeRemoved.Select(x => x.Lot))
+        {
+            lot.LabelUnitsInStockForRemoval(lot.UnitsInStock);
+        }
+        _lotRepo.UpdateRange(lotsToBeRemoved);
+
+        foreach (var disposeQtsGroup in disposeQuantities.GroupBy(x => x.InventoryOwnerId))
+        {
+            _eventBus.Publish(new LotUnitsLabeledForDisposalIntegrationEvent(
+                disposeQtsGroup, true));
+        }
+    }
+
+    #region Helpers
+    private Result RequestRemovalForProductStocks(
+        IEnumerable<StockUnitsRemovalDto> removalRequests, string? deliveryAddress)
     {
         var lotReturnQuantities = new Dictionary<Lot, uint>();
         foreach (var removal in removalRequests)
@@ -28,6 +83,16 @@ public class RemovalService : IRemovalService
             if (productInventory == null)
             {
                 return Result.NotFound($"Product inventory not found. ID: {removal.ProductId}.");
+            }
+            if (productInventory.FulfillableUnitsInStock < removal.FulfillableUnits)
+            {
+                return Result.Conflict(
+                    $"Not enough fulfillable stock for product: {productInventory.ProductId}");
+            }
+            if (productInventory.UnfulfillableUnitsInStock < removal.UnfulfillableUnits)
+            {
+                return Result.Conflict(
+                    $"Not enough unfulfillable stock for product: {productInventory.ProductId}");
             }
 
             LabelLotUnitsForRemovalAndRecordResult(
@@ -44,13 +109,19 @@ public class RemovalService : IRemovalService
         }
 
         _lotRepo.UpdateRange(lotReturnQuantities.Keys);
-        if (removalMethod == RemovalMethod.Return)
+        if (deliveryAddress != null)
         {
-            var returnItems = lotReturnQuantities.Select(x => new LotUnitsLabeledForReturn(
-                x.Key.LotNumber, x.Value, x.Key.ProductInventory.SellerInventory.SellerId));
-            foreach (var returnGroup in returnItems.GroupBy(x => x.InventoryOwnerId))
+            var returnItemsBySeller = lotReturnQuantities
+                .Select(x => new
+                {
+                    Item = new UnitsFromLot(x.Key.LotNumber, x.Value),
+                    x.Key.ProductInventory.SellerInventory.SellerId
+                })
+                .GroupBy(x => x.SellerId);
+            foreach (var returnGroup in returnItemsBySeller)
             {
-                _eventBus.Publish(new LotUnitsLabeledForReturnIntegrationEvent(returnGroup));
+                _eventBus.Publish(new LotUnitsLabeledForReturnIntegrationEvent(
+                    returnGroup.Select(x => x.Item), deliveryAddress, returnGroup.Key));
             }
         }
         else
@@ -66,7 +137,7 @@ public class RemovalService : IRemovalService
         return Result.Success();
     }
 
-    public Result RequestRemovalForLots(IEnumerable<string> lotNumbers, RemovalMethod removalMethod)
+    private Result RequestRemovalForLots(IEnumerable<string> lotNumbers, string? deliveryAddress)
     {
         var hasDuplicateLotNumbers = lotNumbers.GroupBy(x => x)
             .Any(g => g.Count() > 1);
@@ -85,7 +156,13 @@ public class RemovalService : IRemovalService
         if (notFoundLotNumber != null)
         {
             return Result.NotFound(
-                "Lot not found for lot number: {notFoundLotNumber}");
+                $"Lot not found for lot number: {notFoundLotNumber}");
+        }
+        var outOfStockLot = lots.FirstOrDefault(x => !x.HasUnitsInStock);
+        if (outOfStockLot != null)
+        {
+            return Result.Conflict(
+                $"Lot has no units in stock to remove: {outOfStockLot.LotNumber}");
         }
 
         var lotsBeforeRemoval = lots.Select(x =>
@@ -119,50 +196,19 @@ public class RemovalService : IRemovalService
 
         foreach (var lotGroup in lotsBeforeRemoval.GroupBy(x => x.SellerId))
         {
-            IntegrationEvent @event = removalMethod == RemovalMethod.Disposal
-                ? new LotUnitsLabeledForDisposalIntegrationEvent(
+            IntegrationEvent @event = deliveryAddress != null
+                ? new LotUnitsLabeledForReturnIntegrationEvent(
+                    lotGroup.Select(x => new UnitsFromLot(
+                        x.LotNumber, x.UnitsInStock)), deliveryAddress, lotGroup.Key)
+                : new LotUnitsLabeledForDisposalIntegrationEvent(
                     lotGroup.Select(x => new LotUnitsLabeledForDisposal(
-                        x.LotNumber, x.UnitsInStock, x.SellerId)), false)
-                : new LotUnitsLabeledForReturnIntegrationEvent(
-                    lotGroup.Select(x => new LotUnitsLabeledForReturn(
-                        x.LotNumber, x.UnitsInStock, x.SellerId)));
+                        x.LotNumber, x.UnitsInStock, x.SellerId)), false);
 
             _eventBus.Publish(@event);
         }
         return Result.Success();
     }
 
-    public void RequestDisposalForLotsUnfulfillableBeyondPolicyDuration()
-    {
-        // this needs to be refactored into specs
-        var lotsToBeRemoved = _lotRepo.GetUnfulfillables()
-            .Where(x => x.IsUnfulfillableBeyondPolicyDuration && x.HasUnitsInStock)
-            .ToList();
-
-        // this is bad
-        var sellersWithLotsToBeRemoved = _sellerInventoryRepo.GetAll()
-            .Join(lotsToBeRemoved, s => s.SellerId,
-                lot => lot.ProductInventory.SellerInventory.SellerId,
-                (s, lot) => new { s.SellerId, Lot = lot });
-
-        var disposeQuantities = sellersWithLotsToBeRemoved.Select(x =>
-            new LotUnitsLabeledForDisposal(x.Lot.LotNumber, x.Lot.UnitsInStock, x.SellerId))
-            .ToList();
-
-        foreach (var lot in sellersWithLotsToBeRemoved.Select(x => x.Lot))
-        {
-            lot.LabelUnitsInStockForRemoval(lot.UnitsInStock);
-        }
-        _lotRepo.UpdateRange(lotsToBeRemoved);
-
-        foreach (var disposeQtsGroup in disposeQuantities.GroupBy(x => x.InventoryOwnerId))
-        {
-            _eventBus.Publish(new LotUnitsLabeledForDisposalIntegrationEvent(
-                disposeQtsGroup, true));
-        }
-    }
-
-    #region Helpers
     private static void LabelLotUnitsForRemovalAndRecordResult(
         IEnumerable<Lot> lots, uint unitsToLabel, Dictionary<Lot, uint> removalRecords)
     {

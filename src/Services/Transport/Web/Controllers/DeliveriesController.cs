@@ -1,13 +1,13 @@
 ﻿namespace Bazaar.Transport.Web.Controllers;
 
-[Route("api/deliveries")]
+[Route("api/[controller]")]
 [ApiController]
-public class DeliveryController : ControllerBase
+public class DeliveriesController : ControllerBase
 {
     private readonly IDeliveryRepository _deliveryRepository;
     private readonly IDeliveryProcessService _deliveryProcessService;
 
-    public DeliveryController(
+    public DeliveriesController(
         IDeliveryRepository deliveryRepository, IDeliveryProcessService processService)
     {
         _deliveryRepository = deliveryRepository;

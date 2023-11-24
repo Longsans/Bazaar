@@ -89,6 +89,7 @@ public class PickupProcessService : IPickupProcessService
         }
     }
 
+    #region Helpers
     private Result ProceedWithPickup(
         int pickupId, Action<InventoryPickup> progression,
         bool publishStatusEvent = false,
@@ -125,4 +126,5 @@ public class PickupProcessService : IPickupProcessService
 
         return Result.Success();
     }
+    #endregion
 }

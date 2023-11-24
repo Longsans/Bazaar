@@ -28,7 +28,7 @@ public class DeliveryUnitTests
         var delivery = new Delivery(
             _validOrderId, _validAddress, _validPackageItems, _validDeliveryDate);
 
-        Assert.Equal(DateTime.Now.Date, delivery.ScheduledAtDate);
+        Assert.Equal(DateTime.Now.Date, delivery.TimeScheduledAt);
         Assert.Equal(DeliveryStatus.Scheduled, delivery.Status);
     }
 

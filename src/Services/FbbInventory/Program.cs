@@ -108,6 +108,8 @@ public static class EventBusExtensionMethods
         services.AddTransient<ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler>();
         services.AddTransient<DisposalOrderCompletedIntegrationEventHandler>();
         services.AddTransient<DisposalOrderCancelledIntegrationEventHandler>();
+        services.AddTransient<InventoryReturnCompletedIntegrationEventHandler>();
+        services.AddTransient<InventoryReturnCancelledIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -128,5 +130,11 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             DisposalOrderCancelledIntegrationEvent,
             DisposalOrderCancelledIntegrationEventHandler>();
+        eventBus.Subscribe<
+            InventoryReturnCompletedIntegrationEvent,
+            InventoryReturnCompletedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            InventoryReturnCancelledIntegrationEvent,
+            InventoryReturnCancelledIntegrationEventHandler>();
     }
 }
