@@ -34,17 +34,17 @@ namespace Transport.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ExpectedDeliveryDate")
+                    b.Property<DateTime>("EstimatedDeliveryTime")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("ScheduledAtDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("TimeScheduledAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -94,9 +94,6 @@ namespace Transport.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ScheduledAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("SchedulerId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -104,9 +101,45 @@ namespace Transport.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("TimeScheduledAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.ToTable("InventoryPickups");
+                });
+
+            modelBuilder.Entity("Bazaar.Transport.Domain.Entities.InventoryReturn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CancelReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DeliveryAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EstimatedDeliveryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InventoryOwnerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TimeScheduledAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InventoryReturns");
                 });
 
             modelBuilder.Entity("Bazaar.Transport.Domain.Entities.ProductInventory", b =>
@@ -134,6 +167,31 @@ namespace Transport.Infrastructure.Migrations
                     b.ToTable("InventoryItems");
                 });
 
+            modelBuilder.Entity("Bazaar.Transport.Domain.Entities.ReturnQuantity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("LotNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReturnId")
+                        .HasColumnType("int");
+
+                    b.Property<long>("Units")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReturnId");
+
+                    b.ToTable("ReturnQuantities");
+                });
+
             modelBuilder.Entity("Bazaar.Transport.Domain.Entities.DeliveryPackageItem", b =>
                 {
                     b.HasOne("Bazaar.Transport.Domain.Entities.Delivery", "Delivery")
@@ -156,6 +214,17 @@ namespace Transport.Infrastructure.Migrations
                     b.Navigation("Pickup");
                 });
 
+            modelBuilder.Entity("Bazaar.Transport.Domain.Entities.ReturnQuantity", b =>
+                {
+                    b.HasOne("Bazaar.Transport.Domain.Entities.InventoryReturn", "Return")
+                        .WithMany("ReturnQuantities")
+                        .HasForeignKey("ReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Return");
+                });
+
             modelBuilder.Entity("Bazaar.Transport.Domain.Entities.Delivery", b =>
                 {
                     b.Navigation("PackageItems");
@@ -164,6 +233,11 @@ namespace Transport.Infrastructure.Migrations
             modelBuilder.Entity("Bazaar.Transport.Domain.Entities.InventoryPickup", b =>
                 {
                     b.Navigation("ProductInventories");
+                });
+
+            modelBuilder.Entity("Bazaar.Transport.Domain.Entities.InventoryReturn", b =>
+                {
+                    b.Navigation("ReturnQuantities");
                 });
 #pragma warning restore 612, 618
         }

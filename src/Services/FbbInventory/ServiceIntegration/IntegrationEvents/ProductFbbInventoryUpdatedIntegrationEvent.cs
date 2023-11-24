@@ -1,4 +1,6 @@
 ﻿namespace Bazaar.FbbInventory.ServiceIntegration.IntegrationEvents;
 
 public record ProductFbbInventoryUpdatedIntegrationEvent(
-    string ProductId, uint UpdatedStock) : IntegrationEvent;
+    string ProductId, uint FulfillableStock, uint UnfulfillableStock,
+    uint FulfillableUnitsPendingRemoval,
+    uint UnfulfillableUnitsPendingRemoval) : IntegrationEvent;

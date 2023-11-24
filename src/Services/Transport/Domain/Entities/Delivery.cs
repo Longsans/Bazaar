@@ -5,15 +5,18 @@ public class Delivery
     public int Id { get; private set; }
     public int OrderId { get; private set; }
     public string DeliveryAddress { get; private set; }
-    public List<DeliveryPackageItem> PackageItems { get; private set; }
-    public DateTime ScheduledAtDate { get; private set; }
-    public DateTime ExpectedDeliveryDate { get; private set; }
+
+    public List<DeliveryPackageItem> _packageItems;
+    public IReadOnlyCollection<DeliveryPackageItem> PackageItems
+        => _packageItems.AsReadOnly();
+    public DateTime TimeScheduledAt { get; private set; }
+    public DateTime EstimatedDeliveryTime { get; private set; }
     public DeliveryStatus Status { get; private set; }
 
     public Delivery(
         int orderId, string deliveryAddress,
         IEnumerable<DeliveryPackageItem> packageItems,
-        DateTime expectedDeliveryDate)
+        DateTime estimateDeliveryTime)
     {
         if (string.IsNullOrWhiteSpace(deliveryAddress))
         {
@@ -25,17 +28,16 @@ public class Delivery
             throw new ArgumentNullException(nameof(packageItems),
                 "Package items cannot be empty.");
         }
-        if (expectedDeliveryDate < DateTime.Now.Date)
+        if (estimateDeliveryTime < DateTime.Now)
         {
             throw new ArgumentOutOfRangeException(
-                nameof(expectedDeliveryDate),
+                nameof(estimateDeliveryTime),
                 "Expected delivery date cannot be before current date.");
         }
 
         var hasDuplicateProducts = packageItems
             .GroupBy(x => x.ProductId)
-            .Select(g => g.Count())
-            .Any(c => c > 1);
+            .Any(g => g.Count() > 1);
         if (hasDuplicateProducts)
         {
             throw new ArgumentException(
@@ -44,9 +46,9 @@ public class Delivery
 
         OrderId = orderId;
         DeliveryAddress = deliveryAddress;
-        PackageItems = packageItems.ToList();
-        ScheduledAtDate = DateTime.Now.Date;
-        ExpectedDeliveryDate = expectedDeliveryDate.Date;
+        _packageItems = packageItems.ToList();
+        TimeScheduledAt = DateTime.Now;
+        EstimatedDeliveryTime = estimateDeliveryTime;
         Status = DeliveryStatus.Scheduled;
     }
 
@@ -79,10 +81,10 @@ public class Delivery
 
     public void Cancel()
     {
-        Status = Status != DeliveryStatus.Completed
+        Status = Status != DeliveryStatus.Completed && Status != DeliveryStatus.Cancelled
             ? DeliveryStatus.Cancelled
             : throw new InvalidOperationException(
-                "Cannot cancel a completed delivery.");
+                "Cannot cancel a completed or an already cancelled delivery.");
     }
 }
 

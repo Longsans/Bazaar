@@ -5,8 +5,8 @@ public class InventoryPickup
     public int Id { get; private set; }
     public string PickupLocation { get; private set; }
     public List<ProductInventory> ProductInventories { get; private set; }
+    public DateTime TimeScheduledAt { get; private set; }
     public DateTime EstimatedPickupTime { get; private set; }
-    public DateTime ScheduledAt { get; private set; }
     public string SchedulerId { get; private set; }
     public InventoryPickupStatus Status { get; private set; }
 
@@ -47,8 +47,8 @@ public class InventoryPickup
 
         PickupLocation = pickupLocation;
         ProductInventories = productInventories.ToList();
+        TimeScheduledAt = DateTime.Now;
         EstimatedPickupTime = estimatedPickupTime;
-        ScheduledAt = DateTime.Now;
         SchedulerId = schedulerId;
         Status = InventoryPickupStatus.Scheduled;
     }

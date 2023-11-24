@@ -4,16 +4,20 @@ public class BasicEstimationService : IEstimationService
 {
     private readonly TimeSpan _perDeliveryItemIncrement = TimeSpan.FromMinutes(4);  // 1 hour = 15 items
     private readonly TimeSpan _perPickupItemIncrement = TimeSpan.FromMinutes(1.2);  // 1 hour = 50 items
+    private readonly TimeSpan _perReturnUnitIncrement = TimeSpan.FromMinutes(2); // 1 hour = 30 items
 
     private readonly IDeliveryRepository _deliveryRepository;
     private readonly IInventoryPickupRepository _pickupRepository;
+    private readonly IInventoryReturnRepository _returnRepo;
 
     public BasicEstimationService(
         IDeliveryRepository deliveryRepository,
-        IInventoryPickupRepository pickupRepository)
+        IInventoryPickupRepository pickupRepository,
+        IInventoryReturnRepository returnRepository)
     {
         _deliveryRepository = deliveryRepository;
         _pickupRepository = pickupRepository;
+        _returnRepo = returnRepository;
     }
 
     public DateTime EstimateDeliveryCompletion(IEnumerable<DeliveryPackageItem> packageItems)
@@ -32,5 +36,14 @@ public class BasicEstimationService : IEstimationService
         var currentLoadDelay = numOfIncompletePickupUnits * _perPickupItemIncrement;
         var totalPickupUnits = pickupItems.Sum(item => item.NumberOfUnits);
         return DateTime.Now + currentLoadDelay + totalPickupUnits * _perPickupItemIncrement;
+    }
+
+    public DateTime EstimateInventoryReturnCompletion(IEnumerable<ReturnQuantity> returnQuantities)
+    {
+        var numOfIncompleteReturns = _returnRepo.GetIncomplete()
+            .Sum(x => x.ReturnQuantities.Sum(item => item.Units));
+        var currentLoadDelay = numOfIncompleteReturns * _perReturnUnitIncrement;
+        var totalReturnUnits = returnQuantities.Sum(item => item.Units);
+        return DateTime.Now + currentLoadDelay + totalReturnUnits * _perPickupItemIncrement;
     }
 }

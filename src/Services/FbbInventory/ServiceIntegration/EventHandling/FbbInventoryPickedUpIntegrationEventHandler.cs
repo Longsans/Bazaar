@@ -24,7 +24,7 @@ public class FbbInventoryPickedUpIntegrationEventHandler
             }
 
             // This should not throw exceeding stock threshold
-            productInventory.Restock(pickupInventory.StockUnits);
+            productInventory.AddFulfillableStock(pickupInventory.StockUnits);
             _productInventoryRepo.Update(productInventory);
         }
         await Task.CompletedTask;

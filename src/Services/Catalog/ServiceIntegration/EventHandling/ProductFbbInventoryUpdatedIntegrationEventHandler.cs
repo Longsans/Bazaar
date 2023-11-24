@@ -22,18 +22,18 @@ public class ProductFbbInventoryUpdatedIntegrationEventHandler
             return;
         }
 
-        if (@event.UpdatedStock == catalogItem.AvailableStock)
+        if (@event.FulfillableStock == catalogItem.AvailableStock)
         {
             return;
         }
 
-        if (@event.UpdatedStock < catalogItem.AvailableStock)
+        if (@event.FulfillableStock < catalogItem.AvailableStock)
         {
-            catalogItem.ReduceStock(catalogItem.AvailableStock - @event.UpdatedStock);
+            catalogItem.ReduceStock(catalogItem.AvailableStock - @event.FulfillableStock);
         }
         else
         {
-            catalogItem.Restock(@event.UpdatedStock - catalogItem.AvailableStock);
+            catalogItem.Restock(@event.FulfillableStock - catalogItem.AvailableStock);
         }
 
         _catalogRepo.Update(catalogItem);

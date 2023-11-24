@@ -8,8 +8,13 @@ public class TransportDbContext : DbContext
     {
         modelBuilder.Entity<InventoryPickup>()
             .HasMany(x => x.ProductInventories)
-            .WithOne(x => x.Pickup)
-            .HasForeignKey(x => x.PickupId);
+            .WithOne(p => p.Pickup)
+            .HasForeignKey(p => p.PickupId);
+
+        modelBuilder.Entity<InventoryReturn>()
+            .HasMany(x => x.ReturnQuantities)
+            .WithOne(r => r.Return)
+            .HasForeignKey(r => r.ReturnId);
     }
 
     public DbSet<Delivery> Deliveries { get; set; }
@@ -17,4 +22,7 @@ public class TransportDbContext : DbContext
 
     public DbSet<InventoryPickup> InventoryPickups { get; set; }
     public DbSet<ProductInventory> InventoryItems { get; set; }
+
+    public DbSet<InventoryReturn> InventoryReturns { get; set; }
+    public DbSet<ReturnQuantity> ReturnQuantities { get; set; }
 }

@@ -25,7 +25,7 @@ public class InventoryDisposalServiceUnitTests
     #endregion
 
     private readonly Mock<IProductInventoryRepository> _mockInventoryRepo;
-    private readonly InventoryDisposalService _service;
+    private readonly RemovalService _service;
 
     public InventoryDisposalServiceUnitTests()
     {
@@ -52,7 +52,7 @@ public class InventoryDisposalServiceUnitTests
         _mockInventoryRepo.Setup(x => x.GetAll())
             .Returns(inventories);
 
-        _service.MarkOverdueUnfulfillableInventoriesForDisposal();
+        _service.RequestDisposalForLotsUnfulfillableBeyondPolicyDuration();
 
         foreach (var (inven, index) in inventories.Select((x, i) => (x, i)))
         {
