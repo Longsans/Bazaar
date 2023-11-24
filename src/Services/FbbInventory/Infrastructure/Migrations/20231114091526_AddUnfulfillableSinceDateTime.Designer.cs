@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Inventory.Infrastructure.Migrations
 {
-    [DbContext(typeof(InventoryDbContext))]
+    [DbContext(typeof(FbbInventoryDbContext))]
     [Migration("20231114091526_AddUnfulfillableSinceDateTime")]
     partial class AddUnfulfillableSinceDateTime
     {

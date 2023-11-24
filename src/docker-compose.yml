@@ -14,6 +14,7 @@ services:
       - fbbinventory
       - ordering
       - basket
+      - disposal
       - all
   
   identity-sql:
@@ -38,6 +39,12 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - transport
+      - all
+
+  disposal-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - disposal
       - all
 
   basket-sql:
@@ -128,6 +135,18 @@ services:
       - rabbitmq
     profiles:
       - transport
+      - all
+
+  disposal-api:
+    image: ${DOCKER_REGISTRY-}disposal-api
+    build:
+      context: .
+      dockerfile: Services/Disposal/Dockerfile
+    depends_on:
+      - disposal-sql
+      - rabbitmq
+    profiles:
+      - disposal
       - all
 
   shopper-info-api:

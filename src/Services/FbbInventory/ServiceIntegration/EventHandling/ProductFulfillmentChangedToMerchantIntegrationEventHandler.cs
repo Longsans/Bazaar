@@ -22,7 +22,9 @@ public class ProductFulfillmentChangedToMerchantIntegrationEventHandler
             return;
         }
 
-        inventory.MarkAsUnfulfillable();
+        var unitsInStock = inventory.FulfillableUnitsInStock;
+        inventory.ReduceFulfillableStock(unitsInStock);
+        inventory.AddUnfulfillableStock(UnfulfillableCategory.Stranded, unitsInStock);
         _productInventoryRepo.Update(inventory);
         await Task.CompletedTask;
     }

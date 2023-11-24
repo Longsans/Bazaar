@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Inventory.Infrastructure.Migrations
 {
-    [DbContext(typeof(InventoryDbContext))]
+    [DbContext(typeof(FbbInventoryDbContext))]
     [Migration("20231110093004_AddHasPickupsInProgressColumn")]
     partial class AddHasPickupsInProgressColumn
     {

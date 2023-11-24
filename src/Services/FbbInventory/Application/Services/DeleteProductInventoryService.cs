@@ -1,4 +1,4 @@
-﻿namespace Bazaar.FbbInventory.Domain.Services;
+﻿namespace Bazaar.FbbInventory.Application.Services;
 
 public class DeleteProductInventoryService : IDeleteProductInventoryService
 {
@@ -38,10 +38,15 @@ public class DeleteProductInventoryService : IDeleteProductInventoryService
 
     private Result DeleteAndPublishEvent(ProductInventory productInventory)
     {
+        if (productInventory.TotalUnits > 0)
+        {
+            return Result.Conflict(
+                "Cannot delete product inventory while it still has units being used in operations.");
+        }
         if (productInventory.HasPickupsInProgress)
         {
             return Result.Conflict(
-                "Cannot delete product inventory when there are pickups in progress for it.");
+                "Cannot delete product inventory while there are pickups in progress for it.");
         }
 
         var sellerInventory = _sellerInventoryRepo.GetWithProductsById(

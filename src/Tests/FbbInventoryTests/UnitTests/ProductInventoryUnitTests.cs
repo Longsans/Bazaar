@@ -119,7 +119,7 @@ public class ProductInventoryUnitTests
         var inventory = GetTestInventory(initialStock);
         uint restockUnits = 100;
 
-        inventory.Restock(restockUnits);
+        inventory.AddFulfillableStock(restockUnits);
 
         Assert.Equal(initialStock + restockUnits, inventory.UnitsInStock);
         Assert.Equal(InventoryStatus.Ready, inventory.Status);
@@ -132,7 +132,7 @@ public class ProductInventoryUnitTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            inventory.Restock(0);
+            inventory.AddFulfillableStock(0);
         });
     }
 
@@ -143,7 +143,7 @@ public class ProductInventoryUnitTests
 
         Assert.Throws<ExceedingMaxStockThresholdException>(() =>
         {
-            inventory.Restock(10000);
+            inventory.AddFulfillableStock(10000);
         });
     }
 

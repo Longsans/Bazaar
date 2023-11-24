@@ -7,44 +7,64 @@ public class ProductInventoryController : ControllerBase
     private readonly IProductInventoryRepository _productInventoryRepo;
     private readonly IUpdateProductStockService _updateProductStockService;
     private readonly IDeleteProductInventoryService _deleteService;
-    private readonly IInventoryDisposalService _disposalService;
+    private readonly IRemovalService _removalService;
 
     public ProductInventoryController(
         IProductInventoryRepository productInventoryRepo,
         IUpdateProductStockService updateStockService,
         IDeleteProductInventoryService deleteService,
-        IInventoryDisposalService disposalService)
+        IRemovalService disposalService)
     {
         _productInventoryRepo = productInventoryRepo;
         _updateProductStockService = updateStockService;
         _deleteService = deleteService;
-        _disposalService = disposalService;
+        _removalService = disposalService;
     }
 
     [HttpGet("{productId}")]
-    public ActionResult<ProductInventory> GetByProductId(string productId)
+    public ActionResult<ProductInventoryResponse> GetByProductId(string productId)
     {
         var productInventory = _productInventoryRepo.GetByProductId(productId);
         if (productInventory == null)
         {
             return NotFound();
         }
-        return productInventory;
+        return new ProductInventoryResponse(productInventory);
     }
 
     [HttpPatch("{productId}/reduce-stock")]
     public IActionResult ReduceStock(string productId, ReduceProductStockRequest request)
     {
         return _updateProductStockService
-            .ReduceStock(productId, request.StockUnitsToReduce)
+            .ReduceStock(productId,
+                request.FulfillableUnits, request.UnfulfillableUnits)
             .ToActionResult(this);
     }
 
-    [HttpPatch("{productId}/restock")]
-    public IActionResult Restock(string productId, RestockProductRequest request)
+    [HttpPatch("{productId}/add-fulfillable")]
+    public IActionResult AddFulfillableStock(string productId, AddFulfillableStockRequest request)
     {
         return _updateProductStockService
-            .Restock(productId, request.UnitsToRestock)
+            .AddFulfillableStock(productId, request.Units)
+            .ToActionResult(this);
+    }
+
+    [HttpPatch("{productId}/add-unfulfillable")]
+    public IActionResult AddUnfulfillableStock(string productId, AddUnfulfillableStockRequest request)
+    {
+        return _updateProductStockService
+            .AddUnfulfillableStock(productId,
+                request.UnfulfillableCategory, request.Units)
+            .ToActionResult(this);
+    }
+
+    [HttpPatch("request-removal")]
+    public IActionResult RequestRemovalForStockUnits(StockUnitsRemovalRequest request)
+    {
+        return _removalService.RequestRemovalForStockUnits(
+            request.RemovalQuantities.Select(x => new StockUnitsRemovalDto(
+                x.ProductId, x.FulfillableUnits, x.UnfulfillableUnits)),
+            request.RemovalMethod)
             .ToActionResult(this);
     }
 
@@ -53,32 +73,5 @@ public class ProductInventoryController : ControllerBase
     {
         return _deleteService.DeleteProductInventory(productId)
             .ToActionResult(this);
-    }
-
-    [HttpPatch]
-    public IActionResult MarkOverdueUnfulfillableInventoriesForDisposal(
-        bool overdueUnfulfillable, MarkInventoriesToBeDisposedRequest request)
-    {
-        if (!request.ToBeDisposed)
-        {
-            return NoContent();
-        }
-        else if (!overdueUnfulfillable)
-        {
-            return BadRequest();
-        }
-
-        _disposalService.MarkOverdueUnfulfillableInventoriesForDisposal();
-        return NoContent();
-    }
-
-    [HttpDelete]
-    public IActionResult DisposeMarkedInventories(bool toBeDisposed)
-    {
-        if (toBeDisposed)
-        {
-            _disposalService.DisposeMarkedInventories();
-        }
-        return NoContent();
     }
 }

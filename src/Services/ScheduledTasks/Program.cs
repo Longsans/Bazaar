@@ -12,7 +12,7 @@ builder.Services.AddHangfire(configuration => configuration
 builder.Services.AddHangfireServer();
 
 // Background jobs
-builder.Services.AddHttpClient<MarkOverdueUnfulfillableFbbInventoriesJob>();
+builder.Services.AddHttpClient<RequestDisposalForLotsUbpdJob>();
 
 var app = builder.Build();
 
@@ -51,9 +51,9 @@ app.UseHangfireDashboard(options: new DashboardOptions
     }
 });
 
-RecurringJob.AddOrUpdate(nameof(MarkOverdueUnfulfillableFbbInventoriesJob),
+RecurringJob.AddOrUpdate(nameof(RequestDisposalForLotsUbpdJob),
     () => app.Services
-        .GetRequiredService<MarkOverdueUnfulfillableFbbInventoriesJob>()
+        .GetRequiredService<RequestDisposalForLotsUbpdJob>()
         .ExecuteAsync(),
     Cron.Daily);
 

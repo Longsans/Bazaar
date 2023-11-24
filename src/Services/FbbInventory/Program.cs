@@ -8,17 +8,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 #region Register application services
-builder.Services.AddDbContext<InventoryDbContext>(options =>
+builder.Services.AddDbContext<FbbInventoryDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
 builder.Services.AddScoped<IUpdateProductStockService, UpdateProductStockService>();
 builder.Services.AddScoped<IDeleteProductInventoryService, DeleteProductInventoryService>();
-builder.Services.AddScoped<IInventoryDisposalService, InventoryDisposalService>();
+builder.Services.AddScoped<IRemovalService, RemovalService>();
 
 builder.Services.AddScoped<ISellerInventoryRepository, SellerInventoryRepository>();
 builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
+builder.Services.AddScoped<ILotRepository, LotRepository>();
 
 builder.Services.RegisterEventBus(builder.Configuration);
 
@@ -43,7 +44,7 @@ app.ConfigureEventBus();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<FbbInventoryDbContext>();
     await dbContext.Seed();
 }
 
@@ -105,6 +106,8 @@ public static class EventBusExtensionMethods
         services.AddTransient<CatalogItemDeletedIntegrationEventHandler>();
         services.AddTransient<FbbInventoryPickedUpIntegrationEventHandler>();
         services.AddTransient<ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler>();
+        services.AddTransient<DisposalOrderCompletedIntegrationEventHandler>();
+        services.AddTransient<DisposalOrderCancelledIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -119,5 +122,11 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             ProductFbbInventoryPickupsStatusChangedIntegrationEvent,
             ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            DisposalOrderCompletedIntegrationEvent,
+            DisposalOrderCompletedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            DisposalOrderCancelledIntegrationEvent,
+            DisposalOrderCancelledIntegrationEventHandler>();
     }
 }

@@ -1,0 +1,14 @@
+﻿global using Ardalis.Result;
+global using Bazaar.BuildingBlocks.EventBus;
+global using Bazaar.BuildingBlocks.EventBus.Abstractions;
+global using Bazaar.BuildingBlocks.EventBus.Events;
+global using Bazaar.BuildingBlocks.EventBusRabbitMQ;
+global using Bazaar.Disposal.Domain.Entities;
+global using Bazaar.Disposal.Domain.Interfaces;
+global using Bazaar.Disposal.Domain.Services;
+global using Bazaar.Disposal.Infrastructure.Database;
+global using Bazaar.Disposal.Infrastructure.Repositories;
+global using Bazaar.Disposal.ServiceIntegration.EventHandling;
+global using Bazaar.Disposal.ServiceIntegration.IntegrationEvents;
+global using Microsoft.EntityFrameworkCore;
+global using RabbitMQ.Client;

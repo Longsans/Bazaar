@@ -1,13 +1,15 @@
 ﻿namespace Bazaar.ScheduledTasks.BackgroundJobs;
 
-public class MarkOverdueUnfulfillableFbbInventoriesJob : IBackgroundJob
+// Request disposal for Lots unfulfillable beyond policy duration
+public class RequestDisposalForLotsUbpdJob : IBackgroundJob
 {
     private readonly HttpClient _httpClient;
     private readonly string _fbbInventoryUri;
-    private readonly ILogger<MarkOverdueUnfulfillableFbbInventoriesJob> _logger;
+    private readonly ILogger<RequestDisposalForLotsUbpdJob> _logger;
 
-    public MarkOverdueUnfulfillableFbbInventoriesJob(HttpClient httpClient, IConfiguration config,
-        ILogger<MarkOverdueUnfulfillableFbbInventoriesJob> logger)
+    public RequestDisposalForLotsUbpdJob(
+        HttpClient httpClient, IConfiguration config,
+        ILogger<RequestDisposalForLotsUbpdJob> logger)
     {
         _httpClient = httpClient;
         _fbbInventoryUri = config["FbbInventoryApi"]!;
@@ -16,11 +18,11 @@ public class MarkOverdueUnfulfillableFbbInventoriesJob : IBackgroundJob
 
     public async Task ExecuteAsync()
     {
-        var requestBody = new MarkInventoriesToBeDisposedRequest(true);
+        var requestBody = new LotsUbpdDisposalRequest(true);
         var patchContent = new StringContent(JsonSerializer.Serialize(requestBody),
             System.Text.Encoding.UTF8, "application/json");
         var response = await _httpClient.PatchAsync(
-            OverdueUnfulfillableProductInventoriesEndpoint, patchContent);
+            RequestDisposalForLotsUbpdEndpoint, patchContent);
 
         if (response.IsSuccessStatusCode)
         {
@@ -34,6 +36,6 @@ public class MarkOverdueUnfulfillableFbbInventoriesJob : IBackgroundJob
         }
     }
 
-    private string OverdueUnfulfillableProductInventoriesEndpoint
-        => $"{_fbbInventoryUri}/api/product-inventories?overdueUnfulfillable=true";
+    private string RequestDisposalForLotsUbpdEndpoint
+        => $"{_fbbInventoryUri}/api/lots/unf-disposal-requests";
 }

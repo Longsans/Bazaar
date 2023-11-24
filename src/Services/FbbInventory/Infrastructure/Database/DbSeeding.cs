@@ -1,8 +1,8 @@
 ﻿namespace Bazaar.FbbInventory.Infrastructure.Database;
 
-public static class InventoryDbSeeding
+public static class DbSeeding
 {
-    public static async Task Seed(this InventoryDbContext context)
+    public static async Task Seed(this FbbInventoryDbContext context)
     {
         await context.Database.EnsureDeletedAsync();
         await context.Database.MigrateAsync();
@@ -12,7 +12,7 @@ public static class InventoryDbSeeding
         await context.SaveChangesAsync();
 
         var productInventory = new ProductInventory(
-            "PROD-1", 100, 10, 2000, sellerInventory.Id);
+            "PROD-1", 100, 30, 20, 10, 2000, sellerInventory.Id);
         context.ProductInventories.Add(productInventory);
         await context.SaveChangesAsync();
     }

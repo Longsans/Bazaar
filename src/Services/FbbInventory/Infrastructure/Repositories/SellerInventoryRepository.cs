@@ -1,14 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace Bazaar.FbbInventory.Infrastructure.Repositories;
+﻿namespace Bazaar.FbbInventory.Infrastructure.Repositories;
 
 public class SellerInventoryRepository : ISellerInventoryRepository
 {
-    private readonly InventoryDbContext _context;
+    private readonly FbbInventoryDbContext _context;
 
-    public SellerInventoryRepository(InventoryDbContext context)
+    public SellerInventoryRepository(FbbInventoryDbContext context)
     {
         _context = context;
+    }
+
+    public IEnumerable<SellerInventory> GetAll()
+    {
+        return _context.SellerInventories;
     }
 
     public SellerInventory? GetWithProductsById(int id)
