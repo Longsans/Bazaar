@@ -23,7 +23,7 @@ public class ProductFulfillmentChangedToMerchantIntegrationEventHandler
         }
 
         var unitsInStock = inventory.FulfillableUnitsInStock;
-        inventory.ReduceFulfillableStock(unitsInStock);
+        inventory.ReduceFulfillableStockFromOldToNew(unitsInStock);
         inventory.AddUnfulfillableStock(UnfulfillableCategory.Stranded, unitsInStock);
         _productInventoryRepo.Update(inventory);
         await Task.CompletedTask;

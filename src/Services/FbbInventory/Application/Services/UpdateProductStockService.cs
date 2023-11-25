@@ -20,11 +20,11 @@ public class UpdateProductStockService : IUpdateProductStockService
         {
             if (fulfillableUnits > 0)
             {
-                inventory.ReduceFulfillableStock(fulfillableUnits);
+                inventory.ReduceFulfillableStockFromOldToNew(fulfillableUnits);
             }
             if (unfulfillableUnits > 0)
             {
-                inventory.ReduceUnfulfillableStock(unfulfillableUnits);
+                inventory.ReduceUnfulfillableStockFromOldToNew(unfulfillableUnits);
             }
         });
     }
@@ -50,11 +50,11 @@ public class UpdateProductStockService : IUpdateProductStockService
         {
             if (fulfillableUnits > 0)
             {
-                inventory.LabelFulfillableUnitsForRemoval(fulfillableUnits);
+                inventory.LabelFulfillableUnitsFromOldToNewForRemoval(fulfillableUnits);
             }
             if (unfulfillableUnits > 0)
             {
-                inventory.LabelUnfulfillableUnitsForRemoval(unfulfillableUnits);
+                inventory.LabelUnfulfillableUnitsFromOldToNewForRemoval(unfulfillableUnits);
             }
         });
     }
