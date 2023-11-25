@@ -1,10 +1,10 @@
 ﻿namespace Bazaar.FbbInventory.Domain.Exceptions;
 
-public class NotEnoughStockException : Exception
+public class NotEnoughUnitsException : Exception
 {
-    public NotEnoughStockException()
+    public NotEnoughUnitsException()
         : base("Product does not have enough stock.") { }
 
-    public NotEnoughStockException(string message)
+    public NotEnoughUnitsException(string message)
         : base(message) { }
 }

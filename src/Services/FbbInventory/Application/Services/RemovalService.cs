@@ -189,7 +189,7 @@ public class RemovalService : IRemovalService
                 ErrorMessage = ex.Message
             });
         }
-        catch (NotEnoughStockException ex)
+        catch (NotEnoughUnitsException ex)
         {
             return Result.Conflict(ex.Message);
         }

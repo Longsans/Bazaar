@@ -12,6 +12,12 @@ public class UnfulfillableLot : Lot
         uint unitsInStock, UnfulfillableCategory unfulfillableCategory)
         : base(inventory, unitsInStock)
     {
+        if (!Enum.IsDefined(unfulfillableCategory))
+        {
+            throw new ArgumentOutOfRangeException(nameof(unfulfillableCategory),
+                "Value does not correspond to any Unfulfillable category.");
+        }
+
         UnfulfillableCategory = unfulfillableCategory;
         DateUnfulfillableSince = DateTime.Now.Date;
     }

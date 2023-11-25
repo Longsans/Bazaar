@@ -82,7 +82,7 @@ public class UpdateProductStockService : IUpdateProductStockService
         {
             update(productInventory);
         }
-        catch (Exception ex) when (ex is NotEnoughStockException
+        catch (Exception ex) when (ex is NotEnoughUnitsException
             || ex is ExceedingMaxStockThresholdException)
         {
             return Result.Conflict(ex.Message);

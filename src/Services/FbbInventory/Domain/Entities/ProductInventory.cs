@@ -78,7 +78,7 @@ public class ProductInventory
         }
         if (units > FulfillableUnitsInStock)
         {
-            throw new NotEnoughStockException("Not enough fulfillable stock.");
+            throw new NotEnoughUnitsException("Not enough fulfillable stock.");
         }
 
         var fulfillableLotsFromOldest = _fulfillableLots
@@ -98,7 +98,7 @@ public class ProductInventory
         }
         if (units > UnfulfillableUnitsInStock)
         {
-            throw new NotEnoughStockException("Not enough unfulfillable stock.");
+            throw new NotEnoughUnitsException("Not enough unfulfillable stock.");
         }
 
         var unfulfillableLotsFromOldest = _unfulfillableLots
@@ -118,7 +118,7 @@ public class ProductInventory
         }
         if (units > FulfillableUnitsInStock)
         {
-            throw new NotEnoughStockException("Not enough fulfillable stock.");
+            throw new NotEnoughUnitsException("Not enough fulfillable stock.");
         }
 
         var fulfillableLotsFromOldest = _fulfillableLots
@@ -136,7 +136,7 @@ public class ProductInventory
         }
         if (units > UnfulfillableUnitsInStock)
         {
-            throw new NotEnoughStockException("Not enough unfulfillable stock.");
+            throw new NotEnoughUnitsException("Not enough unfulfillable stock.");
         }
 
         var unfulfillableLotsFromOldest = _unfulfillableLots
