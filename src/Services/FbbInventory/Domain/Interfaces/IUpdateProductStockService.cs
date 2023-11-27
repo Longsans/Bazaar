@@ -9,7 +9,4 @@ public interface IUpdateProductStockService
 
     Result AddUnfulfillableStock(string productId,
         UnfulfillableCategory category, uint units);
-
-    Result LabelStockUnitsForRemoval(string productId,
-        uint fulfillableUnits, uint unfulfillableUnits);
 }

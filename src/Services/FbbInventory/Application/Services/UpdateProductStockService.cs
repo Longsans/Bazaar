@@ -42,23 +42,6 @@ public class UpdateProductStockService : IUpdateProductStockService
             inventory => inventory.AddUnfulfillableStock(category, units));
     }
 
-    public Result LabelStockUnitsForRemoval(string productId,
-        uint fulfillableUnits, uint unfulfillableUnits)
-    {
-        return UpdateStockAndPublishEvent(productId,
-            fulfillableUnits + unfulfillableUnits, inventory =>
-        {
-            if (fulfillableUnits > 0)
-            {
-                inventory.LabelFulfillableUnitsFromOldToNewForRemoval(fulfillableUnits);
-            }
-            if (unfulfillableUnits > 0)
-            {
-                inventory.LabelUnfulfillableUnitsFromOldToNewForRemoval(unfulfillableUnits);
-            }
-        });
-    }
-
     #region Helpers
     private Result UpdateStockAndPublishEvent(
         string productId, uint units, Action<ProductInventory> update)

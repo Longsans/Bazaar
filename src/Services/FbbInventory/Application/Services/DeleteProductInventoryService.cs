@@ -2,16 +2,13 @@
 
 public class DeleteProductInventoryService : IDeleteProductInventoryService
 {
-    private readonly ISellerInventoryRepository _sellerInventoryRepo;
     private readonly IProductInventoryRepository _productInventoryRepo;
     private readonly IEventBus _eventBus;
 
     public DeleteProductInventoryService(
-        ISellerInventoryRepository sellerInventoryRepo,
         IProductInventoryRepository productInventoryRepo,
         IEventBus eventBus)
     {
-        _sellerInventoryRepo = sellerInventoryRepo;
         _productInventoryRepo = productInventoryRepo;
         _eventBus = eventBus;
     }
@@ -49,10 +46,7 @@ public class DeleteProductInventoryService : IDeleteProductInventoryService
                 "Cannot delete product inventory while there are pickups in progress for it.");
         }
 
-        var sellerInventory = _sellerInventoryRepo.GetWithProductsById(
-            productInventory.SellerInventoryId)!;
-        sellerInventory.ProductInventories.Remove(productInventory);
-        _sellerInventoryRepo.Update(sellerInventory);
+        productInventory.SellerInventory.ProductInventories.Remove(productInventory);
         _eventBus.Publish(
             new ProductFbbInventoryDeletedIntegrationEvent(productInventory.ProductId));
 

@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace FbbInventoryTests.UnitTests;
 
 public class ProductInventoryUnitTests
@@ -201,80 +199,6 @@ public class ProductInventoryUnitTests
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
             inventory.ReduceUnfulfillableStockFromOldToNew(inventory.UnfulfillableUnitsInStock + 1);
-        });
-    }
-
-    // FULFILLABLE LABELING
-    [Fact]
-    public void LabelFulfillableUnitsFromOldToNewForRemoval_MovesLotUnitsToPendingRemoval_WhenAllValid()
-    {
-        var inventory = GetTestInventory();
-        uint units = 150;
-        uint remainingUnitsInStock = inventory.FulfillableUnitsInStock - units;
-        uint pendingRemovalUnitsAfterLabeling = inventory.FulfillableUnitsPendingRemoval + units;
-
-        inventory.LabelFulfillableUnitsFromOldToNewForRemoval(units);
-
-        Assert.Equal(remainingUnitsInStock, inventory.FulfillableUnitsInStock);
-        Assert.Equal(pendingRemovalUnitsAfterLabeling, inventory.FulfillableUnitsPendingRemoval);
-    }
-
-    [Fact]
-    public void LabelFulfillableUnitsFromOldToNewForRemoval_ThrowsArgOutOfRangeException_WhenUnitsToReduceIsZero()
-    {
-        var inventory = GetTestInventory();
-
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            inventory.LabelFulfillableUnitsFromOldToNewForRemoval(0u);
-        });
-    }
-
-    [Fact]
-    public void LabelFulfillableUnitsFromOldToNewForRemoval_ThrowsNotEnoughUnitsException_WhenUnitsToLabelIsMoreThanFulfillableUnits()
-    {
-        var inventory = GetTestInventory();
-
-        Assert.Throws<NotEnoughUnitsException>(() =>
-        {
-            inventory.LabelFulfillableUnitsFromOldToNewForRemoval(inventory.FulfillableUnitsInStock + 1);
-        });
-    }
-
-    // UNFULFILLABLE LABELING
-    [Fact]
-    public void LabelUnfulfillableUnitsFromOldToNewForRemoval_MovesLotUnitsToPendingRemoval_WhenAllValid()
-    {
-        var inventory = GetTestInventory();
-        uint units = 35;
-        uint remainingUnitsInStock = inventory.UnfulfillableUnitsInStock - units;
-        uint pendingRemovalUnitsAfterLabeling = inventory.UnfulfillableUnitsPendingRemoval + units;
-
-        inventory.LabelUnfulfillableUnitsFromOldToNewForRemoval(units);
-
-        Assert.Equal(remainingUnitsInStock, inventory.UnfulfillableUnitsInStock);
-        Assert.Equal(pendingRemovalUnitsAfterLabeling, inventory.UnfulfillableUnitsPendingRemoval);
-    }
-
-    [Fact]
-    public void LabelUnfulfillableUnitsFromOldToNewForRemoval_ThrowsArgOutOfRangeException_WhenUnitsToReduceIsZero()
-    {
-        var inventory = GetTestInventory();
-
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            inventory.LabelUnfulfillableUnitsFromOldToNewForRemoval(0u);
-        });
-    }
-
-    [Fact]
-    public void LabelUnfulfillableUnitsFromOldToNewForRemoval_ThrowsNotEnoughUnitsException_WhenUnitsToLabelIsMoreThanUnfulfillableUnits()
-    {
-        var inventory = GetTestInventory();
-
-        Assert.Throws<NotEnoughUnitsException>(() =>
-        {
-            inventory.LabelUnfulfillableUnitsFromOldToNewForRemoval(inventory.UnfulfillableUnitsInStock + 1);
         });
     }
 

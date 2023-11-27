@@ -111,42 +111,6 @@ public class ProductInventory
             _unfulfillableLots, units);
     }
 
-    public void LabelFulfillableUnitsFromOldToNewForRemoval(uint units)
-    {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to reduce cannot be 0.");
-        }
-        if (units > FulfillableUnitsInStock)
-        {
-            throw new NotEnoughUnitsException("Not enough fulfillable stock.");
-        }
-
-        var fulfillableLotsFromOldest = _fulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.DateEnteredStorage);
-        LabelUnitsForRemovalFromOldToNew(fulfillableLotsFromOldest, units);
-    }
-
-    public void LabelUnfulfillableUnitsFromOldToNewForRemoval(uint units)
-    {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to reduce cannot be 0.");
-        }
-        if (units > UnfulfillableUnitsInStock)
-        {
-            throw new NotEnoughUnitsException("Not enough unfulfillable stock.");
-        }
-
-        var unfulfillableLotsFromOldest = _unfulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.DateUnfulfillableSince);
-        LabelUnitsForRemovalFromOldToNew(unfulfillableLotsFromOldest, units);
-    }
-
     public void AddFulfillableStock(uint units)
     {
         if (units == 0)
