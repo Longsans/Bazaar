@@ -71,8 +71,8 @@ public class ProductInventoryController : ControllerBase
                 x.ProductId, x.FulfillableUnits, x.UnfulfillableUnits));
 
         return (request.RemovalMethod == RemovalMethod.Return
-            ? _removalService.RequestReturnForProductStocks(stockRemovalDtos, request.DeliveryAddress)
-            : _removalService.RequestDisposalForProductStocks(stockRemovalDtos))
+            ? _removalService.RequestReturnForProductStocksFromOldToNew(stockRemovalDtos, request.DeliveryAddress)
+            : _removalService.RequestDisposalForProductStocksFromOldToNew(stockRemovalDtos))
             .ToActionResult(this);
     }
 

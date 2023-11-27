@@ -20,11 +20,11 @@ public class UpdateProductStockService : IUpdateProductStockService
         {
             if (fulfillableUnits > 0)
             {
-                inventory.ReduceFulfillableStock(fulfillableUnits);
+                inventory.ReduceFulfillableStockFromOldToNew(fulfillableUnits);
             }
             if (unfulfillableUnits > 0)
             {
-                inventory.ReduceUnfulfillableStock(unfulfillableUnits);
+                inventory.ReduceUnfulfillableStockFromOldToNew(unfulfillableUnits);
             }
         });
     }
@@ -40,23 +40,6 @@ public class UpdateProductStockService : IUpdateProductStockService
     {
         return UpdateStockAndPublishEvent(productId, units,
             inventory => inventory.AddUnfulfillableStock(category, units));
-    }
-
-    public Result LabelStockUnitsForRemoval(string productId,
-        uint fulfillableUnits, uint unfulfillableUnits)
-    {
-        return UpdateStockAndPublishEvent(productId,
-            fulfillableUnits + unfulfillableUnits, inventory =>
-        {
-            if (fulfillableUnits > 0)
-            {
-                inventory.LabelFulfillableUnitsForRemoval(fulfillableUnits);
-            }
-            if (unfulfillableUnits > 0)
-            {
-                inventory.LabelUnfulfillableUnitsForRemoval(unfulfillableUnits);
-            }
-        });
     }
 
     #region Helpers
@@ -82,7 +65,7 @@ public class UpdateProductStockService : IUpdateProductStockService
         {
             update(productInventory);
         }
-        catch (Exception ex) when (ex is NotEnoughStockException
+        catch (Exception ex) when (ex is NotEnoughUnitsException
             || ex is ExceedingMaxStockThresholdException)
         {
             return Result.Conflict(ex.Message);

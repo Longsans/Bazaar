@@ -24,6 +24,8 @@ public class ProductInventory
     public uint TotalUnits => FulfillableUnitsInStock + FulfillableUnitsPendingRemoval
             + UnfulfillableUnitsInStock + UnfulfillableUnitsPendingRemoval;
 
+    public uint RemainingCapacity => MaxStockThreshold - TotalUnits;
+
     public uint RestockThreshold { get; private set; }
     public uint MaxStockThreshold { get; private set; }
     public SellerInventory SellerInventory { get; private set; }
@@ -69,7 +71,7 @@ public class ProductInventory
     private ProductInventory() { }
 
     #region Domain logic
-    public void ReduceFulfillableStock(uint units)
+    public void ReduceFulfillableStockFromOldToNew(uint units)
     {
         if (units == 0)
         {
@@ -78,7 +80,7 @@ public class ProductInventory
         }
         if (units > FulfillableUnitsInStock)
         {
-            throw new NotEnoughStockException("Not enough fulfillable stock.");
+            throw new NotEnoughUnitsException("Not enough fulfillable stock.");
         }
 
         var fulfillableLotsFromOldest = _fulfillableLots
@@ -89,7 +91,7 @@ public class ProductInventory
             _fulfillableLots, units);
     }
 
-    public void ReduceUnfulfillableStock(uint units)
+    public void ReduceUnfulfillableStockFromOldToNew(uint units)
     {
         if (units == 0)
         {
@@ -98,7 +100,7 @@ public class ProductInventory
         }
         if (units > UnfulfillableUnitsInStock)
         {
-            throw new NotEnoughStockException("Not enough unfulfillable stock.");
+            throw new NotEnoughUnitsException("Not enough unfulfillable stock.");
         }
 
         var unfulfillableLotsFromOldest = _unfulfillableLots
@@ -109,42 +111,6 @@ public class ProductInventory
             _unfulfillableLots, units);
     }
 
-    public void LabelFulfillableUnitsForRemoval(uint units)
-    {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to reduce cannot be 0.");
-        }
-        if (units > FulfillableUnitsInStock)
-        {
-            throw new NotEnoughStockException("Not enough fulfillable stock.");
-        }
-
-        var fulfillableLotsFromOldest = _fulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.DateEnteredStorage);
-        LabelUnitsForRemovalFromOldest(fulfillableLotsFromOldest, units);
-    }
-
-    public void LabelUnfulfillableUnitsForRemoval(uint units)
-    {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to reduce cannot be 0.");
-        }
-        if (units > UnfulfillableUnitsInStock)
-        {
-            throw new NotEnoughStockException("Not enough unfulfillable stock.");
-        }
-
-        var unfulfillableLotsFromOldest = _unfulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.DateUnfulfillableSince);
-        LabelUnitsForRemovalFromOldest(unfulfillableLotsFromOldest, units);
-    }
-
     public void AddFulfillableStock(uint units)
     {
         if (units == 0)
@@ -152,7 +118,7 @@ public class ProductInventory
             throw new ArgumentOutOfRangeException(
                 nameof(units), "Number of stock units to restock cannot be 0.");
         }
-        if (TotalUnits + units > MaxStockThreshold)
+        if (units > RemainingCapacity)
         {
             throw new ExceedingMaxStockThresholdException();
         }
@@ -176,7 +142,7 @@ public class ProductInventory
             throw new ArgumentOutOfRangeException(
                 nameof(units), "Number of stock units to add cannot be 0.");
         }
-        if (TotalUnits + units > MaxStockThreshold)
+        if (units > RemainingCapacity)
         {
             throw new ExceedingMaxStockThresholdException();
         }
@@ -233,7 +199,7 @@ public class ProductInventory
         }
     }
 
-    private static void LabelUnitsForRemovalFromOldest(
+    private static void LabelUnitsForRemovalFromOldToNew(
         IEnumerable<Lot> lots, uint totalUnitsToMark)
     {
         foreach (var lot in lots)

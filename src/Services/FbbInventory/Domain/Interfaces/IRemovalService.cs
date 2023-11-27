@@ -2,9 +2,9 @@
 
 public interface IRemovalService
 {
-    Result RequestReturnForProductStocks(
+    Result RequestReturnForProductStocksFromOldToNew(
         IEnumerable<StockUnitsRemovalDto> removalRequests, string deliveryAddress);
-    Result RequestDisposalForProductStocks(
+    Result RequestDisposalForProductStocksFromOldToNew(
         IEnumerable<StockUnitsRemovalDto> removalRequests);
     Result RequestReturnForLots(IEnumerable<string> lotNumbers, string deliveryAddress);
     Result RequestDisposalForLots(IEnumerable<string> lotNumbers);

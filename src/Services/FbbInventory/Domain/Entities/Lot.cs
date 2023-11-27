@@ -38,7 +38,7 @@ public class Lot
         }
         if (units > UnitsInStock)
         {
-            throw new NotEnoughStockException();
+            throw new NotEnoughUnitsException();
         }
 
         UnitsInStock -= units;
@@ -51,6 +51,10 @@ public class Lot
         {
             throw new ArgumentOutOfRangeException(nameof(units),
                 "Units cannot be 0.");
+        }
+        if (ProductInventory.TotalUnits + units > ProductInventory.MaxStockThreshold)
+        {
+            throw new ExceedingMaxStockThresholdException();
         }
 
         UnitsInStock += units;
@@ -66,7 +70,7 @@ public class Lot
         }
         if (units > UnitsInStock)
         {
-            throw new NotEnoughStockException(
+            throw new NotEnoughUnitsException(
                 "Number of units pending removal exceeds total number of units.");
         }
 
@@ -84,8 +88,8 @@ public class Lot
         }
         if (unitsToRemove > UnitsPendingRemoval)
         {
-            throw new ArgumentOutOfRangeException(nameof(unitsToRemove),
-                "Units pending removal are fewer than the number requested to remove.");
+            throw new NotEnoughUnitsException(
+                "Units pending removal are fewer than the units requested to remove.");
         }
 
         UnitsPendingRemoval -= unitsToRemove;
@@ -101,8 +105,8 @@ public class Lot
         }
         if (unitsToReturn > UnitsPendingRemoval)
         {
-            throw new ArgumentOutOfRangeException(nameof(unitsToReturn),
-                "Units pending removal are fewer than the number requested to return.");
+            throw new NotEnoughUnitsException(
+                "Units pending removal are fewer than the units requested to return.");
         }
 
         UnitsPendingRemoval -= unitsToReturn;
