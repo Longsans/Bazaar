@@ -5,14 +5,14 @@
 namespace Bazaar.Contracting.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPartnerEmailUniqueAndSellingPlanNonZeroChecks : Migration
+    public partial class AddClientEmailUniqueAndSellingPlanNonZeroChecks : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
                 name: "Email",
-                table: "Partners",
+                table: "Clients",
                 type: "nvarchar(450)",
                 nullable: false,
                 oldClrType: typeof(string),
@@ -29,8 +29,8 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                 sql: "[RegularPerSaleFeePercent] > 0");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Partners_Email",
-                table: "Partners",
+                name: "IX_Clients_Email",
+                table: "Clients",
                 column: "Email",
                 unique: true);
         }
@@ -47,12 +47,12 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                 table: "SellingPlans");
 
             migrationBuilder.DropIndex(
-                name: "IX_Partners_Email",
-                table: "Partners");
+                name: "IX_Clients_Email",
+                table: "Clients");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Email",
-                table: "Partners",
+                table: "Clients",
                 type: "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),

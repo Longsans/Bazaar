@@ -15,6 +15,7 @@ public class Order
     public OrderStatus Status { get; private set; }
     public string? CancelReason { get; private set; }
 
+    // Create constructor
     public Order(string shippingAddress, string buyerId, IEnumerable<OrderItem> items)
     {
         if (!items.Any())
@@ -38,23 +39,26 @@ public class Order
         ShippingAddress = shippingAddress;
         BuyerId = buyerId;
         _items = items.ToList();
-        Status = OrderStatus.AwaitingValidation;
+        Status = OrderStatus.PendingValidation;
     }
 
     [JsonConstructor]
-    private Order(
-        int id, string shippingAddress, string buyerId,
-        OrderStatus status)
-        : this(shippingAddress, buyerId, Array.Empty<OrderItem>())
+    private Order(string buyerId, string shippingAddress, OrderStatus status)
     {
-        Id = id;
+        BuyerId = buyerId;
+        ShippingAddress = shippingAddress;
         Status = status;
+        _items = new List<OrderItem>();
     }
+
+    // EF requires this to read from DB correctly, otherwise the damn thing tries to use
+    // the create constructor and fails to provide order items
+    private Order() { }
 
     #region Domain logic
 
     public bool IsCancellable
-        => Status == OrderStatus.AwaitingSellerConfirmation
+        => Status == OrderStatus.PendingSellerConfirmation
         || Status == OrderStatus.Postponed;
 
     public void Cancel(string reason)
@@ -62,32 +66,32 @@ public class Order
         Status = IsCancellable
             ? OrderStatus.Cancelled
             : throw new InvalidOperationException(
-                "Order can only be cancelled if it is currently awaiting seller's confirmation or being postponed.");
+                "Order can only be cancelled if it is currently pending seller's confirmation or being postponed.");
         CancelReason = reason;
     }
 
     public void StartPayment()
     {
-        Status = Status == OrderStatus.AwaitingValidation
+        Status = Status == OrderStatus.PendingValidation
             ? OrderStatus.ProcessingPayment
             : throw new InvalidOperationException(
-                "Can only start payment if order was previously awaiting validation.");
+                "Can only start payment if order was previously pending validation.");
     }
 
-    public void AwaitSellerConfirmation()
+    public void RequestSellerConfirmation()
     {
         Status = Status == OrderStatus.ProcessingPayment
-            ? OrderStatus.AwaitingSellerConfirmation
+            ? OrderStatus.PendingSellerConfirmation
             : throw new InvalidOperationException(
                 "Can only request seller confirmation if order's payment was previously under process.");
     }
 
     public void Ship()
     {
-        Status = Status == OrderStatus.AwaitingSellerConfirmation
+        Status = Status == OrderStatus.PendingSellerConfirmation
             ? OrderStatus.Shipping
             : throw new InvalidOperationException(
-                "Can only start shipment if order was previously awaiting seller's confirmation.");
+                "Can only start shipment if order was previously pending seller's confirmation.");
     }
 
     public void ConfirmShipped()
@@ -101,12 +105,12 @@ public class Order
     public void Postpone()
     {
         Status = Status == OrderStatus.Shipping
-                || Status == OrderStatus.AwaitingSellerConfirmation
+                || Status == OrderStatus.PendingSellerConfirmation
                 || Status == OrderStatus.ProcessingPayment
             ? OrderStatus.Postponed
             : throw new InvalidOperationException(
                 "Can only postpone order if order is currently processing payment, " +
-                "awaiting seller confirmation, or shipping.");
+                "pending seller confirmation, or shipping.");
     }
 
     public void UpdateTotal()
@@ -119,9 +123,9 @@ public class Order
 
 public enum OrderStatus
 {
-    AwaitingValidation = 1,
+    PendingValidation = 1,
     ProcessingPayment = 2,
-    AwaitingSellerConfirmation = 4,
+    PendingSellerConfirmation = 4,
     Shipping = 8,
     Shipped = 16,
     Cancelled = 32,

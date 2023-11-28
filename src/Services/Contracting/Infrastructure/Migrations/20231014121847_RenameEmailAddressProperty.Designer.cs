@@ -36,7 +36,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("date");
 
-                    b.Property<int>("PartnerId")
+                    b.Property<int>("ClientId")
                         .HasColumnType("int");
 
                     b.Property<int>("SellingPlanId")
@@ -47,7 +47,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PartnerId");
+                    b.HasIndex("ClientId");
 
                     b.HasIndex("SellingPlanId");
 
@@ -59,7 +59,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Partner", b =>
+            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Client", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -104,9 +104,9 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                     b.HasIndex("ExternalId")
                         .IsUnique();
 
-                    b.ToTable("Partners", t =>
+                    b.ToTable("Clients", t =>
                         {
-                            t.HasCheckConstraint("CK_Partner_18AndOlder", "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()");
+                            t.HasCheckConstraint("CK_Client_18AndOlder", "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()");
                         });
                 });
 
@@ -143,9 +143,9 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
 
             modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Contract", b =>
                 {
-                    b.HasOne("Bazaar.Contracting.Domain.Entities.Partner", "Partner")
+                    b.HasOne("Bazaar.Contracting.Domain.Entities.Client", "Client")
                         .WithMany("Contracts")
-                        .HasForeignKey("PartnerId")
+                        .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -155,12 +155,12 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Partner");
+                    b.Navigation("Client");
 
                     b.Navigation("SellingPlan");
                 });
 
-            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Partner", b =>
+            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Client", b =>
                 {
                     b.Navigation("Contracts");
                 });

@@ -47,12 +47,13 @@ public class CatalogRepository : ICatalogRepository
         _context.SaveChanges();
     }
 
-    public bool Delete(int id)
+    public void Delete(int id)
     {
         var existing = _context.CatalogItems.Find(id);
         if (existing == null)
-            return false;
+            return;
+
         _context.CatalogItems.Remove(existing);
-        return true;
+        _context.SaveChanges();
     }
 }

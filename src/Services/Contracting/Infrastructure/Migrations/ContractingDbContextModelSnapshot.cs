@@ -22,41 +22,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Contract", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("date");
-
-                    b.Property<int>("PartnerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SellingPlanId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("date");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartnerId");
-
-                    b.HasIndex("SellingPlanId");
-
-                    b.ToTable("Contracts", t =>
-                        {
-                            t.HasCheckConstraint("CK_Contract_StartBeforeEndDate", "[EndDate] IS NULL OR [StartDate] <= [EndDate]");
-
-                            t.HasCheckConstraint("CK_Contract_StartDateFromToday", "[StartDate] >= CAST(GETDATE() as date)");
-                        });
-                });
-
-            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Partner", b =>
+            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Client", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -76,7 +42,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("ExternalId")
-                        .HasComputedColumnSql("CONCAT('PNER-', [Id])", true);
+                        .HasComputedColumnSql("CONCAT('CLNT-', [Id])", true);
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -84,6 +50,9 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
 
                     b.Property<int>("Gender")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsAccountClosed")
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -93,6 +62,9 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("SellingPlanId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmailAddress")
@@ -101,9 +73,45 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                     b.HasIndex("ExternalId")
                         .IsUnique();
 
-                    b.ToTable("Partners", t =>
+                    b.HasIndex("SellingPlanId");
+
+                    b.ToTable("Clients", t =>
                         {
-                            t.HasCheckConstraint("CK_Partner_18AndOlder", "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()");
+                            t.HasCheckConstraint("CK_Client_18AndOlder", "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()");
+                        });
+                });
+
+            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Contract", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("SellingPlanId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("SellingPlanId");
+
+                    b.ToTable("Contracts", t =>
+                        {
+                            t.HasCheckConstraint("CK_Contract_StartBeforeEndDate", "[EndDate] IS NULL OR [StartDate] <= [EndDate]");
+
+                            t.HasCheckConstraint("CK_Contract_StartDateFromToday", "[StartDate] >= CAST(GETDATE() as date)");
                         });
                 });
 
@@ -138,12 +146,23 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Client", b =>
+                {
+                    b.HasOne("Bazaar.Contracting.Domain.Entities.SellingPlan", "SellingPlan")
+                        .WithMany()
+                        .HasForeignKey("SellingPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SellingPlan");
+                });
+
             modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Contract", b =>
                 {
-                    b.HasOne("Bazaar.Contracting.Domain.Entities.Partner", "Partner")
+                    b.HasOne("Bazaar.Contracting.Domain.Entities.Client", "Client")
                         .WithMany("Contracts")
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.HasOne("Bazaar.Contracting.Domain.Entities.SellingPlan", "SellingPlan")
@@ -152,12 +171,12 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Partner");
+                    b.Navigation("Client");
 
                     b.Navigation("SellingPlan");
                 });
 
-            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Partner", b =>
+            modelBuilder.Entity("Bazaar.Contracting.Domain.Entities.Client", b =>
                 {
                     b.Navigation("Contracts");
                 });

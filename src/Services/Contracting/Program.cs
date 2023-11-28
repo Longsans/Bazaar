@@ -21,19 +21,20 @@ builder.Services.AddDbContext<ContractingDbContext>(options =>
 
 // Domain services
 builder.Services.AddScoped<
-    IUpdatePartnerEmailAddressService,
-    UpdatePartnerEmailAddressService>();
-
-// Application use-cases
-builder.Services.AddScoped<IContractUseCases, ContractUseCases>();
-builder.Services.AddScoped<IPartnerUseCases, PartnerUseCases>();
-builder.Services.AddScoped<ISellingPlanUseCases, SellingPlanUseCases>();
+    IUpdateClientEmailAddressService,
+    UpdateClientEmailAddressService>();
+builder.Services.AddScoped<
+    ICloseClientAccountService,
+    CloseClientAccountService>();
 
 // Data services
-builder.Services.AddScoped<IPartnerRepository, PartnerRepository>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<ISellingPlanRepository, SellingPlanRepository>();
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
+
+// Event bus
+builder.Services.RegisterEventBus(builder.Configuration);
 
 // AuthN and AuthZ
 builder.Services.AddAuthentication()
@@ -81,4 +82,75 @@ using (var scope = app.Services.CreateScope())
     await dbContext.Seed(scope.ServiceProvider);
 }
 
+app.ConfigureEventBus();
+
 app.Run();
+
+public static class EventBusExtensionMethods
+{
+    public static void RegisterEventBus(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
+        services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
+            var factory = new ConnectionFactory()
+            {
+                HostName = config["EventBusConnection"],
+                DispatchConsumersAsync = true
+            };
+
+            if (!string.IsNullOrEmpty(config["EventBusUserName"]))
+            {
+                factory.UserName = config["EventBusUserName"];
+            }
+
+            if (!string.IsNullOrEmpty(config["EventBusPassword"]))
+            {
+                factory.Password = config["EventBusPassword"];
+            }
+
+            var retryCount = 5;
+            if (!string.IsNullOrEmpty(config["EventBusRetryCount"]))
+            {
+                retryCount = int.Parse(config["EventBusRetryCount"]!);
+            }
+
+            return new DefaultRabbitMQPersistentConnection(factory, logger, retryCount);
+        });
+        services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
+        {
+            var subscriptionClientName = config["SubscriptionClientName"];
+            var rabbitMQPersistentConnection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
+            var logger = sp.GetRequiredService<ILogger<EventBusRabbitMQ>>();
+            var eventBusSubcriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+
+            var retryCount = 5;
+            if (!string.IsNullOrEmpty(config["EventBusRetryCount"]))
+            {
+                retryCount = int.Parse(config["EventBusRetryCount"]!);
+            }
+
+            return new EventBusRabbitMQ(
+                rabbitMQPersistentConnection,
+                logger,
+                sp,
+                eventBusSubcriptionsManager,
+                subscriptionClientName,
+                retryCount);
+        });
+        services.AddTransient<ProductsHaveOrdersInProgressIntegrationEventHandler>();
+        services.AddTransient<ProductsHaveFbbStocksIntegrationEventHandler>();
+    }
+
+    public static void ConfigureEventBus(this IApplicationBuilder app)
+    {
+        var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+        eventBus.Subscribe<
+            ProductsHaveOrdersInProgressIntegrationEvent,
+            ProductsHaveOrdersInProgressIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductsHaveFbbStocksIntegrationEvent,
+            ProductsHaveFbbStocksIntegrationEventHandler>();
+    }
+}

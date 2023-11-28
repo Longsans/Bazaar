@@ -1,7 +1,3 @@
-using Bazaar.BuildingBlocks.EventBus;
-using RabbitMQ.Client;
-using System.Text.Json.Serialization;
-
 var builder = WebApplication.CreateBuilder(args);
 var IF_ENABLED_IDENTITY = (Action doWithIdentity) =>
 {
@@ -14,6 +10,9 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
+
+builder.Services.AddScoped<IDeleteCatalogItemService, DeleteCatalogItemService>();
+builder.Services.AddScoped<IFulfillmentMethodService, FulfillmentMethodService>();
 
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
@@ -131,13 +130,31 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<OrderCreatedIntegrationEventHandler>();
+        services.AddTransient<BasketCheckoutAcceptedIntegrationEventHandler>();
+        services.AddTransient<ProductFbbInventoryUpdatedIntegrationEventHandler>();
+        services.AddTransient<ProductOrdersStatusReportChangedIntegrationEventHandler>();
+        services.AddTransient<ClientAccountClosedIntegrationEventHandler>();
+        services.AddTransient<FbbInventoryPickedUpIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-        eventBus.Subscribe<OrderCreatedIntegrationEvent, OrderCreatedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            BasketCheckoutAcceptedIntegrationEvent,
+            BasketCheckoutAcceptedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductFbbInventoryUpdatedIntegrationEvent,
+            ProductFbbInventoryUpdatedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductOrdersStatusReportChangedIntegrationEvent,
+            ProductOrdersStatusReportChangedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ClientAccountClosedIntegrationEvent,
+            ClientAccountClosedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            FbbInventoryPickedUpIntegrationEvent,
+            FbbInventoryPickedUpIntegrationEventHandler>();
     }
 }
 

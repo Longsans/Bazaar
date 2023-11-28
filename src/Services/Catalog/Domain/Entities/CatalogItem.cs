@@ -1,98 +1,119 @@
-namespace Bazaar.Catalog.Domain.Entities
+namespace Bazaar.Catalog.Domain.Entities;
+
+public class CatalogItem
 {
-    public class CatalogItem
+    public int Id { get; private set; }
+    public string ProductId { get; private set; }
+    public string ProductName { get; private set; }
+    public string ProductDescription { get; private set; }
+    public decimal Price { get; private set; }
+    public uint AvailableStock { get; private set; }
+    public string SellerId { get; private set; }
+
+    // The following 3 properties are used in service integration
+    public bool IsFulfilledByBazaar { get; private set; }
+    public bool IsOfficiallyListed { get; private set; }
+    public bool HasOrdersInProgress { get; private set; }
+
+    public bool IsDeleted { get; private set; }
+
+    // Create constructor
+    public CatalogItem(
+        int id, string productId, string productName, string productDescription,
+        decimal price, uint availableStock, string sellerId, bool isFulfilledByBazaar)
     {
-        public int Id { get; private set; }
-        public string ProductId { get; private set; }
-        public string ProductName { get; private set; }
-        public string ProductDescription { get; private set; }
-        public decimal Price { get; private set; }
-        public uint AvailableStock { get; private set; }
-        public string SellerId { get; private set; }
+        if (price <= 0m)
+            throw new ArgumentOutOfRangeException(
+                nameof(price), "Product price cannot be 0 or negative.");
 
-        // Available stock at which we should reorder
-        public uint RestockThreshold { get; private set; }
+        if (availableStock == 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(availableStock), "Available stock must be larger than 0.");
 
-        // Maximum number of units that can be in-stock at any time
-        // (due to physicial/logistical constraints in warehouses)
-        public uint MaxStockThreshold { get; private set; }
+        Id = id;
+        ProductId = productId;
+        ProductName = productName;
+        ProductDescription = productDescription;
+        Price = price;
+        AvailableStock = availableStock;
+        SellerId = sellerId;
+        IsFulfilledByBazaar = isFulfilledByBazaar;
+        IsOfficiallyListed = !isFulfilledByBazaar;
+    }
 
-        public CatalogItem(
-            int id, string productId, string productName, string productDescription,
-            decimal price, uint availableStock, string sellerId,
-            uint restockThreshold, uint maxStockThreshold)
-        {
-            if (price <= 0m)
-                throw new ArgumentException("Product price cannot be 0 or negative.");
+    [Newtonsoft.Json.JsonConstructor]
+    private CatalogItem(
+        int id, string productId, string productName, string productDescription,
+        decimal price, uint availableStock, string sellerId, bool isFulfilledByBazaar, bool hasOrdersInProgress)
+        : this(id, productId, productName, productDescription, price, availableStock, sellerId, isFulfilledByBazaar)
+    {
+        HasOrdersInProgress = hasOrdersInProgress;
+    }
 
-            if (availableStock == 0)
-                throw new ArgumentException("Available stock cannot be 0.");
+    // EF read constructor
+    private CatalogItem()
+    {
 
-            if (maxStockThreshold == 0)
-                throw new ArgumentException("Max stock threshold cannot be 0.");
+    }
 
-            if (restockThreshold >= maxStockThreshold)
-                throw new ArgumentException("Restock threshold must be less than max stock threshold.");
+    public void ChangeProductDetails(string productName, string productDescription, decimal price)
+    {
+        if (IsDeleted)
+            throw new InvalidOperationException("Item deleted.");
 
-            if (maxStockThreshold < availableStock)
-                throw new ExceedingMaxStockThresholdException();
+        if (price <= 0m)
+            throw new ArgumentOutOfRangeException(
+                nameof(price), "Product price cannot be 0 or negative.");
 
-            Id = id;
-            ProductId = productId;
-            ProductName = productName;
-            ProductDescription = productDescription;
-            Price = price;
-            AvailableStock = availableStock;
-            SellerId = sellerId;
-            RestockThreshold = restockThreshold;
-            MaxStockThreshold = maxStockThreshold;
-        }
+        ProductName = productName;
+        ProductDescription = productDescription;
+        Price = price;
+    }
 
-        public void ChangeProductDetails(string productName, string productDescription, decimal price)
-        {
-            if (price <= 0m)
-                throw new ArgumentException("Product price cannot be 0 or negative.");
+    public void ReduceStock(uint units)
+    {
+        if (IsDeleted)
+            throw new InvalidOperationException("Item deleted.");
 
-            ProductName = productName;
-            ProductDescription = productDescription;
-            Price = price;
-        }
+        if (units == 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(units), "Number of units to reduce must be greater than 0.");
 
-        public void ReduceStock(uint units)
-        {
-            if (units == 0)
-                throw new ArgumentException("Number of units to reduce must be greater than 0.");
+        if (units > AvailableStock)
+            throw new NotEnoughStockException();
 
-            if (units > AvailableStock)
-                throw new NotEnoughStockException();
+        AvailableStock -= units;
+    }
 
-            AvailableStock -= units;
-        }
+    public void Restock(uint units)
+    {
+        if (IsDeleted)
+            throw new InvalidOperationException("Item deleted.");
 
-        public void Restock(uint units)
-        {
-            if (units == 0)
-                throw new ArgumentException("Number of units to restock must be greater than 0.");
+        if (units == 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(units), "Number of units to restock must be greater than 0.");
 
-            if (AvailableStock + units > MaxStockThreshold)
-                throw new ExceedingMaxStockThresholdException();
+        AvailableStock += units;
+    }
 
-            AvailableStock += units;
-        }
+    public void UpdateHasOrdersInProgressStatus(bool hasOrdersInProgress)
+    {
+        HasOrdersInProgress = hasOrdersInProgress;
+    }
 
-        public void ChangeStockThresholds(uint restockThreshold, uint maxStockThreshold)
-        {
-            if (maxStockThreshold == 0)
-                throw new ArgumentException("Max stock threshold cannot be 0.");
+    public void UpdateFulfillmentByBazaar(bool isFulfilledByBazaar)
+    {
+        IsFulfilledByBazaar = isFulfilledByBazaar;
+    }
 
-            if (restockThreshold >= maxStockThreshold)
-                throw new ArgumentException("Restock threshold must be less than max stock threshold.");
+    public void UpdateOfficiallyListed(bool listed)
+    {
+        IsOfficiallyListed = listed;
+    }
 
-            if (maxStockThreshold < AvailableStock)
-                throw new ExceedingMaxStockThresholdException();
-
-            RestockThreshold = restockThreshold;
-            MaxStockThreshold = maxStockThreshold;
-        }
+    public void Delete()
+    {
+        IsDeleted = true;
     }
 }

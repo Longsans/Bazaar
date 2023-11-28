@@ -11,7 +11,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Partners",
+                name: "Clients",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -26,8 +26,8 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Partners", x => x.Id);
-                    table.CheckConstraint("CK_Partner_18AndOlder", "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()");
+                    table.PrimaryKey("PK_Clients", x => x.Id);
+                    table.CheckConstraint("CK_Client_18AndOlder", "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()");
                 });
 
             migrationBuilder.CreateTable(
@@ -52,7 +52,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    PartnerId = table.Column<int>(type: "int", nullable: false),
+                    ClientId = table.Column<int>(type: "int", nullable: false),
                     SellingPlanId = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "date", nullable: false),
                     EndDate = table.Column<DateTime>(type: "date", nullable: true)
@@ -63,9 +63,9 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                     table.CheckConstraint("CK_Contract_StartBeforeEndDate", "[StartDate] <= [EndDate]");
                     table.CheckConstraint("CK_Contract_StartDateFromToday", "[StartDate] >= CAST(GETDATE() as date)");
                     table.ForeignKey(
-                        name: "FK_Contracts_Partners_PartnerId",
-                        column: x => x.PartnerId,
-                        principalTable: "Partners",
+                        name: "FK_Contracts_Clients_ClientId",
+                        column: x => x.ClientId,
+                        principalTable: "Clients",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -77,9 +77,9 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Contracts_PartnerId",
+                name: "IX_Contracts_ClientId",
                 table: "Contracts",
-                column: "PartnerId");
+                column: "ClientId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Contracts_SellingPlanId",
@@ -87,8 +87,8 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                 column: "SellingPlanId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Partners_ExternalId",
-                table: "Partners",
+                name: "IX_Clients_ExternalId",
+                table: "Clients",
                 column: "ExternalId",
                 unique: true);
         }
@@ -100,7 +100,7 @@ namespace Bazaar.Contracting.Infrastructure.Migrations
                 name: "Contracts");
 
             migrationBuilder.DropTable(
-                name: "Partners");
+                name: "Clients");
 
             migrationBuilder.DropTable(
                 name: "SellingPlans");

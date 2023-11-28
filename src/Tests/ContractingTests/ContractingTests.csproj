@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Services\Contracting\Contracting.csproj" />
+    <ProjectReference Include="..\Common\TestingCommon.csproj" />
   </ItemGroup>
 
 </Project>

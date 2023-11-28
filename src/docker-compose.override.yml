@@ -38,6 +38,27 @@ services:
     ports:
       - "5433:1433"
 
+  fbbinventory-sql:
+    environment:
+      - SA_PASSWORD=P@ssw0rd
+      - ACCEPT_EULA=Y
+    ports:
+      - "5439:1433"
+
+  transport-sql:
+    environment:
+      - SA_PASSWORD=P@ssw0rd
+      - ACCEPT_EULA=Y
+    ports:
+      - "5440:1433"
+
+  disposal-sql:
+    environment:
+      - SA_PASSWORD=P@ssw0rd
+      - ACCEPT_EULA=Y
+    ports:
+      - "5441:1433"
+
   basket-sql:
     environment:
       - SA_PASSWORD=P@ssw0rd
@@ -66,6 +87,13 @@ services:
     ports:
       - "5437:1433"
 
+  task-scheduler-sql:
+    environment:
+      - SA_PASSWORD=P@ssw0rd
+      - ACCEPT_EULA=Y
+    ports:
+      - "5438:1433"
+
   identity-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -79,34 +107,87 @@ services:
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     ports:
       - ${IDENTITY_PORT}:80
+
+  task-scheduler:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - HangfireConnection=Server=task-scheduler-sql;Database=Hangfire;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - DbServerConnection=Server=task-scheduler-sql;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - FbbInventoryApi=http://internallb/fbb
+    ports:
+      - "5500:80"
   
   catalog-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - SeedDataFilePath=/root/Data/data.json
+      - SeedDataFilePath=/root/SeedData/seed_data.json
       - ConnectionString=Server=catalog-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - OrderingApi=http://internallb/o
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     volumes:
-      - ./Data:/root/Data
+      - ./SeedData:/root/SeedData
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     ports:
       - "5240:80"
+
+  fbbinventory-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - EventBusConnection=rabbitmq
+      # - SeedDataFilePath=/root/SeedData/seed_data.json
+      - ConnectionString=Server=fbbinventory-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - IdentityApi=http://identity-api
+      - DisableIdentity=true
+    # volumes:
+      # - ./SeedData:/root/SeedData
+    ports:
+      - "5252:80"
+
+  transport-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - EventBusConnection=rabbitmq
+      # - SeedDataFilePath=/root/SeedData/seed_data.json
+      - ConnectionString=Server=transport-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - IdentityApi=http://identity-api
+      - DisableIdentity=true
+    # volumes:
+      # - ./SeedData:/root/SeedData
+    ports:
+      - "5254:80"
+
+  disposal-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - EventBusConnection=rabbitmq
+      # - SeedDataFilePath=/root/SeedData/seed_data.json
+      - ConnectionString=Server=disposal-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - IdentityApi=http://identity-api
+      - DisableIdentity=true
+    # volumes:
+      # - ./SeedData:/root/SeedData
+    ports:
+      - "5256:80"
 
   shopper-info-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - SeedDataFilePath=/root/Data/data.json
+      - SeedDataFilePath=/root/SeedData/seed_data.json
       - ConnectionString=Server=shopper-info-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     volumes:
-      - ./Data:/root/Data
+      - ./SeedData:/root/SeedData
     ports:
       - "5242:80"
 
@@ -115,12 +196,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - SeedDataFilePath=/root/Data/data.json
+      - SeedDataFilePath=/root/SeedData/seed_data.json
       - ConnectionString=Server=contracting-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     volumes:
-      - ./Data:/root/Data
+      - ./SeedData:/root/SeedData
     ports:
       - "5244:80"
 
@@ -129,26 +210,26 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - SeedDataFilePath=/root/Data/data.json
+      - SeedDataFilePath=/root/SeedData/seed_data.json
       - ConnectionString=Server=basket-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     ports:
       - "5246:80"
     volumes:
-      - ./Data:/root/Data
+      - ./SeedData:/root/SeedData
 
   ordering-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
-      - SeedDataFilePath=/root/Data/data.json
+      - SeedDataFilePath=/root/SeedData/seed_data.json
       - ConnectionString=Server=ordering-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     volumes:
-      - ./Data:/root/Data
+      - ./SeedData:/root/SeedData
     ports:
       - "5248:80"
 

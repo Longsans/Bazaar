@@ -10,7 +10,7 @@ public class ContractingDbContext : DbContext
 
         modelBuilder.Entity<Contract>(contract =>
         {
-            contract.HasOne(c => c.Partner)
+            contract.HasOne(c => c.Client)
                 .WithMany(p => p.Contracts)
                 .IsRequired();
 
@@ -28,24 +28,30 @@ public class ContractingDbContext : DbContext
             });
         });
 
-        modelBuilder.Entity<Partner>(partner =>
+        modelBuilder.Entity<Client>(client =>
         {
-            partner.HasMany(p => p.Contracts)
-                .WithOne(c => c.Partner);
+            client.HasOne(c => c.SellingPlan)
+                .WithMany()
+                .IsRequired();
 
-            partner.HasIndex(p => p.ExternalId)
+            client.HasMany(c => c.Contracts)
+                .WithOne(c => c.Client)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.ClientCascade);
+
+            client.HasIndex(c => c.ExternalId)
                 .IsUnique();
 
-            partner.HasIndex(p => p.EmailAddress)
+            client.HasIndex(c => c.EmailAddress)
                 .IsUnique();
 
-            partner.Property(p => p.ExternalId)
-                .HasComputedColumnSql("CONCAT('PNER-', [Id])", stored: true)
+            client.Property(c => c.ExternalId)
+                .HasComputedColumnSql("CONCAT('CLNT-', [Id])", stored: true)
                 .HasColumnName("ExternalId");
 
-            partner.ToTable(p => p.HasCheckConstraint(
-                "CK_Partner_18AndOlder",
-                "DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= 18 AND [DateOfBirth] < GETDATE()"));
+            client.ToTable(c => c.HasCheckConstraint(
+                $"CK_Client_{ClientCompliance.MinimumAge}AndOlder",
+                $"DATEDIFF(year, [DateOfBirth], CAST(GETDATE() as date)) >= {ClientCompliance.MinimumAge} AND [DateOfBirth] < GETDATE()"));
         });
 
         modelBuilder.Entity<SellingPlan>(plan =>
@@ -65,6 +71,6 @@ public class ContractingDbContext : DbContext
     }
 
     public virtual DbSet<Contract> Contracts { get; set; }
-    public virtual DbSet<Partner> Partners { get; set; }
+    public virtual DbSet<Client> Clients { get; set; }
     public virtual DbSet<SellingPlan> SellingPlans { get; set; }
 }

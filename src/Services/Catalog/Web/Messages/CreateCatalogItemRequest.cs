@@ -7,12 +7,9 @@ public class CreateCatalogItemRequest
     public decimal Price { get; set; }
     public uint AvailableStock { get; set; }
     public string SellerId { get; set; }
-
-    public uint RestockThreshold { get; set; }
-    public uint MaxStockThreshold { get; set; }
+    public bool FulfilledByBazaar { get; set; }
 
     public CatalogItem ToNewCatalogItem() => new(
         default, string.Empty, Name, Description,
-        Price, AvailableStock, SellerId,
-        RestockThreshold, MaxStockThreshold);
+        Price, AvailableStock, SellerId, FulfilledByBazaar);
 }

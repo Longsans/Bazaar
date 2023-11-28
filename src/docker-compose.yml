@@ -11,8 +11,10 @@ services:
     image: rabbitmq:3-management-alpine
     profiles:
       - catalog
+      - fbbinventory
       - ordering
       - basket
+      - disposal
       - all
   
   identity-sql:
@@ -25,6 +27,24 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     profiles:
       - catalog
+      - all
+
+  fbbinventory-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - fbbinventory
+      - all
+
+  transport-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - transport
+      - all
+
+  disposal-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - disposal
       - all
 
   basket-sql:
@@ -51,6 +71,12 @@ services:
       - contracting
       - all
 
+  task-scheduler-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles:
+      - fbbinventory
+      - all
+
   identity-api:
     image: ${DOCKER_REGISTRY-}identity-api
     build:
@@ -62,6 +88,17 @@ services:
     profiles:
       - id
       - all
+
+  task-scheduler:
+    image: ${DOCKER_REGISTRY-}task-scheduler
+    build:
+      context: .
+      dockerfile: Services/ScheduledTasks/Dockerfile
+    depends_on:
+      - fbbinventory-api
+      - task-scheduler-sql
+    profiles:
+      - fbbinventory
   
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api
@@ -74,6 +111,42 @@ services:
       - rabbitmq
     profiles:
       - catalog
+      - all
+
+  fbbinventory-api:
+    image: ${DOCKER_REGISTRY-}fbbinventory-api
+    build:
+      context: .
+      dockerfile: Services/FbbInventory/Dockerfile
+    depends_on:
+      - fbbinventory-sql
+      - rabbitmq
+    profiles:
+      - fbbinventory
+      - all
+
+  transport-api:
+    image: ${DOCKER_REGISTRY-}transport-api
+    build:
+      context: .
+      dockerfile: Services/Transport/Dockerfile
+    depends_on:
+      - transport-sql
+      - rabbitmq
+    profiles:
+      - transport
+      - all
+
+  disposal-api:
+    image: ${DOCKER_REGISTRY-}disposal-api
+    build:
+      context: .
+      dockerfile: Services/Disposal/Dockerfile
+    depends_on:
+      - disposal-sql
+      - rabbitmq
+    profiles:
+      - disposal
       - all
 
   shopper-info-api:
@@ -159,6 +232,7 @@ services:
       - catalog-api
       - ordering-api
       - contracting-api
+      - fbbinventory-api
     profiles:
       - websell
       - all
