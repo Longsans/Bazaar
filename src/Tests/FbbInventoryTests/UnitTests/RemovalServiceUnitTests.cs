@@ -101,7 +101,7 @@ public class RemovalServiceUnitTests
         var remainingFfLots = _testProdInventory.FulfillableLots.Except(removalFfLots);
         var remainingUfLots = _testProdInventory.UnfulfillableLots.Except(removalUfLots);
         Assert.True(!removalFfLots.Any() || removalFfLots.All(x =>
-            remainingFfLots.All(r => r.DateEnteredStorage >= x.DateEnteredStorage)));
+            remainingFfLots.All(r => r.TimeEnteredStorage >= x.TimeEnteredStorage)));
         Assert.True(!removalUfLots.Any() || removalUfLots.All(x =>
             remainingUfLots.All(r => r.DateUnfulfillableSince >= x.DateUnfulfillableSince)));
 

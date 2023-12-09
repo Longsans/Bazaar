@@ -31,37 +31,31 @@ public class LotRepository : ILotRepository
             .Where(x => lotNumbers.Contains(x.LotNumber));
     }
 
-    public FulfillableLot? GetFulfillableById(int id)
+    public Lot? GetFulfillableById(int id)
     {
-        return _context.FulfillableLots
+        return _context.Lots
             .Include(x => x.ProductInventory)
-            .SingleOrDefault(x => x.Id == id);
+            .SingleOrDefault(x => x.Id == id && x.UnfulfillableCategory == null);
     }
 
-    public IEnumerable<UnfulfillableLot> GetUnfulfillables()
+    public IEnumerable<Lot> GetUnfulfillables()
     {
-        return _context.UnfulfillableLots
+        return _context.Lots
             .Include(x => x.ProductInventory)
-            .ThenInclude(p => p.SellerInventory);
+            .ThenInclude(p => p.SellerInventory)
+            .Where(x => x.UnfulfillableCategory != null);
     }
 
-    public UnfulfillableLot? GetUnfulfillableById(int id)
+    public Lot? GetUnfulfillableById(int id)
     {
-        return _context.UnfulfillableLots
+        return _context.Lots
             .Include(x => x.ProductInventory)
-            .SingleOrDefault(x => x.Id == id);
+            .SingleOrDefault(x => x.Id == id && x.UnfulfillableCategory != null);
     }
 
-    public FulfillableLot CreateFulfillable(FulfillableLot lot)
+    public Lot Create(Lot lot)
     {
-        _context.FulfillableLots.Add(lot);
-        _context.SaveChanges();
-        return lot;
-    }
-
-    public UnfulfillableLot CreateUnfulfillable(UnfulfillableLot lot)
-    {
-        _context.UnfulfillableLots.Add(lot);
+        _context.Lots.Add(lot);
         _context.SaveChanges();
         return lot;
     }

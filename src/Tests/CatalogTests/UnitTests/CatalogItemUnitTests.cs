@@ -38,8 +38,8 @@ public class CatalogItemUnitTests
         Assert.Equal(_productId, _testCatalogItem.ProductId);
         Assert.Equal(_validPrice, _testCatalogItem.Price);
         Assert.Equal(_validStock, _testCatalogItem.AvailableStock);
-        Assert.Equal(isFbb, _testCatalogItem.IsFulfilledByBazaar);
-        Assert.Equal(!_testCatalogItem.IsFulfilledByBazaar, _testCatalogItem.IsOfficiallyListed);
+        Assert.Equal(isFbb, _testCatalogItem.IsFbb);
+        Assert.Equal(!_testCatalogItem.IsFbb, _testCatalogItem.IsListed);
         Assert.False(_testCatalogItem.HasOrdersInProgress);
         Assert.False(_testCatalogItem.IsDeleted);
     }

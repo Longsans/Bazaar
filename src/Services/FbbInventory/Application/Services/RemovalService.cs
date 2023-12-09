@@ -126,13 +126,13 @@ public class RemovalService : IRemovalService
             var fulfillableLotsWithLabeledUnits = LabelLotUnitsForRemoval(
                 productInventory.FulfillableLots
                     .Where(x => x.HasUnitsInStock)
-                    .OrderBy(x => x.DateEnteredStorage),
+                    .OrderBy(x => x.TimeEnteredStorage),
                 removal.FulfillableUnits);
 
             var unfulfillableLotsWithLabeledUnits = LabelLotUnitsForRemoval(
                 productInventory.UnfulfillableLots
                     .Where(x => x.HasUnitsInStock)
-                    .OrderBy(x => x.DateUnfulfillableSince),
+                    .OrderBy(x => x.TimeUnfulfillableSince),
                 removal.UnfulfillableUnits);
             lotsWithLabeledUnits.AddRange(fulfillableLotsWithLabeledUnits);
             lotsWithLabeledUnits.AddRange(unfulfillableLotsWithLabeledUnits);

@@ -13,6 +13,7 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 
 builder.Services.AddScoped<IDeleteCatalogItemService, DeleteCatalogItemService>();
 builder.Services.AddScoped<IFulfillmentMethodService, FulfillmentMethodService>();
+builder.Services.AddScoped<ListingService>();
 
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));

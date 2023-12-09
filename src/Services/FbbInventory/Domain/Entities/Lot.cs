@@ -7,11 +7,18 @@ public class Lot
     public uint UnitsInStock { get; protected set; }
     public uint UnitsPendingRemoval { get; protected set; }
     public uint TotalUnits { get; protected set; }
+    public DateTime TimeEnteredStorage { get; protected set; }
+    public DateTime? TimeUnfulfillableSince { get; protected set; }
+    public UnfulfillableCategory? UnfulfillableCategory { get; protected set; }
     public ProductInventory ProductInventory { get; protected set; }
     public int ProductInventoryId { get; protected set; }
 
+    public bool IsUnfulfillable => UnfulfillableCategory != null;
     public bool HasUnitsInStock => UnitsInStock > 0;
+    public bool IsUnfulfillableBeyondPolicyDuration
+        => TimeUnfulfillableSince + StoragePolicy.MaximumUnfulfillableDuration <= DateTime.Now.Date;
 
+    // Fulfillable lot
     public Lot(
         ProductInventory inventory, uint unitsInStock)
     {
@@ -21,9 +28,29 @@ public class Lot
                 "Fulfillable units cannot be 0.");
         }
 
+        TimeEnteredStorage = DateTime.Now;
+        UnitsInStock = unitsInStock;
         ProductInventory = inventory;
         ProductInventoryId = inventory.Id;
+        UpdateTotalUnits();
+    }
+
+    // Unfulfillable lot
+    public Lot(
+        ProductInventory inventory, UnfulfillableCategory unfulfillableCategory, uint unitsInStock)
+    {
+        if (unitsInStock == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(unitsInStock),
+                "Fulfillable units cannot be 0.");
+        }
+
+        TimeEnteredStorage = DateTime.Now;
+        TimeUnfulfillableSince = DateTime.Now;
+        UnfulfillableCategory = unfulfillableCategory;
         UnitsInStock = unitsInStock;
+        ProductInventory = inventory;
+        ProductInventoryId = inventory.Id;
         UpdateTotalUnits();
     }
 
@@ -112,6 +139,24 @@ public class Lot
         UnitsPendingRemoval -= unitsToReturn;
         UnitsInStock += unitsToReturn;
         UpdateTotalUnits();
+    }
+
+    public void LabelUnfulfillable(UnfulfillableCategory category)
+    {
+        UnfulfillableCategory = category;
+        TimeUnfulfillableSince = DateTime.Now;
+    }
+
+    public void RemoveUnfulfillableLabel()
+    {
+        if (UnfulfillableCategory != null
+            && UnfulfillableCategory != Entities.UnfulfillableCategory.Stranded)
+        {
+            throw new InvalidOperationException(
+                "Cannot remove unfulfillable label on damaged goods.");
+        }
+        UnfulfillableCategory = null;
+        TimeUnfulfillableSince = null;
     }
 
     protected void UpdateTotalUnits()

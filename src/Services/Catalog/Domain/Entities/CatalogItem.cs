@@ -9,27 +9,46 @@ public class CatalogItem
     public decimal Price { get; private set; }
     public uint AvailableStock { get; private set; }
     public string SellerId { get; private set; }
+    public ListingStatus ListingStatus { get; private set; }
+    public FulfillmentMethod FulfillmentMethod { get; private set; }
 
-    // The following 3 properties are used in service integration
-    public bool IsFulfilledByBazaar { get; private set; }
-    public bool IsOfficiallyListed { get; private set; }
     public bool HasOrdersInProgress { get; private set; }
 
-    public bool IsDeleted { get; private set; }
+    public bool IsFbb => FulfillmentMethod == FulfillmentMethod.Fbb;
+    public bool IsListingActive => ListingStatus == ListingStatus.Active;
+    public bool IsOutOfStock => ListingStatus == ListingStatus.InactiveOutOfStock;
+    public bool IsListingClosed => ListingStatus == ListingStatus.InactiveClosedListing;
+    public bool IsDeleted => ListingStatus == ListingStatus.Deleted;
 
     // Create constructor
     public CatalogItem(
-        int id, string productId, string productName, string productDescription,
-        decimal price, uint availableStock, string sellerId, bool isFulfilledByBazaar)
+        string productId, string productName, string productDescription,
+        decimal price, uint availableStock, string sellerId, FulfillmentMethod fulfillmentMethod)
     {
         if (price <= 0m)
             throw new ArgumentOutOfRangeException(
                 nameof(price), "Product price cannot be 0 or negative.");
 
-        if (availableStock == 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(availableStock), "Available stock must be larger than 0.");
+        if (availableStock > 0 && fulfillmentMethod == FulfillmentMethod.Fbb)
+            throw new ManualInsertOfFbbStockNotSupportedException();
 
+        ProductId = productId;
+        ProductName = productName;
+        ProductDescription = productDescription;
+        Price = price;
+        AvailableStock = availableStock;
+        SellerId = sellerId;
+        FulfillmentMethod = fulfillmentMethod;
+        ListingStatus = availableStock > 0
+            ? ListingStatus.Active : ListingStatus.InactiveOutOfStock;
+    }
+
+    [Newtonsoft.Json.JsonConstructor]
+    private CatalogItem(
+        int id, string productId, string productName,
+        string productDescription, decimal price, uint availableStock,
+        string sellerId, FulfillmentMethod fulfillmentMethod, bool hasOrdersInProgress)
+    {
         Id = id;
         ProductId = productId;
         ProductName = productName;
@@ -37,24 +56,14 @@ public class CatalogItem
         Price = price;
         AvailableStock = availableStock;
         SellerId = sellerId;
-        IsFulfilledByBazaar = isFulfilledByBazaar;
-        IsOfficiallyListed = !isFulfilledByBazaar;
-    }
-
-    [Newtonsoft.Json.JsonConstructor]
-    private CatalogItem(
-        int id, string productId, string productName, string productDescription,
-        decimal price, uint availableStock, string sellerId, bool isFulfilledByBazaar, bool hasOrdersInProgress)
-        : this(id, productId, productName, productDescription, price, availableStock, sellerId, isFulfilledByBazaar)
-    {
+        FulfillmentMethod = fulfillmentMethod;
+        ListingStatus = availableStock > 0
+            ? ListingStatus.Active : ListingStatus.InactiveOutOfStock;
         HasOrdersInProgress = hasOrdersInProgress;
     }
 
     // EF read constructor
-    private CatalogItem()
-    {
-
-    }
+    private CatalogItem() { }
 
     public void ChangeProductDetails(string productName, string productDescription, decimal price)
     {
@@ -83,6 +92,8 @@ public class CatalogItem
             throw new NotEnoughStockException();
 
         AvailableStock -= units;
+        if (AvailableStock == 0 && IsListingActive)
+            ListingStatus = ListingStatus.InactiveOutOfStock;
     }
 
     public void Restock(uint units)
@@ -97,23 +108,57 @@ public class CatalogItem
         AvailableStock += units;
     }
 
-    public void UpdateHasOrdersInProgressStatus(bool hasOrdersInProgress)
+    public void CloseListing()
     {
-        HasOrdersInProgress = hasOrdersInProgress;
+        ListingStatus = !IsDeleted
+            ? ListingStatus.InactiveClosedListing
+            : throw new InvalidOperationException();
     }
 
-    public void UpdateFulfillmentByBazaar(bool isFulfilledByBazaar)
+    public void Relist()
     {
-        IsFulfilledByBazaar = isFulfilledByBazaar;
+        ListingStatus = IsListingClosed
+            ? ListingStatus.Active
+            : throw new InvalidOperationException();
     }
 
-    public void UpdateOfficiallyListed(bool listed)
+    public void SetListingInactiveOutOfStock()
     {
-        IsOfficiallyListed = listed;
+        ListingStatus = IsListingActive
+            ? ListingStatus.InactiveOutOfStock : throw new InvalidOperationException();
+    }
+
+    public void ReactivateOutOfStockListing()
+    {
+        ListingStatus = IsOutOfStock
+            ? ListingStatus.Active : throw new InvalidOperationException();
     }
 
     public void Delete()
     {
-        IsDeleted = true;
+        ListingStatus = ListingStatus.Deleted;
+    }
+
+    public void ChangeFulfillmentMethodToFbb()
+    {
+        if (IsDeleted || IsListingClosed || IsFbb)
+            throw new InvalidOperationException();
+
+        FulfillmentMethod = FulfillmentMethod.Fbb;
+        ListingStatus = ListingStatus.InactiveOutOfStock;
+    }
+
+    public void ChangeFulfillmentMethodToMerchant()
+    {
+        if (IsDeleted || IsListingClosed || FulfillmentMethod == FulfillmentMethod.Merchant)
+            throw new InvalidOperationException();
+
+        FulfillmentMethod = FulfillmentMethod.Merchant;
+        ListingStatus = ListingStatus.Active;
+    }
+
+    public void UpdateHasOrdersInProgressStatus(bool hasOrdersInProgress)
+    {
+        HasOrdersInProgress = hasOrdersInProgress;
     }
 }

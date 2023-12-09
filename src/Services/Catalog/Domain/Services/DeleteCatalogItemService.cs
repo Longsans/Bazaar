@@ -22,7 +22,7 @@ public class DeleteCatalogItemService : IDeleteCatalogItemService
         }
 
         // If the product is fulfilled by Bazaar then all FBB stock must be moved out before deleting the product
-        if (item.IsFulfilledByBazaar && item.AvailableStock > 0)
+        if (item.IsFbb && item.AvailableStock > 0)
         {
             throw new DeleteFbbProductWhenFbbInventoryNotEmptyException();
         }

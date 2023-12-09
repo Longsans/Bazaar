@@ -2,7 +2,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -110,6 +112,8 @@ public static class EventBusExtensionMethods
         services.AddTransient<DisposalOrderCancelledIntegrationEventHandler>();
         services.AddTransient<InventoryReturnCompletedIntegrationEventHandler>();
         services.AddTransient<InventoryReturnCancelledIntegrationEventHandler>();
+        services.AddTransient<ProductListingClosedIntegrationEventHandler>();
+        services.AddTransient<ProductRelistedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -136,5 +140,11 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             InventoryReturnCancelledIntegrationEvent,
             InventoryReturnCancelledIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductListingClosedIntegrationEvent,
+            ProductListingClosedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductRelistedIntegrationEvent,
+            ProductRelistedIntegrationEventHandler>();
     }
 }

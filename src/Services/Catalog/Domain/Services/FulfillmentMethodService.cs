@@ -12,7 +12,7 @@ public class FulfillmentMethodService : IFulfillmentMethodService
         _eventBus = eventBus;
     }
 
-    public Result ChangeToFulfillmentByBazaar(string productId)
+    public Result ChangeFulfillmentMethodToFbb(string productId)
     {
         var catalogItem = _catalogRepo.GetByProductId(productId);
         if (catalogItem == null)
@@ -20,18 +20,21 @@ public class FulfillmentMethodService : IFulfillmentMethodService
             return Result.NotFound();
         }
 
-        if (!catalogItem.IsFulfilledByBazaar)
+        try
         {
-            catalogItem.UpdateFulfillmentByBazaar(true);
-            catalogItem.UpdateOfficiallyListed(false);
-            _catalogRepo.Update(catalogItem);
-            _eventBus.Publish(
-                new ProductFulfillmentChangedToFbbIntegrationEvent(productId));
+            catalogItem.ChangeFulfillmentMethodToFbb();
         }
+        catch (InvalidOperationException ex)
+        {
+            return Result.Conflict(ex.Message);
+        }
+        _catalogRepo.Update(catalogItem);
+        _eventBus.Publish(
+            new ProductFulfillmentMethodChangedToFbbIntegrationEvent(productId));
         return Result.Success();
     }
 
-    public Result ChangeToFulfillmentByMerchant(string productId)
+    public Result ChangeFulfillmentMethodToMerchant(string productId)
     {
         var catalogItem = _catalogRepo.GetByProductId(productId);
         if (catalogItem == null)
@@ -39,14 +42,17 @@ public class FulfillmentMethodService : IFulfillmentMethodService
             return Result.NotFound();
         }
 
-        if (catalogItem.IsFulfilledByBazaar)
+        try
         {
-            catalogItem.UpdateFulfillmentByBazaar(false);
-            catalogItem.UpdateOfficiallyListed(false);
-            _catalogRepo.Update(catalogItem);
-            _eventBus.Publish(
-                new ProductFulfillmentChangedToMerchantIntegrationEvent(productId));
+            catalogItem.ChangeFulfillmentMethodToMerchant();
         }
+        catch (InvalidOperationException ex)
+        {
+            return Result.Conflict(ex.Message);
+        }
+        _catalogRepo.Update(catalogItem);
+        _eventBus.Publish(
+            new ProductFulfillmentMethodChangedToMerchantIntegrationEvent(productId));
         return Result.Success();
     }
 }

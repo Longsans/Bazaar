@@ -16,7 +16,7 @@ global using Bazaar.FbbInventory.Infrastructure.Repositories;
 global using Bazaar.FbbInventory.ServiceIntegration.EventHandling;
 global using Bazaar.FbbInventory.ServiceIntegration.IntegrationEvents;
 global using Bazaar.FbbInventory.Web.Messages;
-global using Bazaar.FbbInventory.Web.RoutingAttributes;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
 global using RabbitMQ.Client;
+global using System.Text.Json.Serialization;

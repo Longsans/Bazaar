@@ -123,7 +123,7 @@ public class ProductInventoryUnitTests
         var fulfillableUnitsAfterReduction = inventory.FulfillableUnitsInStock - units;
         var lotsFromOldToNew = inventory.FulfillableLots
             .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.DateEnteredStorage)
+            .OrderBy(x => x.TimeEnteredStorage)
             .ToList();
 
         inventory.ReduceFulfillableStockFromOldToNew(units);
@@ -132,7 +132,7 @@ public class ProductInventoryUnitTests
 
         var removedLots = lotsFromOldToNew.Except(inventory.FulfillableLots);
         Assert.True(!removedLots.Any() || removedLots.All(
-            x => inventory.FulfillableLots.All(f => f.DateEnteredStorage >= x.DateEnteredStorage)));
+            x => inventory.FulfillableLots.All(f => f.TimeEnteredStorage >= x.TimeEnteredStorage)));
     }
 
     [Fact]

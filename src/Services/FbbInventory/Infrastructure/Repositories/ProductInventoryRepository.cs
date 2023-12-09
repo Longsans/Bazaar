@@ -12,8 +12,7 @@ public class ProductInventoryRepository : IProductInventoryRepository
     public IEnumerable<ProductInventory> GetAll()
     {
         return _context.ProductInventories
-            .Include(x => x.FulfillableLots)
-            .Include(x => x.UnfulfillableLots)
+            .Include(x => x.Lots)
             .Include(x => x.SellerInventory)
             .AsEnumerable();
     }
@@ -21,8 +20,7 @@ public class ProductInventoryRepository : IProductInventoryRepository
     public ProductInventory? GetById(int id)
     {
         return _context.ProductInventories
-            .Include(x => x.FulfillableLots)
-            .Include(x => x.UnfulfillableLots)
+            .Include(x => x.Lots)
             .Include(x => x.SellerInventory)
             .SingleOrDefault(x => x.Id == id);
     }
@@ -30,8 +28,7 @@ public class ProductInventoryRepository : IProductInventoryRepository
     public ProductInventory? GetByProductId(string productId)
     {
         return _context.ProductInventories
-            .Include(x => x.UnfulfillableLots)
-            .Include(x => x.FulfillableLots)
+            .Include(x => x.Lots)
             .Include(x => x.SellerInventory)
             .SingleOrDefault(x => x.ProductId == productId);
     }
