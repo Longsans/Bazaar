@@ -2,18 +2,18 @@
 
 public class Lot
 {
-    public int Id { get; protected set; }
-    public string LotNumber { get; protected set; }
-    public uint UnitsInStock { get; protected set; }
-    public uint UnitsPendingRemoval { get; protected set; }
-    public uint TotalUnits { get; protected set; }
-    public DateTime TimeEnteredStorage { get; protected set; }
-    public DateTime? TimeUnfulfillableSince { get; protected set; }
-    public UnfulfillableCategory? UnfulfillableCategory { get; protected set; }
-    public ProductInventory ProductInventory { get; protected set; }
-    public int ProductInventoryId { get; protected set; }
+    public int Id { get; private set; }
+    public string LotNumber { get; private set; }
+    public uint UnitsInStock { get; private set; }
+    public uint UnitsPendingRemoval { get; private set; }
+    public uint TotalUnits { get; private set; }
+    public DateTime TimeEnteredStorage { get; private set; }
+    public DateTime? TimeUnfulfillableSince { get; private set; }
+    public UnfulfillableCategory? UnfulfillableCategory { get; private set; }
+    public ProductInventory ProductInventory { get; private set; }
+    public int ProductInventoryId { get; private set; }
 
-    public bool IsUnfulfillable => UnfulfillableCategory != null;
+    public bool IsUnfulfillable => UnfulfillableCategory != null && TimeUnfulfillableSince != null;
     public bool HasUnitsInStock => UnitsInStock > 0;
     public bool IsUnfulfillableBeyondPolicyDuration
         => TimeUnfulfillableSince + StoragePolicy.MaximumUnfulfillableDuration <= DateTime.Now.Date;
@@ -39,6 +39,11 @@ public class Lot
     public Lot(
         ProductInventory inventory, UnfulfillableCategory unfulfillableCategory, uint unitsInStock)
     {
+        if (!Enum.IsDefined(typeof(UnfulfillableCategory), unfulfillableCategory))
+        {
+            throw new ArgumentOutOfRangeException(nameof(unfulfillableCategory),
+                "Unfulfillable category does not exist.");
+        }
         if (unitsInStock == 0)
         {
             throw new ArgumentOutOfRangeException(nameof(unitsInStock),
@@ -143,8 +148,8 @@ public class Lot
 
     public void LabelUnfulfillable(UnfulfillableCategory category)
     {
-        UnfulfillableCategory = category;
         TimeUnfulfillableSince = DateTime.Now;
+        UnfulfillableCategory = category;
     }
 
     public void RemoveUnfulfillableLabel()
@@ -155,12 +160,20 @@ public class Lot
             throw new InvalidOperationException(
                 "Cannot remove unfulfillable label on damaged goods.");
         }
-        UnfulfillableCategory = null;
         TimeUnfulfillableSince = null;
+        UnfulfillableCategory = null;
     }
 
     protected void UpdateTotalUnits()
     {
         TotalUnits = UnitsInStock + UnitsPendingRemoval;
     }
+}
+
+public enum UnfulfillableCategory
+{
+    Defective,
+    WarehouseDamaged,
+    CustomerDamaged,
+    Stranded
 }

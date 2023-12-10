@@ -1,4 +1,6 @@
 global using Bazaar.Catalog.Domain.Entities;
+global using Bazaar.Catalog.Domain.Enums;
+global using Bazaar.Catalog.Domain.Exceptions;
 global using Bazaar.Catalog.Domain.Interfaces;
 global using Bazaar.Catalog.Domain.Services;
 global using Bazaar.Catalog.Infrastructure.Repositories;

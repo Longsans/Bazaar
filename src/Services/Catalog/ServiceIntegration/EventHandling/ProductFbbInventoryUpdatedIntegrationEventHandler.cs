@@ -21,6 +21,12 @@ public class ProductFbbInventoryUpdatedIntegrationEventHandler
             _eventBus.Publish(new CatalogItemDeletedIntegrationEvent(@event.ProductId));
             return;
         }
+        if (!catalogItem.IsFbb)
+        {
+            // Product has switched to Fulfillment by Merchant,
+            // FBB inventory is now stranded and no longer correlates with listing's stock
+            return;
+        }
 
         if (@event.FulfillableStock == catalogItem.AvailableStock)
         {

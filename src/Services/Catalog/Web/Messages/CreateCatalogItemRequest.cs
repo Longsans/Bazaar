@@ -10,6 +10,6 @@ public class CreateCatalogItemRequest
     public FulfillmentMethod FulfillmentMethod { get; set; }
 
     public CatalogItem ToNewCatalogItem()
-        => new(string.Empty, Name, Description,
+        => new(Name, Description,
         Price, AvailableStock, SellerId, FulfillmentMethod);
 }

@@ -123,19 +123,25 @@ public class RemovalService : IRemovalService
                     $"Not enough unfulfillable stock for product: {productInventory.ProductId}");
             }
 
-            var fulfillableLotsWithLabeledUnits = LabelLotUnitsForRemoval(
-                productInventory.FulfillableLots
-                    .Where(x => x.HasUnitsInStock)
-                    .OrderBy(x => x.TimeEnteredStorage),
-                removal.FulfillableUnits);
+            if (removal.FulfillableUnits > 0)
+            {
+                var fulfillableLotsWithLabeledUnits = LabelLotUnitsForRemoval(
+                    productInventory.FulfillableLots
+                        .Where(x => x.HasUnitsInStock)
+                        .OrderBy(x => x.TimeEnteredStorage),
+                    removal.FulfillableUnits);
+                lotsWithLabeledUnits.AddRange(fulfillableLotsWithLabeledUnits);
+            }
 
-            var unfulfillableLotsWithLabeledUnits = LabelLotUnitsForRemoval(
+            if (removal.UnfulfillableUnits > 0)
+            {
+                var unfulfillableLotsWithLabeledUnits = LabelLotUnitsForRemoval(
                 productInventory.UnfulfillableLots
                     .Where(x => x.HasUnitsInStock)
                     .OrderBy(x => x.TimeUnfulfillableSince),
                 removal.UnfulfillableUnits);
-            lotsWithLabeledUnits.AddRange(fulfillableLotsWithLabeledUnits);
-            lotsWithLabeledUnits.AddRange(unfulfillableLotsWithLabeledUnits);
+                lotsWithLabeledUnits.AddRange(unfulfillableLotsWithLabeledUnits);
+            }
         }
 
         _lotRepo.UpdateRange(lotsWithLabeledUnits.Select(x => x.Lot));
@@ -151,6 +157,9 @@ public class RemovalService : IRemovalService
         }
         else
         {
+            // TEMPORARY SOLUTION:
+            // if the requested removal method is disposal, send events to inform
+            // the catalog of remaining stocks
             foreach (var lotsBySeller in lotsWithLabeledUnits
                 .GroupBy(x => x.Lot.ProductInventory.SellerInventory.SellerId))
             {
@@ -158,7 +167,10 @@ public class RemovalService : IRemovalService
                     lotsBySeller.Select(x => new LotUnitsLabeledForDisposal(
                         x.Lot.LotNumber, x.LabeledUnits, lotsBySeller.Key)), false));
             }
+            PublishFbbInventoryUpdatedEvents(lotsWithLabeledUnits.Where(x => !x.Lot.IsUnfulfillable)
+                .Select(x => x.Lot.ProductInventory).Distinct());
         }
+
         return Result.Success();
     }
 
@@ -216,6 +228,9 @@ public class RemovalService : IRemovalService
         }
         else
         {
+            // TEMPORARY SOLUTION:
+            // if the requested removal method is disposal, send events to inform
+            // the catalog of remaining stocks
             foreach (var lotGroup in lotsWithLabeledUnits.GroupBy(x => x.SellerId))
             {
                 var @event = new LotUnitsLabeledForDisposalIntegrationEvent(
@@ -224,7 +239,10 @@ public class RemovalService : IRemovalService
 
                 _eventBus.Publish(@event);
             }
+            PublishFbbInventoryUpdatedEvents(lots.Where(x => !x.IsUnfulfillable)
+                .Select(x => x.ProductInventory).Distinct());
         }
+
         return Result.Success();
     }
 
@@ -245,6 +263,14 @@ public class RemovalService : IRemovalService
                 break;
         }
         return lotsWithUnitsLabeled;
+    }
+
+    private void PublishFbbInventoryUpdatedEvents(IEnumerable<ProductInventory> inventories)
+    {
+        foreach (var inventory in inventories)
+        {
+            _eventBus.Publish(new ProductFbbInventoryUpdatedIntegrationEvent(inventory));
+        }
     }
     #endregion
 }

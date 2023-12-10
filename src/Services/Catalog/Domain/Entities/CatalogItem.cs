@@ -22,7 +22,7 @@ public class CatalogItem
 
     // Create constructor
     public CatalogItem(
-        string productId, string productName, string productDescription,
+        string productName, string productDescription,
         decimal price, uint availableStock, string sellerId, FulfillmentMethod fulfillmentMethod)
     {
         if (price <= 0m)
@@ -32,7 +32,6 @@ public class CatalogItem
         if (availableStock > 0 && fulfillmentMethod == FulfillmentMethod.Fbb)
             throw new ManualInsertOfFbbStockNotSupportedException();
 
-        ProductId = productId;
         ProductName = productName;
         ProductDescription = productDescription;
         Price = price;
@@ -45,12 +44,10 @@ public class CatalogItem
 
     [Newtonsoft.Json.JsonConstructor]
     private CatalogItem(
-        int id, string productId, string productName,
+        string productName,
         string productDescription, decimal price, uint availableStock,
         string sellerId, FulfillmentMethod fulfillmentMethod, bool hasOrdersInProgress)
     {
-        Id = id;
-        ProductId = productId;
         ProductName = productName;
         ProductDescription = productDescription;
         Price = price;
@@ -106,6 +103,8 @@ public class CatalogItem
                 nameof(units), "Number of units to restock must be greater than 0.");
 
         AvailableStock += units;
+        if (IsOutOfStock)
+            ListingStatus = ListingStatus.Active;
     }
 
     public void CloseListing()
@@ -122,18 +121,6 @@ public class CatalogItem
             : throw new InvalidOperationException();
     }
 
-    public void SetListingInactiveOutOfStock()
-    {
-        ListingStatus = IsListingActive
-            ? ListingStatus.InactiveOutOfStock : throw new InvalidOperationException();
-    }
-
-    public void ReactivateOutOfStockListing()
-    {
-        ListingStatus = IsOutOfStock
-            ? ListingStatus.Active : throw new InvalidOperationException();
-    }
-
     public void Delete()
     {
         ListingStatus = ListingStatus.Deleted;
@@ -141,20 +128,30 @@ public class CatalogItem
 
     public void ChangeFulfillmentMethodToFbb()
     {
-        if (IsDeleted || IsListingClosed || IsFbb)
+        if (IsDeleted || IsListingClosed)
+        {
+            throw new InvalidOperationException(
+                "Cannot change fulfillment method of deleted or closed listing.");
+        }
+        if (IsFbb)
+        {
             throw new InvalidOperationException();
+        }
 
         FulfillmentMethod = FulfillmentMethod.Fbb;
-        ListingStatus = ListingStatus.InactiveOutOfStock;
+        if (AvailableStock > 0)
+            ReduceStock(AvailableStock);
     }
 
     public void ChangeFulfillmentMethodToMerchant()
     {
-        if (IsDeleted || IsListingClosed || FulfillmentMethod == FulfillmentMethod.Merchant)
-            throw new InvalidOperationException();
+        if (IsDeleted || IsListingClosed)
+        {
+            throw new InvalidOperationException(
+                "Cannot change fulfillment method of deleted or closed listing.");
+        }
 
         FulfillmentMethod = FulfillmentMethod.Merchant;
-        ListingStatus = ListingStatus.Active;
     }
 
     public void UpdateHasOrdersInProgressStatus(bool hasOrdersInProgress)

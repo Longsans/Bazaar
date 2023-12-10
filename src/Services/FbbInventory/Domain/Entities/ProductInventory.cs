@@ -108,7 +108,7 @@ public class ProductInventory
 
         var unfulfillableLotsFromOldest = UnfulfillableLots
             .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.TimeEnteredStorage)
+            .OrderBy(x => x.TimeUnfulfillableSince)
             .ToList();
         ReduceUnitsInStockWithAltIteration(unfulfillableLotsFromOldest,
             _lots, units);
@@ -127,7 +127,7 @@ public class ProductInventory
         }
 
         var fulfillableQty = FulfillableLots
-            .SingleOrDefault(x => x.TimeEnteredStorage == DateTime.Now.Date);
+            .SingleOrDefault(x => x.TimeEnteredStorage.Date == DateTime.Now.Date);
         if (fulfillableQty == null)
         {
             _lots.Add(new(this, units));
@@ -152,7 +152,7 @@ public class ProductInventory
 
         var unfulfillableLot = UnfulfillableLots
             .Where(x => x.UnfulfillableCategory == category
-                && x.TimeEnteredStorage == DateTime.Now.Date)
+                && x.TimeUnfulfillableSince!.Value.Date == DateTime.Now.Date)
             .SingleOrDefault();
 
         if (unfulfillableLot == null)

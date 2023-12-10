@@ -18,27 +18,27 @@ public class RemovalServiceUnitTests
     private static void SetupPastLots(ProductInventory prodInventory,
         uint fulfillableUnits, uint unfulfillableUnits)
     {
-        var pastFfLot = new FulfillableLot(prodInventory, fulfillableUnits / 2);
-        var pastFfLot2 = new FulfillableLot(prodInventory, fulfillableUnits / 2);
-        var pastUfLot = new UnfulfillableLot(prodInventory,
-            unfulfillableUnits / 2, UnfulfillableCategory.Defective);
-        var pastUfLot2 = new UnfulfillableLot(prodInventory,
-            unfulfillableUnits / 2, UnfulfillableCategory.Defective);
-        typeof(FulfillableLot).GetProperty(nameof(FulfillableLot.DateEnteredStorage))!
+        var pastFfLot = new Lot(prodInventory, fulfillableUnits / 2);
+        var pastFfLot2 = new Lot(prodInventory, fulfillableUnits / 2);
+        var pastUfLot = new Lot(prodInventory,
+            UnfulfillableCategory.Defective, unfulfillableUnits / 2);
+        var pastUfLot2 = new Lot(prodInventory,
+            UnfulfillableCategory.Defective, unfulfillableUnits / 2);
+        typeof(Lot).GetProperty(nameof(Lot.TimeEnteredStorage))!
             .SetValue(pastFfLot, DateTime.Now.AddDays(-3));
-        typeof(UnfulfillableLot).GetProperty(nameof(UnfulfillableLot.DateUnfulfillableSince))!
+        typeof(Lot).GetProperty(nameof(Lot.TimeUnfulfillableSince))!
             .SetValue(pastUfLot, DateTime.Now.AddDays(-3));
-        typeof(FulfillableLot).GetProperty(nameof(FulfillableLot.DateEnteredStorage))!
+        typeof(Lot).GetProperty(nameof(Lot.TimeEnteredStorage))!
             .SetValue(pastFfLot2, DateTime.Now.AddDays(-2));
-        typeof(UnfulfillableLot).GetProperty(nameof(UnfulfillableLot.DateUnfulfillableSince))!
+        typeof(Lot).GetProperty(nameof(Lot.TimeUnfulfillableSince))!
             .SetValue(pastUfLot2, DateTime.Now.AddDays(-2));
 
         var ffLots = typeof(ProductInventory)
-            .GetField("_fulfillableLots", BindingFlags.NonPublic | BindingFlags.Instance)!
-            .GetValue(prodInventory) as List<FulfillableLot>;
+            .GetField("_lots", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .GetValue(prodInventory) as List<Lot>;
         var ufLots = typeof(ProductInventory)
-            .GetField("_unfulfillableLots", BindingFlags.NonPublic | BindingFlags.Instance)!
-            .GetValue(prodInventory) as List<UnfulfillableLot>;
+            .GetField("_lots", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .GetValue(prodInventory) as List<Lot>;
         ffLots.Add(pastFfLot);
         ufLots.Add(pastUfLot);
         ffLots.Add(pastFfLot2);
@@ -57,9 +57,9 @@ public class RemovalServiceUnitTests
 
         _testLots = new()
         {
-            new FulfillableLot(_testProdInventory, 50),
-            new FulfillableLot(_testProdInventory, 100),
-            new FulfillableLot(_testProdInventory, 200),
+            new Lot(_testProdInventory, 50),
+            new Lot(_testProdInventory, 100),
+            new Lot(_testProdInventory, 200),
         };
         for (int i = 0; i < 3; i++)
         {
@@ -98,15 +98,15 @@ public class RemovalServiceUnitTests
             .Where(x => !x.HasUnitsInStock);
         var removalUfLots = _testProdInventory.UnfulfillableLots
             .Where(x => !x.HasUnitsInStock);
-        var remainingFfLots = _testProdInventory.FulfillableLots.Except(removalFfLots);
-        var remainingUfLots = _testProdInventory.UnfulfillableLots.Except(removalUfLots);
-        Assert.True(!removalFfLots.Any() || removalFfLots.All(x =>
-            remainingFfLots.All(r => r.TimeEnteredStorage >= x.TimeEnteredStorage)));
-        Assert.True(!removalUfLots.Any() || removalUfLots.All(x =>
-            remainingUfLots.All(r => r.DateUnfulfillableSince >= x.DateUnfulfillableSince)));
+        var remainingFfLots = _testProdInventory.Lots.Except(removalFfLots);
+        var remainingUfLots = _testProdInventory.Lots.Except(removalUfLots);
+        Assert.DoesNotContain(removalFfLots, fLot =>
+            remainingFfLots.Any(x => x.TimeEnteredStorage < fLot.TimeEnteredStorage));
+        Assert.DoesNotContain(removalUfLots, uLot =>
+            remainingUfLots.Any(x => x.TimeUnfulfillableSince < uLot.TimeUnfulfillableSince));
 
-        Assert.Equal(fulfillableUnits, _testProdInventory.FulfillableLots.Sum(x => x.UnitsPendingRemoval));
-        Assert.Equal(unfulfillableUnits, _testProdInventory.UnfulfillableLots.Sum(x => x.UnitsPendingRemoval));
+        Assert.Equal(fulfillableUnits, _testProdInventory.FulfillableUnitsPendingRemoval);
+        Assert.Equal(unfulfillableUnits, _testProdInventory.UnfulfillableUnitsPendingRemoval);
     }
 
     [Theory]

@@ -32,4 +32,8 @@
     <ProjectReference Include="..\Common\TestingCommon.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="IntegrationTests\" />
+  </ItemGroup>
+
 </Project>

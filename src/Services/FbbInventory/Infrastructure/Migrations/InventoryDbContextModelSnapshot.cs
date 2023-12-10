@@ -63,7 +63,7 @@ namespace Inventory.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[TimeUnfulfillableSince] IS NOT NULL AND [UnfulfillableCategory] IS NOT NULL");
 
-                    b.ToTable("Lots", t =>
+                    b.ToTable("Lots", null, t =>
                         {
                             t.HasCheckConstraint("CK_TimeUnfulfillableSince_After_TimeEnteredStorage", "[TimeUnfulfillableSince] IS NULL OR [TimeUnfulfillableSince] >= [TimeEnteredStorage]");
                         });
@@ -100,7 +100,7 @@ namespace Inventory.Infrastructure.Migrations
 
                     b.HasIndex("SellerInventoryId");
 
-                    b.ToTable("ProductInventories");
+                    b.ToTable("ProductInventories", (string)null);
                 });
 
             modelBuilder.Entity("Bazaar.FbbInventory.Domain.Entities.SellerInventory", b =>
@@ -120,7 +120,7 @@ namespace Inventory.Infrastructure.Migrations
                     b.HasIndex("SellerId")
                         .IsUnique();
 
-                    b.ToTable("SellerInventories");
+                    b.ToTable("SellerInventories", (string)null);
                 });
 
             modelBuilder.Entity("Bazaar.FbbInventory.Domain.Entities.Lot", b =>

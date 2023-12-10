@@ -16,6 +16,7 @@ public record CatalogItemResponse
     public CatalogItemResponse(CatalogItem item)
     {
         Id = item.Id;
+        ProductId = item.ProductId;
         ProductName = item.ProductName;
         ProductDescription = item.ProductDescription;
         Price = item.Price;

@@ -20,7 +20,7 @@ public class CatalogController : ControllerBase
 
     [HttpGet("{id}")]
     //[Authorize(Policy = "HasReadScope")]
-    public IActionResult GetById(int id, bool includeDeleted = false)
+    public ActionResult<CatalogItemResponse> GetById(int id, bool includeDeleted = false)
     {
         var item = _catalogRepo.GetById(id);
         if (item == null || !includeDeleted && item.IsDeleted)
@@ -28,7 +28,7 @@ public class CatalogController : ControllerBase
             return NotFound();
         }
 
-        return Ok(item);
+        return new CatalogItemResponse(item);
     }
 
     [HttpGet]

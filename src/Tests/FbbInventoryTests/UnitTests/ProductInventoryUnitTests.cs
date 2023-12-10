@@ -16,17 +16,17 @@ public class ProductInventoryUnitTests
         var inventory = new ProductInventory(_validProductId, _validFulfillableUnits, _defectiveUnits,
             _wdmgUnits, _validRestockThres, _validMaxStockThres, _validSellerInvId);
 
-        var fLots = GetLotsForProductInventory<FulfillableLot>(inventory);
-        var fLot = new FulfillableLot(inventory, 50);
-        var fLot2 = new FulfillableLot(inventory, 75);
+        var fLots = GetLotsForProductInventory(inventory);
+        var fLot = new Lot(inventory, 50);
+        var fLot2 = new Lot(inventory, 75);
         AddDaysToLotEventDate(fLot, -3);
         AddDaysToLotEventDate(fLot2, -2);
         fLots.Add(fLot);
         fLots.Add(fLot2);
 
-        var uLots = GetLotsForProductInventory<UnfulfillableLot>(inventory);
-        var uLot = new UnfulfillableLot(inventory, 20, UnfulfillableCategory.CustomerDamaged);
-        var uLot2 = new UnfulfillableLot(inventory, 10, UnfulfillableCategory.CustomerDamaged);
+        var uLots = GetLotsForProductInventory(inventory);
+        var uLot = new Lot(inventory, UnfulfillableCategory.CustomerDamaged, 20);
+        var uLot2 = new Lot(inventory, UnfulfillableCategory.CustomerDamaged, 10);
         AddDaysToLotEventDate(uLot, -3);
         AddDaysToLotEventDate(uLot2, -2);
         uLots.Add(uLot);
@@ -40,11 +40,11 @@ public class ProductInventoryUnitTests
         var inventory = new ProductInventory(_validProductId, _validFulfillableUnits, _defectiveUnits,
             _wdmgUnits, _validRestockThres, _validMaxStockThres, _validSellerInvId);
 
-        var fCurrentDateLot = GetLotsForProductInventory<FulfillableLot>(inventory).Single();
+        var fCurrentDateLot = GetLotsForProductInventory(inventory).Single(x => !x.IsUnfulfillable);
         AddDaysToLotEventDate(fCurrentDateLot, -3);
 
-        var uCurrentDateLot = GetLotsForProductInventory<UnfulfillableLot>(inventory)
-            .Where(u => u.DateUnfulfillableSince == DateTime.Now.Date)
+        var uCurrentDateLot = GetLotsForProductInventory(inventory)
+            .Where(u => u.TimeUnfulfillableSince?.Date == DateTime.Now.Date)
             .Select(u =>
             {
                 AddDaysToLotEventDate(u, -3);
@@ -55,29 +55,32 @@ public class ProductInventoryUnitTests
         return inventory;
     }
 
-    private static List<T> GetLotsForProductInventory<T>(ProductInventory inventory)
-        where T : Lot
+    private static ProductInventory GetTestInventoryWithStrandedLots()
     {
-        var fieldName = typeof(T) == typeof(FulfillableLot)
-            ? "_fulfillableLots"
-            : "_unfulfillableLots";
+        var inventory = GetTestInventory();
+        foreach (var lot in inventory.UnfulfillableLots
+            .Where(x => x.UnfulfillableCategory == UnfulfillableCategory.CustomerDamaged))
+        {
+            var categoryProperty = typeof(Lot).GetProperty(nameof(Lot.UnfulfillableCategory));
+            categoryProperty!.SetValue(lot, UnfulfillableCategory.Stranded);
+        }
+        return inventory;
+    }
 
-        return (List<T>)typeof(ProductInventory)
-            .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
+    private static List<Lot> GetLotsForProductInventory(ProductInventory inventory)
+    {
+        return (List<Lot>)typeof(ProductInventory)
+            .GetField("_lots", BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(inventory)!;
     }
 
-    private static void AddDaysToLotEventDate<T>(T lot, int days)
-        where T : Lot
+    private static void AddDaysToLotEventDate(Lot lot, int days)
     {
-        var eventDatePropName = lot switch
-        {
-            FulfillableLot => nameof(FulfillableLot.DateEnteredStorage),
-            UnfulfillableLot => nameof(UnfulfillableLot.DateUnfulfillableSince)
-        };
-
-        typeof(T).GetProperty(eventDatePropName)!
-            .SetValue(lot, DateTime.Now.AddDays(days));
+        var eventTimeProperty = typeof(Lot).GetProperty(
+            lot.TimeUnfulfillableSince == null
+            ? nameof(lot.TimeEnteredStorage)
+            : nameof(lot.TimeUnfulfillableSince))!;
+        eventTimeProperty.SetValue(lot, DateTime.Now.AddDays(days));
     }
     #endregion
 
@@ -90,6 +93,16 @@ public class ProductInventoryUnitTests
         Assert.Equal(_validFulfillableUnits, inventory.FulfillableUnitsInStock);
         Assert.Equal(_defectiveUnits + _wdmgUnits, inventory.UnfulfillableUnitsInStock);
         Assert.Equal(_validFulfillableUnits + _defectiveUnits + _wdmgUnits, inventory.TotalUnits);
+    }
+
+    [Fact]
+    public void Constructor_ThrowsArgOutOfRangeException_WhenTotalUnitsIsZero()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            var inventory = new ProductInventory(_validProductId, 0u, 0u, 0u,
+                _validMaxStockThres, _validMaxStockThres, _validSellerInvId);
+        });
     }
 
     [Fact]
@@ -168,7 +181,7 @@ public class ProductInventoryUnitTests
         var unfulfillableUnitsAfterReduction = inventory.UnfulfillableUnitsInStock - units;
         var lotsFromOldToNew = inventory.UnfulfillableLots
             .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.DateUnfulfillableSince)
+            .OrderBy(x => x.TimeUnfulfillableSince)
             .ToList();
 
         inventory.ReduceUnfulfillableStockFromOldToNew(units);
@@ -177,7 +190,7 @@ public class ProductInventoryUnitTests
 
         var removedLots = lotsFromOldToNew.Except(inventory.UnfulfillableLots);
         Assert.True(!removedLots.Any() || removedLots.All(
-            x => inventory.UnfulfillableLots.All(f => f.DateUnfulfillableSince >= x.DateUnfulfillableSince)));
+            x => inventory.UnfulfillableLots.All(f => f.TimeUnfulfillableSince >= x.TimeUnfulfillableSince)));
     }
 
     [Fact]
@@ -283,5 +296,57 @@ public class ProductInventoryUnitTests
             inventory.AddUnfulfillableStock(UnfulfillableCategory.Defective,
                 inventory.RemainingCapacity + 1);
         });
+    }
+
+    [Fact]
+    public void LabelAllFulfillableStockAsStrandedStock_AlwaysSucceeds()
+    {
+        var inventory = GetTestInventory();
+        var initialFulfillableLots = inventory.FulfillableLots.ToList();
+
+        inventory.LabelAllFulfillableStockAsStrandedStock();
+
+        Assert.True(inventory.FulfillableUnitsInStock + inventory.FulfillableUnitsPendingRemoval == 0u);
+        Assert.DoesNotContain(initialFulfillableLots, lot =>
+            lot.UnfulfillableCategory != UnfulfillableCategory.Stranded);
+    }
+
+    [Fact]
+    public void RelabelStrandedStockAsFulfillableStock_AlwaysSucceeds()
+    {
+        var inventory = GetTestInventoryWithStrandedLots();
+        var initialStrandedLots = inventory.UnfulfillableLots
+            .Where(x => x.UnfulfillableCategory == UnfulfillableCategory.Stranded)
+            .ToList();
+
+        inventory.RelabelStrandedStockAsFulfillableStock();
+
+        Assert.DoesNotContain(inventory.Lots, lot =>
+            lot.UnfulfillableCategory == UnfulfillableCategory.Stranded);
+        Assert.DoesNotContain(initialStrandedLots, lot =>
+            lot.UnfulfillableCategory != null || lot.TimeUnfulfillableSince != null);
+    }
+
+    [Fact]
+    public void RemoveEmptyLots_AlwaysSucceeds()
+    {
+        var inventory = GetTestInventory();
+        var lotsToRemove = new List<Lot>
+        {
+            inventory.Lots.First(x => !x.IsUnfulfillable),
+            inventory.Lots.First(x => x.IsUnfulfillable),
+        };
+        foreach (var lot in lotsToRemove)
+        {
+            if (lot.UnitsInStock > 0)
+                lot.ReduceStock(lot.UnitsInStock);
+            if (lot.UnitsPendingRemoval > 0)
+                lot.RemovePendingUnits(lot.UnitsPendingRemoval);
+        }
+
+        inventory.RemoveEmptyLots();
+
+        Assert.DoesNotContain(inventory.Lots, lot => lot.TotalUnits == 0);
+        Assert.DoesNotContain(inventory.Lots, lot => lotsToRemove.Contains(lot));
     }
 }
