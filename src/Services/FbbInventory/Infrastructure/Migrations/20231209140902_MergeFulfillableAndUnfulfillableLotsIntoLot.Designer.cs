@@ -4,6 +4,7 @@ using Bazaar.FbbInventory.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Infrastructure.Migrations
 {
     [DbContext(typeof(FbbInventoryDbContext))]
-    partial class InventoryDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231209140902_MergeFulfillableAndUnfulfillableLotsIntoLot")]
+    partial class MergeFulfillableAndUnfulfillableLotsIntoLot
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,7 +66,7 @@ namespace Inventory.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[TimeUnfulfillableSince] IS NOT NULL AND [UnfulfillableCategory] IS NOT NULL");
 
-                    b.ToTable("Lots", null, t =>
+                    b.ToTable("Lots", t =>
                         {
                             t.HasCheckConstraint("CK_TimeUnfulfillableSince_After_TimeEnteredStorage", "[TimeUnfulfillableSince] IS NULL OR [TimeUnfulfillableSince] >= [TimeEnteredStorage]");
                         });
@@ -100,7 +103,7 @@ namespace Inventory.Infrastructure.Migrations
 
                     b.HasIndex("SellerInventoryId");
 
-                    b.ToTable("ProductInventories", (string)null);
+                    b.ToTable("ProductInventories");
                 });
 
             modelBuilder.Entity("Bazaar.FbbInventory.Domain.Entities.SellerInventory", b =>
@@ -120,7 +123,7 @@ namespace Inventory.Infrastructure.Migrations
                     b.HasIndex("SellerId")
                         .IsUnique();
 
-                    b.ToTable("SellerInventories", (string)null);
+                    b.ToTable("SellerInventories");
                 });
 
             modelBuilder.Entity("Bazaar.FbbInventory.Domain.Entities.Lot", b =>

@@ -3,29 +3,20 @@
 public class FbbInventoryPickedUpIntegrationEventHandler
     : IIntegrationEventHandler<FbbInventoryPickedUpIntegrationEvent>
 {
-    private readonly IProductInventoryRepository _productInventoryRepo;
+    private readonly IUpdateProductStockService _updateStockService;
 
-    public FbbInventoryPickedUpIntegrationEventHandler(
-        IProductInventoryRepository productInventoryRepo)
+    public FbbInventoryPickedUpIntegrationEventHandler(IUpdateProductStockService updateStockService)
     {
-        _productInventoryRepo = productInventoryRepo;
+        _updateStockService = updateStockService;
     }
 
     public async Task Handle(FbbInventoryPickedUpIntegrationEvent @event)
     {
         foreach (var pickupInventory in @event.Inventories)
         {
-            var productInventory = _productInventoryRepo
-                .GetByProductId(pickupInventory.ProductId);
-            if (productInventory == null)
-            {
-                // This should never happen due to delete inventory saga
-                return;
-            }
-
             // This should not throw exceeding stock threshold
-            productInventory.AddFulfillableStock(pickupInventory.StockUnits);
-            _productInventoryRepo.Update(productInventory);
+            _updateStockService.AddFulfillableStock(
+                pickupInventory.ProductId, pickupInventory.StockUnits);
         }
         await Task.CompletedTask;
     }

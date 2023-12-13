@@ -29,17 +29,18 @@ public class LotUnitTests
     #endregion
 
     [Fact]
-    public void LotConstructor_Succeeds_WhenAllValid()
+    public void FulfillableConstructor_Succeeds_WhenAllValid()
     {
         var lot = new Lot(_inventory, _validUnitsInStock);
 
+        ExtendedAssert.SameTime(lot.TimeEnteredStorage, DateTime.Now);
         Assert.Equal(_validUnitsInStock, lot.UnitsInStock);
         Assert.Equal(0u, lot.UnitsPendingRemoval);
         AssertTotalUnits(lot);
     }
 
     [Fact]
-    public void LotConstructor_ThrowsArgOutOfRangeException_WhenUnitsInStockIsZero()
+    public void FulfillableConstructor_ThrowsArgOutOfRangeException_WhenUnitsInStockIsZero()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
@@ -47,43 +48,39 @@ public class LotUnitTests
         });
     }
 
-    [Fact]
-    public void FulfillableLotConstructor_Succeeds_WhenAllValid()
-    {
-        var fulfillableLot = new FulfillableLot(_inventory, _validUnitsInStock);
-
-        Assert.Equal(DateTime.Now.Date, fulfillableLot.DateEnteredStorage);
-        Assert.Equal(_validUnitsInStock, fulfillableLot.UnitsInStock);
-        Assert.Equal(0u, fulfillableLot.UnitsPendingRemoval);
-        AssertTotalUnits(fulfillableLot);
-    }
-
     [Theory]
     [InlineData(UnfulfillableCategory.Defective)]
-    [InlineData(UnfulfillableCategory.WarehouseDamaged)]
     [InlineData(UnfulfillableCategory.CustomerDamaged)]
+    [InlineData(UnfulfillableCategory.WarehouseDamaged)]
     [InlineData(UnfulfillableCategory.Stranded)]
-    public void UnfulfillableLotConstructor_Succeeds_WhenAllValid(
-        UnfulfillableCategory category)
+    public void UnfulfillableConstructor_Succeeds_WhenAllValid(UnfulfillableCategory category)
     {
-        var unfulfillableLot = new UnfulfillableLot(_inventory, _validUnitsInStock, category);
+        var lot = new Lot(_inventory, category, _validUnitsInStock);
 
-        Assert.Equal(DateTime.Now.Date, unfulfillableLot.DateUnfulfillableSince);
-        Assert.Equal(_validUnitsInStock, unfulfillableLot.UnitsInStock);
-        Assert.Equal(0u, unfulfillableLot.UnitsPendingRemoval);
-        AssertTotalUnits(unfulfillableLot);
+        ExtendedAssert.SameTime(lot.TimeEnteredStorage, DateTime.Now);
+        Assert.NotNull(lot.TimeUnfulfillableSince);
+        ExtendedAssert.SameTime(lot.TimeUnfulfillableSince.Value, DateTime.Now);
+        Assert.Equal(category, lot.UnfulfillableCategory);
+        Assert.Equal(_validUnitsInStock, lot.UnitsInStock);
+        Assert.Equal(0u, lot.UnitsPendingRemoval);
+        AssertTotalUnits(lot);
     }
 
-    [Theory]
-    [InlineData(-1)]
-    [InlineData(100)]
-    public void UnfulfillableLotConstructor_ThrowsArgOutOfRangeException_WhenUnfulfillableCategoryDoesNotExist(
-        int enumValue)
+    [Fact]
+    public void UnfulfillableConstructor_ThrowsArgOutOfRangeException_WhenUnfulfillableCategoryNotExist()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            var unfulfillableLot = new UnfulfillableLot(_inventory,
-                _validUnitsInStock, (UnfulfillableCategory)enumValue);
+            var lot = new Lot(_inventory, (UnfulfillableCategory)1111, _validUnitsInStock);
+        });
+    }
+
+    [Fact]
+    public void UnfulfillableConstructor_ThrowsArgOutOfRangeException_WhenUnitsInStockIsZero()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            var lot = new Lot(_inventory, UnfulfillableCategory.Defective, 0u);
         });
     }
 
@@ -269,5 +266,47 @@ public class LotUnitTests
         {
             lot.ReturnPendingUnitsToStock(lot.UnitsPendingRemoval + 1);
         });
+    }
+
+    [Theory]
+    [InlineData(UnfulfillableCategory.Defective)]
+    [InlineData(UnfulfillableCategory.CustomerDamaged)]
+    [InlineData(UnfulfillableCategory.WarehouseDamaged)]
+    [InlineData(UnfulfillableCategory.Stranded)]
+    public void LabelUnfulfillable_SetsUnfulfillableCategoryAndTimeUnfulfillableSinceToNow(
+        UnfulfillableCategory category)
+    {
+        var lot = GetTestLot();
+
+        lot.LabelUnfulfillable(category);
+
+        Assert.NotNull(lot.TimeUnfulfillableSince);
+        ExtendedAssert.SameTime(lot.TimeUnfulfillableSince.Value, DateTime.Now);
+        Assert.Equal(category, lot.UnfulfillableCategory);
+    }
+
+    [Fact]
+    public void RemoveUnfulfillableLabel_SetsUnfulfillableCategoryAndTimeToNull_WhenCategoryIsStranded()
+    {
+        var lot = GetTestLot();
+        lot.LabelUnfulfillable(UnfulfillableCategory.Stranded);
+
+        lot.RemoveUnfulfillableLabel();
+
+        Assert.Null(lot.TimeUnfulfillableSince);
+        Assert.Null(lot.UnfulfillableCategory);
+    }
+
+    [Theory]
+    [InlineData(UnfulfillableCategory.Defective)]
+    [InlineData(UnfulfillableCategory.CustomerDamaged)]
+    [InlineData(UnfulfillableCategory.WarehouseDamaged)]
+    public void RemoveUnfulfillableLabel_ThrowsInvalidOpException_WhenCategoryNotStranded(
+        UnfulfillableCategory category)
+    {
+        var lot = GetTestLot();
+        lot.LabelUnfulfillable(category);
+
+        Assert.Throws<InvalidOperationException>(lot.RemoveUnfulfillableLabel);
     }
 }

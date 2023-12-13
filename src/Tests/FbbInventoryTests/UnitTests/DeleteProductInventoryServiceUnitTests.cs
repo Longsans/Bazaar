@@ -31,25 +31,15 @@ public class DeleteProductInventoryServiceUnitTests
     private static void SetProductInventoryUnits(ProductInventory productInv,
         uint fulfillableUnits, uint unfulfillableUnits)
     {
-        var ffLots = fulfillableUnits > 0
-            ? new List<FulfillableLot>
-            {
-                new(productInv, fulfillableUnits)
-            }
-            : new List<FulfillableLot>();
-        var ufLots = unfulfillableUnits > 0
-            ? new List<UnfulfillableLot>
-            {
-                new(productInv, unfulfillableUnits, UnfulfillableCategory.Defective)
-            }
-            : new List<UnfulfillableLot>();
+        var lots = new List<Lot>();
+        if (fulfillableUnits > 0)
+            lots.Add(new(productInv, fulfillableUnits));
+        if (unfulfillableUnits > 0)
+            lots.Add(new(productInv, UnfulfillableCategory.Defective, unfulfillableUnits));
 
-        typeof(ProductInventory).GetField("_fulfillableLots",
+        typeof(ProductInventory).GetField("_lots",
                 BindingFlags.NonPublic | BindingFlags.Instance)!
-            .SetValue(productInv, ffLots);
-        typeof(ProductInventory).GetField("_unfulfillableLots",
-                BindingFlags.NonPublic | BindingFlags.Instance)!
-            .SetValue(productInv, ufLots);
+            .SetValue(productInv, lots);
     }
 
     private static void SetupProductInvWithSellerInv(

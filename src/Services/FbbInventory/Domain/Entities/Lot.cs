@@ -2,16 +2,23 @@
 
 public class Lot
 {
-    public int Id { get; protected set; }
-    public string LotNumber { get; protected set; }
-    public uint UnitsInStock { get; protected set; }
-    public uint UnitsPendingRemoval { get; protected set; }
-    public uint TotalUnits { get; protected set; }
-    public ProductInventory ProductInventory { get; protected set; }
-    public int ProductInventoryId { get; protected set; }
+    public int Id { get; private set; }
+    public string LotNumber { get; private set; }
+    public uint UnitsInStock { get; private set; }
+    public uint UnitsPendingRemoval { get; private set; }
+    public uint TotalUnits { get; private set; }
+    public DateTime TimeEnteredStorage { get; private set; }
+    public DateTime? TimeUnfulfillableSince { get; private set; }
+    public UnfulfillableCategory? UnfulfillableCategory { get; private set; }
+    public ProductInventory ProductInventory { get; private set; }
+    public int ProductInventoryId { get; private set; }
 
+    public bool IsUnfulfillable => UnfulfillableCategory != null && TimeUnfulfillableSince != null;
     public bool HasUnitsInStock => UnitsInStock > 0;
+    public bool IsUnfulfillableBeyondPolicyDuration
+        => TimeUnfulfillableSince + StoragePolicy.MaximumUnfulfillableDuration <= DateTime.Now.Date;
 
+    // Fulfillable lot
     public Lot(
         ProductInventory inventory, uint unitsInStock)
     {
@@ -21,9 +28,34 @@ public class Lot
                 "Fulfillable units cannot be 0.");
         }
 
+        TimeEnteredStorage = DateTime.Now;
+        UnitsInStock = unitsInStock;
         ProductInventory = inventory;
         ProductInventoryId = inventory.Id;
+        UpdateTotalUnits();
+    }
+
+    // Unfulfillable lot
+    public Lot(
+        ProductInventory inventory, UnfulfillableCategory unfulfillableCategory, uint unitsInStock)
+    {
+        if (!Enum.IsDefined(typeof(UnfulfillableCategory), unfulfillableCategory))
+        {
+            throw new ArgumentOutOfRangeException(nameof(unfulfillableCategory),
+                "Unfulfillable category does not exist.");
+        }
+        if (unitsInStock == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(unitsInStock),
+                "Fulfillable units cannot be 0.");
+        }
+
+        TimeEnteredStorage = DateTime.Now;
+        TimeUnfulfillableSince = DateTime.Now;
+        UnfulfillableCategory = unfulfillableCategory;
         UnitsInStock = unitsInStock;
+        ProductInventory = inventory;
+        ProductInventoryId = inventory.Id;
         UpdateTotalUnits();
     }
 
@@ -114,8 +146,34 @@ public class Lot
         UpdateTotalUnits();
     }
 
+    public void LabelUnfulfillable(UnfulfillableCategory category)
+    {
+        TimeUnfulfillableSince = DateTime.Now;
+        UnfulfillableCategory = category;
+    }
+
+    public void RemoveUnfulfillableLabel()
+    {
+        if (UnfulfillableCategory != null
+            && UnfulfillableCategory != Entities.UnfulfillableCategory.Stranded)
+        {
+            throw new InvalidOperationException(
+                "Cannot remove unfulfillable label on damaged goods.");
+        }
+        TimeUnfulfillableSince = null;
+        UnfulfillableCategory = null;
+    }
+
     protected void UpdateTotalUnits()
     {
         TotalUnits = UnitsInStock + UnitsPendingRemoval;
     }
+}
+
+public enum UnfulfillableCategory
+{
+    Defective,
+    WarehouseDamaged,
+    CustomerDamaged,
+    Stranded
 }

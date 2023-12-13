@@ -6,18 +6,21 @@ public class CatalogController : ControllerBase
 {
     private readonly ICatalogRepository _catalogRepo;
     private readonly IDeleteCatalogItemService _deleteService;
+    private readonly ListingService _listingService;
 
     public CatalogController(
         ICatalogRepository catalogRepo,
-        IDeleteCatalogItemService deleteService)
+        IDeleteCatalogItemService deleteService,
+        ListingService listingService)
     {
         _catalogRepo = catalogRepo;
         _deleteService = deleteService;
+        _listingService = listingService;
     }
 
     [HttpGet("{id}")]
     //[Authorize(Policy = "HasReadScope")]
-    public IActionResult GetById(int id, bool includeDeleted = false)
+    public ActionResult<CatalogItemResponse> GetById(int id, bool includeDeleted = false)
     {
         var item = _catalogRepo.GetById(id);
         if (item == null || !includeDeleted && item.IsDeleted)
@@ -25,12 +28,12 @@ public class CatalogController : ControllerBase
             return NotFound();
         }
 
-        return Ok(item);
+        return new CatalogItemResponse(item);
     }
 
     [HttpGet]
     //[Authorize(Policy = "HasReadScope")]
-    public ActionResult<IEnumerable<CatalogItem>> GetByCriteria(
+    public ActionResult<IEnumerable<CatalogItemResponse>> GetByCriteria(
         string? productId = null, string? sellerId = null,
         string? nameSubstring = null, bool includeDeleted = false)
     {
@@ -71,22 +74,27 @@ public class CatalogController : ControllerBase
             }
         }
 
-        return includeDeleted
-            ? items
-            : items.Where(i => !i.IsDeleted).ToList();
+        if (!includeDeleted)
+        {
+            items = items.Where(i => !i.IsDeleted).ToList();
+        }
+        return items.Select(x => new CatalogItemResponse(x)).ToList();
     }
 
+    // Shopper only
     [HttpPost]
     [Authorize(Policy = "HasModifyScope")]
-    public ActionResult<CatalogItem> Create(CreateCatalogItemRequest command)
+    public ActionResult<CatalogItemResponse> Create(CreateCatalogItemRequest command)
     {
         var createdItem = _catalogRepo.Create(command.ToNewCatalogItem());
-        return CreatedAtAction(nameof(GetById), new { createdItem.Id }, createdItem);
+        return CreatedAtAction(nameof(GetById), new { createdItem.Id },
+            new CatalogItemResponse(createdItem));
     }
 
+    // Shopper only
     [HttpPut("{productId}/product-details")]
     [Authorize(Policy = "HasModifyScope")]
-    public ActionResult<CatalogItem> UpdateProductDetails(string productId,
+    public ActionResult<CatalogItemResponse> UpdateProductDetails(string productId,
         UpdateProductDetailsRequest request)
     {
         var catalogItem = _catalogRepo.GetByProductId(productId);
@@ -100,11 +108,12 @@ public class CatalogController : ControllerBase
 
         _catalogRepo.Update(catalogItem);
 
-        return catalogItem;
+        return new CatalogItemResponse(catalogItem);
     }
 
-    [HttpPut("{productId}/stock")]
-    public ActionResult<CatalogItem> Restock(string productId, RestockRequest request)
+    // Shopper only
+    [HttpPatch("{productId}/stock")]
+    public ActionResult<CatalogItemResponse> ChangeStock(string productId, ChangeStockRequest request)
     {
         var catalogItem = _catalogRepo.GetByProductId(productId);
         if (catalogItem == null || catalogItem.IsDeleted)
@@ -112,20 +121,54 @@ public class CatalogController : ControllerBase
             return NotFound();
         }
 
+        // This bit of business logic unfortunately can only be here
+        if (catalogItem.IsFbb)
+        {
+            return Conflict(new
+            {
+                error = "Cannot change FBB products' stocks directly. " +
+                "FBB stocks are updated by Bazaar."
+            });
+        }
+
         try
         {
-            catalogItem.Restock(request.RestockUnits);
+            if (request.ChangeType == StockChangeType.Reduce)
+                catalogItem.ReduceStock(request.Units);
+            else if (request.ChangeType == StockChangeType.Restock)
+                catalogItem.Restock(request.Units);
+            else throw new ArgumentException("Change type can only be Reduce or Restock.");
         }
         catch (Exception ex) when (
             ex is ArgumentException
+            || ex is NotEnoughStockException
             || ex is ExceedingMaxStockThresholdException)
         {
             return BadRequest(new { error = ex.Message });
         }
 
-        return catalogItem;
+        _catalogRepo.Update(catalogItem);
+        return new CatalogItemResponse(catalogItem);
     }
 
+    // Shopper only
+    [HttpPatch("{productId}/listing")]
+    public IActionResult ChangeListingStatus(string productId, ChangeListingStatusRequest request)
+    {
+        var result = request.Status switch
+        {
+            ListingCloseStatus.Listed => _listingService.Relist(productId),
+            ListingCloseStatus.Closed => _listingService.CloseListing(productId),
+            _ => Result.Invalid(new ValidationError
+            {
+                Identifier = nameof(request.Status),
+                ErrorMessage = "Invalid status."
+            })
+        };
+        return result.ToActionResult(this);
+    }
+
+    // Shopper only
     [HttpDelete("{productId}")]
     public IActionResult SoftDelete(string productId)
     {

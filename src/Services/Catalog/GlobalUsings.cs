@@ -6,6 +6,7 @@ global using Bazaar.BuildingBlocks.EventBus.Events;
 global using Bazaar.BuildingBlocks.EventBusRabbitMQ;
 global using Bazaar.BuildingBlocks.JsonAdapter;
 global using Bazaar.Catalog.Domain.Entities;
+global using Bazaar.Catalog.Domain.Enums;
 global using Bazaar.Catalog.Domain.Exceptions;
 global using Bazaar.Catalog.Domain.Interfaces;
 global using Bazaar.Catalog.Domain.Services;

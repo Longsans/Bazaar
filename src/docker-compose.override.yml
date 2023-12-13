@@ -24,81 +24,18 @@ services:
     ports:
       - 8080:8080
 
-  identity-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5438:1433"
-
-  catalog-sql:
+  sqldata:
     environment:
       - SA_PASSWORD=P@ssw0rd
       - ACCEPT_EULA=Y
     ports:
       - "5433:1433"
 
-  fbbinventory-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5439:1433"
-
-  transport-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5440:1433"
-
-  disposal-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5441:1433"
-
-  basket-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5434:1433"
-
-  ordering-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5435:1433"
-
-  shopper-info-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5436:1433"
-
-  contracting-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5437:1433"
-
-  task-scheduler-sql:
-    environment:
-      - SA_PASSWORD=P@ssw0rd
-      - ACCEPT_EULA=Y
-    ports:
-      - "5438:1433"
-
   identity-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionString=Server=identity-sql;Database=BazaarIdentity;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarIdentity;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - WebSellerRedirectUrl=http://localhost:5004
       - WebShoppingRedirectUrl=http://localhost:5002
       - IssuerUri=http://identity-api
@@ -106,25 +43,27 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     ports:
-      - ${IDENTITY_PORT}:80
+      - 5555:80
 
+# Task scheduler
   task-scheduler:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - HangfireConnection=Server=task-scheduler-sql;Database=Hangfire;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
-      - DbServerConnection=Server=task-scheduler-sql;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - HangfireConnection=Server=sqldata;Database=Hangfire;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - DbServerConnection=Server=sqldata;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - FbbInventoryApi=http://internallb/fbb
     ports:
       - "5500:80"
   
+# Application services
   catalog-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/SeedData/seed_data.json
-      - ConnectionString=Server=catalog-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarCatalog;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - OrderingApi=http://internallb/o
       - IdentityApi=http://identity-api
       - DisableIdentity=true
@@ -141,13 +80,13 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       # - SeedDataFilePath=/root/SeedData/seed_data.json
-      - ConnectionString=Server=fbbinventory-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarFbbInventory;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     # volumes:
       # - ./SeedData:/root/SeedData
     ports:
-      - "5252:80"
+      - "5242:80"
 
   transport-api:
     environment:
@@ -155,13 +94,13 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       # - SeedDataFilePath=/root/SeedData/seed_data.json
-      - ConnectionString=Server=transport-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarTransport;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     # volumes:
       # - ./SeedData:/root/SeedData
     ports:
-      - "5254:80"
+      - "5244:80"
 
   disposal-api:
     environment:
@@ -169,13 +108,13 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       # - SeedDataFilePath=/root/SeedData/seed_data.json
-      - ConnectionString=Server=disposal-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarDisposal;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     # volumes:
       # - ./SeedData:/root/SeedData
     ports:
-      - "5256:80"
+      - "5246:80"
 
   shopper-info-api:
     environment:
@@ -183,13 +122,13 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/SeedData/seed_data.json
-      - ConnectionString=Server=shopper-info-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarShopperInfo;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     volumes:
       - ./SeedData:/root/SeedData
     ports:
-      - "5242:80"
+      - "5248:80"
 
   contracting-api:
     environment:
@@ -197,13 +136,13 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/SeedData/seed_data.json
-      - ConnectionString=Server=contracting-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarContracting;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     volumes:
       - ./SeedData:/root/SeedData
     ports:
-      - "5244:80"
+      - "5250:80"
 
   basket-api:
     environment:
@@ -211,11 +150,11 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/SeedData/seed_data.json
-      - ConnectionString=Server=basket-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarBasket;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     ports:
-      - "5246:80"
+      - "5252:80"
     volumes:
       - ./SeedData:/root/SeedData
 
@@ -225,13 +164,13 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/SeedData/seed_data.json
-      - ConnectionString=Server=ordering-sql;Database=Bazaar;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
+      - ConnectionString=Server=sqldata;Database=BazaarOrdering;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - IdentityApi=http://identity-api
       - DisableIdentity=true
     volumes:
       - ./SeedData:/root/SeedData
     ports:
-      - "5248:80"
+      - "5254:80"
 
   payment-api:
     environment:
@@ -239,14 +178,15 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - EventBusConnection=rabbitmq
     ports:
-      - "5250:80"
+      - "5256:80"
 
+# Client BFFs
   webshopping:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - IdentityApi=http://identity-api
-      - IdentityRewriteUrl=http://localhost:5252 
+      - IdentityRewriteUrl=http://localhost:5555 
       - ClientId=webshopping
       - ClientSecret=webshoppingsecret
       - CatalogApi=http://catalog-api
@@ -263,7 +203,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - REACT_APP_HTTPS_PORT=5004
       - IdentityApi=http://identity-api
-      - IdentityRewriteUrl=http://localhost:5252
+      - IdentityRewriteUrl=http://localhost:5555
       - ClientId=webseller
       - ClientSecret=websellersecret
       - CatalogApi=http://catalog-api

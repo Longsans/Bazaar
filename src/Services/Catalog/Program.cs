@@ -13,6 +13,7 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 
 builder.Services.AddScoped<IDeleteCatalogItemService, DeleteCatalogItemService>();
 builder.Services.AddScoped<IFulfillmentMethodService, FulfillmentMethodService>();
+builder.Services.AddScoped<ListingService>();
 
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
@@ -134,7 +135,6 @@ public static class EventBusExtensionMethods
         services.AddTransient<ProductFbbInventoryUpdatedIntegrationEventHandler>();
         services.AddTransient<ProductOrdersStatusReportChangedIntegrationEventHandler>();
         services.AddTransient<ClientAccountClosedIntegrationEventHandler>();
-        services.AddTransient<FbbInventoryPickedUpIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -152,9 +152,6 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             ClientAccountClosedIntegrationEvent,
             ClientAccountClosedIntegrationEventHandler>();
-        eventBus.Subscribe<
-            FbbInventoryPickedUpIntegrationEvent,
-            FbbInventoryPickedUpIntegrationEventHandler>();
     }
 }
 

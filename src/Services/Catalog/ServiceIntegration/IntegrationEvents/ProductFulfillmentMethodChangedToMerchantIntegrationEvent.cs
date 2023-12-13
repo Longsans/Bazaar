@@ -1,4 +1,4 @@
 ﻿namespace Bazaar.Catalog.ServiceIntegration.IntegrationEvents;
 
-public record ProductFulfillmentChangedToFbbIntegrationEvent(
+public record ProductFulfillmentMethodChangedToMerchantIntegrationEvent(
     string ProductId) : IntegrationEvent;

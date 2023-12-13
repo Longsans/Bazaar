@@ -5,9 +5,9 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "disposal",
           "fbbinventory",
-          "transport"
+          "catalog",
+          "disposal"
         ]
       }
     }

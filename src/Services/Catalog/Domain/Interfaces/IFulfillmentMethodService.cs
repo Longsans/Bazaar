@@ -2,6 +2,6 @@
 
 public interface IFulfillmentMethodService
 {
-    Result ChangeToFulfillmentByBazaar(string productId);
-    Result ChangeToFulfillmentByMerchant(string productId);
+    Result ChangeFulfillmentMethodToFbb(string productId);
+    Result ChangeFulfillmentMethodToMerchant(string productId);
 }
