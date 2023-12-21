@@ -4,13 +4,18 @@ public class ProductFulfillmentChangedToMerchantIntegrationEventHandler
     : IIntegrationEventHandler<ProductFulfillmentChangedToMerchantIntegrationEvent>
 {
     private readonly IProductInventoryRepository _productInventoryRepo;
+    private readonly StockAdjustmentService _stockAdjustmentService;
+    private readonly ILogger<ProductFulfillmentChangedToMerchantIntegrationEventHandler> _logger;
     private readonly IEventBus _eventBus;
 
     public ProductFulfillmentChangedToMerchantIntegrationEventHandler(
-        IProductInventoryRepository productInventoryRepo, IEventBus eventBus)
+        IProductInventoryRepository productInventoryRepo, StockAdjustmentService stockAdjustmentService,
+        IEventBus eventBus, ILogger<ProductFulfillmentChangedToMerchantIntegrationEventHandler> logger)
     {
         _productInventoryRepo = productInventoryRepo;
+        _stockAdjustmentService = stockAdjustmentService;
         _eventBus = eventBus;
+        _logger = logger;
     }
 
     public async Task Handle(ProductFulfillmentChangedToMerchantIntegrationEvent @event)
@@ -22,10 +27,12 @@ public class ProductFulfillmentChangedToMerchantIntegrationEventHandler
             return;
         }
 
-        var unitsInStock = inventory.FulfillableUnitsInStock;
-        inventory.ReduceFulfillableStockFromOldToNew(unitsInStock);
-        inventory.AddUnfulfillableStock(UnfulfillableCategory.Stranded, unitsInStock);
-        _productInventoryRepo.Update(inventory);
+        var result = _stockAdjustmentService.RenderProductStockStranded(@event.ProductId);
+        if (!result.IsSuccess)
+        {
+            _logger.LogError("Error rendering stock stranded for product {ProductId}: {ErrorMessage}",
+                @event.ProductId, result.GetJoinedErrorMessage());
+        }
         await Task.CompletedTask;
     }
 }

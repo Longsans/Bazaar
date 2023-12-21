@@ -1,22 +1,22 @@
 ﻿namespace Bazaar.Transport.ServiceIntegration.EventHandling;
 
-public class LotUnitsLabeledForReturnIntegrationEventHandler
-    : IIntegrationEventHandler<LotUnitsLabeledForReturnIntegrationEvent>
+public class LotQuantitiesSentForReturnIntegrationEventHandler
+    : IIntegrationEventHandler<LotQuantitiesSentForReturnIntegrationEvent>
 {
     private readonly IInventoryReturnRepository _returnRepo;
     private readonly IEstimationService _estimationService;
 
-    public LotUnitsLabeledForReturnIntegrationEventHandler(
+    public LotQuantitiesSentForReturnIntegrationEventHandler(
         IInventoryReturnRepository returnRepo, IEstimationService estimationService)
     {
         _returnRepo = returnRepo;
         _estimationService = estimationService;
     }
 
-    public async Task Handle(LotUnitsLabeledForReturnIntegrationEvent @event)
+    public async Task Handle(LotQuantitiesSentForReturnIntegrationEvent @event)
     {
-        var returnQuantities = @event.UnitsFromLots.Select(
-            x => new ReturnQuantity(x.LotNumber, x.Units));
+        var returnQuantities = @event.LotQuantities.Select(
+            x => new ReturnQuantity(x.LotNumber, x.Quantity));
         var expectedDeliveryDate = _estimationService
             .EstimateInventoryReturnCompletion(returnQuantities);
         var inventoryReturn = new InventoryReturn(@event.DeliveryAddress, returnQuantities,

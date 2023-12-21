@@ -4,96 +4,135 @@ public class Lot
 {
     public int Id { get; private set; }
     public string LotNumber { get; private set; }
-    public uint UnitsInStock { get; private set; }
-    public uint UnitsPendingRemoval { get; private set; }
-    public uint TotalUnits { get; private set; }
-    public DateTime TimeEnteredStorage { get; private set; }
-    public DateTime? TimeUnfulfillableSince { get; private set; }
+    public DateTime DateUnitsEnteredStorage { get; private set; }
+    public DateTime? DateUnitsBecameStranded { get; private set; }
+    public DateTime? DateUnitsBecameUnfulfillable { get; private set; }
     public UnfulfillableCategory? UnfulfillableCategory { get; private set; }
+    public uint UnitsInStock { get; private set; }
+    public uint UnitsInRemoval { get; private set; }
     public ProductInventory ProductInventory { get; private set; }
     public int ProductInventoryId { get; private set; }
 
-    public bool IsUnfulfillable => UnfulfillableCategory != null && TimeUnfulfillableSince != null;
+    public uint TotalUnits => UnitsInStock + UnitsInRemoval;
+    public bool IsUnitsStranded => DateUnitsBecameStranded != null;
+    public bool IsUnitsUnfulfillable => DateUnitsBecameUnfulfillable != null;
     public bool HasUnitsInStock => UnitsInStock > 0;
-    public bool IsUnfulfillableBeyondPolicyDuration
-        => TimeUnfulfillableSince + StoragePolicy.MaximumUnfulfillableDuration <= DateTime.Now.Date;
+    public bool HasAnyUnits => TotalUnits > 0;
+    public bool IsUnfulfillableBeyondPolicyDuration =>
+        DateUnitsBecameUnfulfillable + StoragePolicy.MaximumUnfulfillableDuration <= DateTime.Now.Date;
 
-    // Fulfillable lot
+    #region Constructors
+    /// <summary>
+    /// Constructs fulfillable lot with the specified date that units entered storage and optionally
+    /// the date that they became stranded, which, if specified, will result in a lot of stranded units. 
+    /// </summary>
+    /// <param name="inventory"></param>
+    /// <param name="units"></param>
+    /// <param name="dateUnitsEnteredStorage"></param>
+    /// <param name="dateUnitsBecameStranded"></param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public Lot(
-        ProductInventory inventory, uint unitsInStock)
+        ProductInventory inventory, uint units,
+        DateTime dateUnitsEnteredStorage, DateTime? dateUnitsBecameStranded = null)
     {
-        if (unitsInStock == 0)
+        if (units == 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(unitsInStock),
-                "Fulfillable units cannot be 0.");
+            throw new ArgumentOutOfRangeException(nameof(units),
+                "Units cannot be 0.");
+        }
+        if (dateUnitsEnteredStorage.Date > DateTime.Now.Date)
+        {
+            throw new ArgumentOutOfRangeException(nameof(dateUnitsEnteredStorage),
+                "Date units entered storage cannot be in the future.");
+        }
+        if (dateUnitsBecameStranded < dateUnitsEnteredStorage)
+        {
+            throw new ArgumentException(
+                "Date units went stranded cannot be before date units entered storage.");
         }
 
-        TimeEnteredStorage = DateTime.Now;
-        UnitsInStock = unitsInStock;
+        DateUnitsEnteredStorage = dateUnitsEnteredStorage;
+        DateUnitsBecameStranded = dateUnitsBecameStranded;
+        UnitsInStock = units;
         ProductInventory = inventory;
         ProductInventoryId = inventory.Id;
-        UpdateTotalUnits();
     }
 
-    // Unfulfillable lot
+    /// <summary>
+    /// Constructs fulfillable lot with <see cref="DateUnitsEnteredStorage"/> set to current date.
+    /// </summary>
+    /// <param name="inventory"></param>
+    /// <param name="units"></param>
     public Lot(
-        ProductInventory inventory, UnfulfillableCategory unfulfillableCategory, uint unitsInStock)
+        ProductInventory inventory, uint units)
+        : this(inventory, units, DateTime.Now.Date)
     {
+
+    }
+
+    /// <summary>
+    /// Constructs unfulfillable lot with specified date units entered storage, 
+    /// date units became unfulfillable and unfulfillable category.
+    /// </summary>
+    /// <param name="inventory"></param>
+    /// <param name="units"></param>
+    /// <param name="dateUnitsEnteredStorage"></param>
+    /// <param name="dateUnitsBecameUnfulfillable"></param>
+    /// <param name="unfulfillableCategory"></param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <exception cref="ArgumentException"></exception>
+    public Lot(
+        ProductInventory inventory, uint units, DateTime dateUnitsEnteredStorage,
+        DateTime dateUnitsBecameUnfulfillable, UnfulfillableCategory unfulfillableCategory)
+        : this(inventory, units, dateUnitsEnteredStorage)
+    {
+        if (dateUnitsBecameUnfulfillable.Date > DateTime.Now.Date)
+        {
+            throw new ArgumentOutOfRangeException(nameof(dateUnitsEnteredStorage),
+                "Date units went unfulfillable cannot be in the future.");
+        }
+        if (dateUnitsBecameUnfulfillable < DateUnitsEnteredStorage)
+        {
+            throw new ArgumentException(
+                "Date units went unfulfillable cannot be before date units entered storage.");
+        }
         if (!Enum.IsDefined(typeof(UnfulfillableCategory), unfulfillableCategory))
         {
             throw new ArgumentOutOfRangeException(nameof(unfulfillableCategory),
                 "Unfulfillable category does not exist.");
         }
-        if (unitsInStock == 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(unitsInStock),
-                "Fulfillable units cannot be 0.");
-        }
 
-        TimeEnteredStorage = DateTime.Now;
-        TimeUnfulfillableSince = DateTime.Now;
+        DateUnitsBecameUnfulfillable = dateUnitsBecameUnfulfillable;
         UnfulfillableCategory = unfulfillableCategory;
-        UnitsInStock = unitsInStock;
-        ProductInventory = inventory;
-        ProductInventoryId = inventory.Id;
-        UpdateTotalUnits();
     }
 
-    protected Lot() { }
+    public Lot(
+        ProductInventory inventory, uint units, UnfulfillableCategory unfulfillableCategory)
+        : this(inventory, units, DateTime.Now.Date, DateTime.Now.Date, unfulfillableCategory)
+    {
 
-    public void ReduceStock(uint units)
+    }
+
+    // EF read constructor
+    private Lot() { }
+    #endregion
+
+    public void IncreaseUnits(uint units)
     {
         if (units == 0)
         {
             throw new ArgumentOutOfRangeException(nameof(units),
                 "Units cannot be 0.");
         }
-        if (units > UnitsInStock)
-        {
-            throw new NotEnoughUnitsException();
-        }
-
-        UnitsInStock -= units;
-        UpdateTotalUnits();
-    }
-
-    public void AddStock(uint units)
-    {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(units),
-                "Units cannot be 0.");
-        }
-        if (ProductInventory.TotalUnits + units > ProductInventory.MaxStockThreshold)
+        if (units > ProductInventory.RemainingCapacity)
         {
             throw new ExceedingMaxStockThresholdException();
         }
 
         UnitsInStock += units;
-        UpdateTotalUnits();
     }
 
-    public void LabelUnitsInStockForRemoval(uint units)
+    public void ReduceUnits(uint units)
     {
         if (units == 0)
         {
@@ -102,71 +141,56 @@ public class Lot
         }
         if (units > UnitsInStock)
         {
-            throw new NotEnoughUnitsException(
-                "Number of units pending removal exceeds total number of units.");
+            throw new NotEnoughUnitsException("Lot does not have enough units to reduce.");
         }
 
         UnitsInStock -= units;
-        UnitsPendingRemoval += units;
-        UpdateTotalUnits();
     }
 
-    public void RemovePendingUnits(uint unitsToRemove)
+    public void SendUnitsForRemoval(uint units)
     {
-        if (unitsToRemove == 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(unitsToRemove),
-                "Units cannot be 0.");
-        }
-        if (unitsToRemove > UnitsPendingRemoval)
-        {
-            throw new NotEnoughUnitsException(
-                "Units pending removal are fewer than the units requested to remove.");
-        }
-
-        UnitsPendingRemoval -= unitsToRemove;
-        UpdateTotalUnits();
+        ReduceUnits(units);
+        UnitsInRemoval += units;
     }
 
-    public void ReturnPendingUnitsToStock(uint unitsToReturn)
+    public void RestoreUnitsFromRemoval(uint units)
     {
-        if (unitsToReturn == 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(unitsToReturn),
-                "Units cannot be 0.");
-        }
-        if (unitsToReturn > UnitsPendingRemoval)
+        if (units > UnitsInRemoval)
         {
             throw new NotEnoughUnitsException(
-                "Units pending removal are fewer than the units requested to return.");
+                "Lot units in removal are fewer than units to restore.");
         }
-
-        UnitsPendingRemoval -= unitsToReturn;
-        UnitsInStock += unitsToReturn;
-        UpdateTotalUnits();
+        UnitsInRemoval -= units;
+        IncreaseUnits(units);
     }
 
-    public void LabelUnfulfillable(UnfulfillableCategory category)
+    public void ConfirmUnitsRemoved(uint units)
     {
-        TimeUnfulfillableSince = DateTime.Now;
-        UnfulfillableCategory = category;
+        if (units > UnitsInRemoval)
+        {
+            throw new NotEnoughUnitsException(
+                "Not enough units in removal to confirm removed.");
+        }
+        UnitsInRemoval -= units;
     }
 
-    public void RemoveUnfulfillableLabel()
+    public void TurnStranded()
     {
-        if (UnfulfillableCategory != null
-            && UnfulfillableCategory != Entities.UnfulfillableCategory.Stranded)
+        if (IsUnitsUnfulfillable)
         {
             throw new InvalidOperationException(
-                "Cannot remove unfulfillable label on damaged goods.");
+                "Unfulfillable units cannot be rendered stranded.");
         }
-        TimeUnfulfillableSince = null;
-        UnfulfillableCategory = null;
+        DateUnitsBecameStranded = DateTime.Now.Date;
     }
 
-    protected void UpdateTotalUnits()
+    public void ConfirmStrandingResolved()
     {
-        TotalUnits = UnitsInStock + UnitsPendingRemoval;
+        if (!IsUnitsStranded)
+        {
+            throw new InvalidOperationException("Lot units are not stranded.");
+        }
+        DateUnitsBecameStranded = null;
     }
 }
 
@@ -175,5 +199,4 @@ public enum UnfulfillableCategory
     Defective,
     WarehouseDamaged,
     CustomerDamaged,
-    Stranded
 }

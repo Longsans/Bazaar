@@ -105,7 +105,7 @@ public static class EventBusExtensionMethods
                 retryCount);
         });
         services.AddTransient<ProductFbbInventoryDeletedIntegrationEventHandler>();
-        services.AddTransient<LotUnitsLabeledForReturnIntegrationEventHandler>();
+        services.AddTransient<LotQuantitiesSentForReturnIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -115,7 +115,7 @@ public static class EventBusExtensionMethods
             ProductFbbInventoryDeletedIntegrationEvent,
             ProductFbbInventoryDeletedIntegrationEventHandler>();
         eventBus.Subscribe<
-            LotUnitsLabeledForReturnIntegrationEvent,
-            LotUnitsLabeledForReturnIntegrationEventHandler>();
+            LotQuantitiesSentForReturnIntegrationEvent,
+            LotQuantitiesSentForReturnIntegrationEventHandler>();
     }
 }

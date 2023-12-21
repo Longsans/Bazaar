@@ -18,6 +18,7 @@ public class SellerInventoryRepository : ISellerInventoryRepository
     {
         return _context.SellerInventories
             .Include(x => x.ProductInventories)
+            .ThenInclude(p => p.Lots)
             .SingleOrDefault(x => x.Id == id);
     }
 
@@ -25,6 +26,7 @@ public class SellerInventoryRepository : ISellerInventoryRepository
     {
         return _context.SellerInventories
             .Include(x => x.ProductInventories)
+            .ThenInclude(p => p.Lots)
             .SingleOrDefault(x => x.SellerId == sellerId);
     }
 

@@ -4,37 +4,49 @@
 [ApiController]
 public class LotsController : ControllerBase
 {
-    private readonly IRemovalService _removalService;
+    private readonly StockAdjustmentService _stockAdjustmentService;
+    private readonly RemovalService _removalService;
 
-    public LotsController(IRemovalService removalService)
+    public LotsController(StockAdjustmentService stockAdjustmentService, RemovalService removalService)
     {
         _removalService = removalService;
+        _stockAdjustmentService = stockAdjustmentService;
     }
 
-    [HttpPatch("removal-requests")]
-    public IActionResult RequestRemovalForLots(LotsRemovalRequest request)
+    [HttpPatch]
+    public IActionResult SendLotsUnfulfillableBeyondPolicyDurationForDisposal(
+        bool unfulfillableBeyondPolicyDuration,
+        LotsUnfulfillableBeyondPolicyDurationDisposalRequest request)
     {
-        if (request.RemovalMethod == RemovalMethod.Return
-            && string.IsNullOrWhiteSpace(request.DeliveryAddress))
+        if (!unfulfillableBeyondPolicyDuration && request.SentForDisposal)
         {
-            return BadRequest(new { error = "Delivery address must be specified for return." });
+            return BadRequest();
         }
+        if (request.SentForDisposal)
+        {
+            _removalService
+                .SendLotsUnfulfillableBeyondPolicyDurationForDisposal();
+        }
+        return NoContent();
+    }
 
-        return (request.RemovalMethod == RemovalMethod.Return
-            ? _removalService.RequestReturnForLots(request.LotNumbers, request.DeliveryAddress)
-            : _removalService.RequestDisposalForLots(request.LotNumbers))
+    [HttpPatch("{lotNumber}/unfulfillable-records")]
+    public IActionResult RecordLotUnitsUnfulfillable(string lotNumber,
+        RecordUnfulfillableStockRequest request)
+    {
+        return _stockAdjustmentService
+            .MoveLotUnitsIntoUnfulfillableStock(
+                lotNumber, request.Quantity, request.UnfulfillableCategory)
             .ToActionResult(this);
     }
 
-    [HttpPatch("unf-disposal-requests")]
-    public IActionResult RequestDisposalForLotsUnfulfillableBeyondPolicyDuration(
-        LotsUnfulfillableBeyondPolicyDurationDisposalRequest request)
+    [HttpPost("/lot-adjustments")]
+    public IActionResult AdjustLotUnits(IEnumerable<LotAdjustmentQuantityDto> adjustmentQuantities)
     {
-        if (request.DisposeLotsUnfulfillableBeyondPolicyDuration)
+        if (adjustmentQuantities.Any(x => x.Quantity == 0))
         {
-            _removalService
-                .RequestDisposalForLotsUnfulfillableBeyondPolicyDuration();
+            return BadRequest(new { error = "Quantity adjusted cannot be 0." });
         }
-        return NoContent();
+        return _stockAdjustmentService.AdjustStockInLots(adjustmentQuantities).ToActionResult(this);
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Disposal.Domain.Entities;
 
-public class DisposeQuantity(string lotNumber, uint unitsToDispose, string inventoryOwnerId)
+public class DisposalQuantity(string lotNumber, uint unitsToDispose, string inventoryOwnerId)
 {
     public int Id { get; private set; }
     public string LotNumber { get; private set; } = lotNumber;

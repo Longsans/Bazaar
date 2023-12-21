@@ -2,20 +2,24 @@
 
 public record LotResponse(
     int Id,
-    uint UnitsInStock,
-    uint UnitsPendingRemoval,
-    uint TotalUnits,
-    DateTime TimeEnteredStorage,
-    DateTime? TimeUnfulfillableSince,
-    UnfulfillableCategory? UnfulfillableCategory,
+    string LotNumber,
     int ProductInventoryId,
+    uint UnitsInStock,
+    uint UnitsInRemoval,
+    uint TotalUnits,
+    DateTime DateUnitsEnteredStorage,
+    DateTime? DateUnitsBecameStranded,
+    DateTime? DateUnitsBecameUnfulfillable,
+    UnfulfillableCategory? UnfulfillableCategory,
     bool IsUnfulfillableBeyondPolicyDuration
 )
 {
     public LotResponse(Lot lot)
-        : this(lot.Id, lot.UnitsInStock, lot.UnitsPendingRemoval, lot.TotalUnits,
-              lot.TimeEnteredStorage, lot.TimeUnfulfillableSince, lot.UnfulfillableCategory,
-              lot.ProductInventoryId, lot.IsUnfulfillableBeyondPolicyDuration)
+        : this(lot.Id, lot.LotNumber, lot.ProductInventoryId,
+              lot.UnitsInStock, lot.UnitsInRemoval, lot.TotalUnits,
+              lot.DateUnitsEnteredStorage, lot.DateUnitsBecameStranded,
+              lot.DateUnitsBecameUnfulfillable, lot.UnfulfillableCategory,
+              lot.IsUnfulfillableBeyondPolicyDuration)
     {
 
     }

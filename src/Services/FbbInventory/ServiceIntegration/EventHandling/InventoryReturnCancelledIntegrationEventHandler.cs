@@ -3,27 +3,25 @@
 public class InventoryReturnCancelledIntegrationEventHandler
     : IIntegrationEventHandler<InventoryReturnCancelledIntegrationEvent>
 {
-    private readonly ILotRepository _lotRepo;
+    private readonly RemovalService _removalService;
+    private readonly ILogger<InventoryReturnCancelledIntegrationEventHandler> _logger;
 
-    public InventoryReturnCancelledIntegrationEventHandler(ILotRepository lotRepo)
+    public InventoryReturnCancelledIntegrationEventHandler(RemovalService removalService,
+        ILogger<InventoryReturnCancelledIntegrationEventHandler> logger)
     {
-        _lotRepo = lotRepo;
+        _removalService = removalService;
+        _logger = logger;
     }
 
     public async Task Handle(InventoryReturnCancelledIntegrationEvent @event)
     {
-        var lots = @event.LotsWithUnreturnedUnits.Select(x =>
+        var restoreQuantities = @event.UnreturnedLotQuantities.ToDictionary(x => x.LotNumber, x => x.Quantity);
+        var result = _removalService.RestoreLotUnitsFromRemoval(restoreQuantities);
+        if (!result.IsSuccess)
         {
-            var lot = _lotRepo.GetByLotNumber(x.LotNumber);
-            lot?.ReturnPendingUnitsToStock(x.Units);
-            return lot;
-        }).ToList();
-        if (lots.Any(x => x == null))
-        {
-            return;
+            _logger.LogError("Error restoring units to lots for return order {ReturnId}: {ErrorMessage}",
+                @event.ReturnId, result.GetJoinedErrorMessage());
         }
-        _lotRepo.UpdateRange(lots);
-
         await Task.CompletedTask;
     }
 }

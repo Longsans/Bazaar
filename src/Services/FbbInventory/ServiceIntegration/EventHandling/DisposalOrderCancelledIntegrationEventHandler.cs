@@ -3,37 +3,24 @@
 public class DisposalOrderCancelledIntegrationEventHandler
     : IIntegrationEventHandler<DisposalOrderCancelledIntegrationEvent>
 {
-    private readonly ILotRepository _lotRepo;
-    private readonly IEventBus _eventBus;
+    private readonly RemovalService _removalService;
+    private readonly ILogger<DisposalOrderCancelledIntegrationEventHandler> _logger;
 
-    public DisposalOrderCancelledIntegrationEventHandler(
-        ILotRepository lotRepo, IEventBus eventBus)
+    public DisposalOrderCancelledIntegrationEventHandler(RemovalService removalService,
+        ILogger<DisposalOrderCancelledIntegrationEventHandler> logger)
     {
-        _lotRepo = lotRepo;
-        _eventBus = eventBus;
+        _removalService = removalService;
+        _logger = logger;
     }
 
     public async Task Handle(DisposalOrderCancelledIntegrationEvent @event)
     {
-        var affectedProductInventories = new List<ProductInventory>();
-        foreach (var undisposedQty in @event.UndisposedQuantities)
+        var restoreQuantities = @event.UndisposedQuantities.ToDictionary(x => x.LotNumber, x => x.UndisposedUnits);
+        var result = _removalService.RestoreLotUnitsFromRemoval(restoreQuantities);
+        if (!result.IsSuccess)
         {
-            var lot = _lotRepo.GetByLotNumber(undisposedQty.LotNumber);
-            if (lot == null)
-            {
-                // Should not be possible
-                return;
-            }
-            lot.ReturnPendingUnitsToStock(undisposedQty.UndisposedUnits);
-            _lotRepo.Update(lot);
-
-            if (!lot.IsUnfulfillable && !affectedProductInventories.Contains(lot.ProductInventory))
-                affectedProductInventories.Add(lot.ProductInventory);
-        }
-
-        foreach (var inventory in affectedProductInventories)
-        {
-            _eventBus.Publish(new ProductFbbInventoryUpdatedIntegrationEvent(inventory));
+            _logger.LogError("Error restoring units to lots for disposal order {DisposalOrderId}: {ErrorMessage}",
+                @event.DisposalOrderId, result.GetJoinedErrorMessage());
         }
 
         await Task.CompletedTask;

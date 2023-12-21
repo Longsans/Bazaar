@@ -18,13 +18,13 @@ public class LotUnitTests
     private Lot GetTestLotWithPendingRemovalUnits()
     {
         var lot = GetTestLot();
-        lot.LabelUnitsInStockForRemoval(_validUnitsPendingRemoval);
+        lot.LabelRegularUnitsForRemoval(_validUnitsPendingRemoval);
         return lot;
     }
 
     private static void AssertTotalUnits(Lot lot)
     {
-        Assert.Equal(lot.UnitsInStock + lot.UnitsPendingRemoval, lot.TotalUnits);
+        Assert.Equal(lot.UnitsInStock + lot.PendingRemovalUnits, lot.TotalUnits);
     }
     #endregion
 
@@ -33,9 +33,9 @@ public class LotUnitTests
     {
         var lot = new Lot(_inventory, _validUnitsInStock);
 
-        ExtendedAssert.SameTime(lot.TimeEnteredStorage, DateTime.Now);
+        ExtendedAssert.SameTime(lot.DateUnitsEnteredStorage, DateTime.Now);
         Assert.Equal(_validUnitsInStock, lot.UnitsInStock);
-        Assert.Equal(0u, lot.UnitsPendingRemoval);
+        Assert.Equal(0u, lot.PendingRemovalUnits);
         AssertTotalUnits(lot);
     }
 
@@ -57,12 +57,12 @@ public class LotUnitTests
     {
         var lot = new Lot(_inventory, category, _validUnitsInStock);
 
-        ExtendedAssert.SameTime(lot.TimeEnteredStorage, DateTime.Now);
-        Assert.NotNull(lot.TimeUnfulfillableSince);
-        ExtendedAssert.SameTime(lot.TimeUnfulfillableSince.Value, DateTime.Now);
+        ExtendedAssert.SameTime(lot.DateUnitsEnteredStorage, DateTime.Now);
+        Assert.NotNull(lot.DateUnitsBecameUnfulfillable);
+        ExtendedAssert.SameTime(lot.DateUnitsBecameUnfulfillable.Value, DateTime.Now);
         Assert.Equal(category, lot.UnfulfillableCategory);
         Assert.Equal(_validUnitsInStock, lot.UnitsInStock);
-        Assert.Equal(0u, lot.UnitsPendingRemoval);
+        Assert.Equal(0u, lot.PendingRemovalUnits);
         AssertTotalUnits(lot);
     }
 
@@ -92,7 +92,7 @@ public class LotUnitTests
         var lot = GetTestLot();
         uint remainingUnits = lot.UnitsInStock - units;
 
-        lot.ReduceStock(units);
+        lot.ReduceUnits(units);
 
         Assert.Equal(remainingUnits, lot.UnitsInStock);
         AssertTotalUnits(lot);
@@ -105,7 +105,7 @@ public class LotUnitTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            lot.ReduceStock(0u);
+            lot.ReduceUnits(0u);
         });
     }
 
@@ -116,7 +116,7 @@ public class LotUnitTests
 
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
-            lot.ReduceStock(lot.UnitsInStock + 1);
+            lot.ReduceUnits(lot.UnitsInStock + 1);
         });
     }
 
@@ -128,7 +128,7 @@ public class LotUnitTests
         var lot = GetTestLot();
         var addedStock = lot.UnitsInStock + units;
 
-        lot.AddStock(units);
+        lot.AddRegularUnits(units);
 
         Assert.Equal(addedStock, lot.UnitsInStock);
         AssertTotalUnits(lot);
@@ -141,7 +141,7 @@ public class LotUnitTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            lot.AddStock(0u);
+            lot.AddRegularUnits(0u);
         });
     }
 
@@ -152,7 +152,7 @@ public class LotUnitTests
 
         Assert.Throws<ExceedingMaxStockThresholdException>(() =>
         {
-            lot.AddStock(_inventory.MaxStockThreshold - lot.UnitsInStock + 1);
+            lot.AddRegularUnits(_inventory.MaxStockThreshold - lot.UnitsInStock + 1);
         });
     }
 
@@ -163,12 +163,12 @@ public class LotUnitTests
     {
         var lot = GetTestLot();
         var reducedStock = lot.UnitsInStock - units;
-        var increasedPendingRemovalUnits = lot.UnitsPendingRemoval + units;
+        var increasedPendingRemovalUnits = lot.PendingRemovalUnits + units;
 
-        lot.LabelUnitsInStockForRemoval(units);
+        lot.LabelRegularUnitsForRemoval(units);
 
         Assert.Equal(reducedStock, lot.UnitsInStock);
-        Assert.Equal(increasedPendingRemovalUnits, lot.UnitsPendingRemoval);
+        Assert.Equal(increasedPendingRemovalUnits, lot.PendingRemovalUnits);
         AssertTotalUnits(lot);
     }
 
@@ -179,7 +179,7 @@ public class LotUnitTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            lot.LabelUnitsInStockForRemoval(0u);
+            lot.LabelRegularUnitsForRemoval(0u);
         });
     }
 
@@ -190,7 +190,7 @@ public class LotUnitTests
 
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
-            lot.LabelUnitsInStockForRemoval(lot.UnitsInStock + 1);
+            lot.LabelRegularUnitsForRemoval(lot.UnitsInStock + 1);
         });
     }
 
@@ -200,11 +200,11 @@ public class LotUnitTests
     public void RemovePendingUnits_Succeeds_WhenAllValid(uint units)
     {
         var lot = GetTestLotWithPendingRemovalUnits();
-        var pendingUnitsAfterRemoval = lot.UnitsPendingRemoval - units;
+        var pendingUnitsAfterRemoval = lot.PendingRemovalUnits - units;
 
         lot.RemovePendingUnits(units);
 
-        Assert.Equal(pendingUnitsAfterRemoval, lot.UnitsPendingRemoval);
+        Assert.Equal(pendingUnitsAfterRemoval, lot.PendingRemovalUnits);
         AssertTotalUnits(lot);
     }
 
@@ -226,7 +226,7 @@ public class LotUnitTests
 
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
-            lot.RemovePendingUnits(lot.UnitsPendingRemoval + 1);
+            lot.RemovePendingUnits(lot.PendingRemovalUnits + 1);
         });
     }
 
@@ -237,12 +237,12 @@ public class LotUnitTests
     {
         var lot = GetTestLotWithPendingRemovalUnits();
         var stockAfterReturn = lot.UnitsInStock + units;
-        var pendingUnitsAfterReturn = lot.UnitsPendingRemoval - units;
+        var pendingUnitsAfterReturn = lot.PendingRemovalUnits - units;
 
-        lot.ReturnPendingUnitsToStock(units);
+        lot.RestorePendingUnitsToRegular(units);
 
         Assert.Equal(stockAfterReturn, lot.UnitsInStock);
-        Assert.Equal(pendingUnitsAfterReturn, lot.UnitsPendingRemoval);
+        Assert.Equal(pendingUnitsAfterReturn, lot.PendingRemovalUnits);
         AssertTotalUnits(lot);
     }
 
@@ -253,7 +253,7 @@ public class LotUnitTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            lot.ReturnPendingUnitsToStock(0u);
+            lot.RestorePendingUnitsToRegular(0u);
         });
     }
 
@@ -264,7 +264,7 @@ public class LotUnitTests
 
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
-            lot.ReturnPendingUnitsToStock(lot.UnitsPendingRemoval + 1);
+            lot.RestorePendingUnitsToRegular(lot.PendingRemovalUnits + 1);
         });
     }
 
@@ -280,8 +280,8 @@ public class LotUnitTests
 
         lot.LabelUnfulfillable(category);
 
-        Assert.NotNull(lot.TimeUnfulfillableSince);
-        ExtendedAssert.SameTime(lot.TimeUnfulfillableSince.Value, DateTime.Now);
+        Assert.NotNull(lot.DateUnitsBecameUnfulfillable);
+        ExtendedAssert.SameTime(lot.DateUnitsBecameUnfulfillable.Value, DateTime.Now);
         Assert.Equal(category, lot.UnfulfillableCategory);
     }
 
@@ -293,7 +293,7 @@ public class LotUnitTests
 
         lot.RemoveUnfulfillableLabel();
 
-        Assert.Null(lot.TimeUnfulfillableSince);
+        Assert.Null(lot.DateUnitsBecameUnfulfillable);
         Assert.Null(lot.UnfulfillableCategory);
     }
 

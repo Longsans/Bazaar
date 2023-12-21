@@ -46,8 +46,8 @@ builder.Services.AddAuthorization(options =>
 #endregion
 
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    .AddJsonOptions(options => options.JsonSerializerOptions
+        .Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -135,6 +135,9 @@ public static class EventBusExtensionMethods
         services.AddTransient<ProductFbbInventoryUpdatedIntegrationEventHandler>();
         services.AddTransient<ProductOrdersStatusReportChangedIntegrationEventHandler>();
         services.AddTransient<ClientAccountClosedIntegrationEventHandler>();
+        services.AddTransient<StockIssuedIntegrationEventHandler>();
+        services.AddTransient<StockReceivedIntegrationEventHandler>();
+        services.AddTransient<StockAdjustedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -152,6 +155,15 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             ClientAccountClosedIntegrationEvent,
             ClientAccountClosedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            StockIssuedIntegrationEvent,
+            StockIssuedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            StockReceivedIntegrationEvent,
+            StockReceivedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            StockAdjustedIntegrationEvent,
+            StockAdjustedIntegrationEventHandler>();
     }
 }
 

@@ -15,6 +15,7 @@ public class DisposalOrderCompletedIntegrationEventHandler
 
     public async Task Handle(DisposalOrderCompletedIntegrationEvent @event)
     {
+        var restoredInventories = new List<ProductInventory>();
         foreach (var disposedQty in @event.DisposedQuantities)
         {
             var lot = _lotRepo.GetByLotNumber(disposedQty.LotNumber);
@@ -24,16 +25,12 @@ public class DisposalOrderCompletedIntegrationEventHandler
                 return;
             }
 
-            var inventory = _productInventoryRepo.GetById(lot.ProductInventoryId);
-            if (inventory == null)
-            {
-                return;
-            }
-
-            lot.RemovePendingUnits(disposedQty.DisposedUnits);
+            lot.ConfirmUnitsRemoved(disposedQty.DisposedUnits);
+            var inventory = lot.ProductInventory;
             inventory.RemoveEmptyLots();
-            _productInventoryRepo.Update(inventory);
+            restoredInventories.Add(inventory);
         }
+        _productInventoryRepo.UpdateRange(restoredInventories);
 
         await Task.CompletedTask;
     }

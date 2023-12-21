@@ -94,14 +94,14 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<LotUnitsLabeledForDisposalIntegrationEventHandler>();
+        services.AddTransient<LotQuantitiesSentForDisposalIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
         eventBus.Subscribe<
-            LotUnitsLabeledForDisposalIntegrationEvent,
-            LotUnitsLabeledForDisposalIntegrationEventHandler>();
+            LotQuantitiesSentForDisposalIntegrationEvent,
+            LotQuantitiesSentForDisposalIntegrationEventHandler>();
     }
 }

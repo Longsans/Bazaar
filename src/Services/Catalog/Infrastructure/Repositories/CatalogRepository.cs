@@ -47,6 +47,12 @@ public class CatalogRepository : ICatalogRepository
         _context.SaveChanges();
     }
 
+    public void UpdateRange(IEnumerable<CatalogItem> items)
+    {
+        _context.CatalogItems.UpdateRange(items);
+        _context.SaveChanges();
+    }
+
     public void Delete(int id)
     {
         var existing = _context.CatalogItems.Find(id);

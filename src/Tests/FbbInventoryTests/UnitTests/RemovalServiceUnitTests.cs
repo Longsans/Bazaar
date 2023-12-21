@@ -24,13 +24,13 @@ public class RemovalServiceUnitTests
             UnfulfillableCategory.Defective, unfulfillableUnits / 2);
         var pastUfLot2 = new Lot(prodInventory,
             UnfulfillableCategory.Defective, unfulfillableUnits / 2);
-        typeof(Lot).GetProperty(nameof(Lot.TimeEnteredStorage))!
+        typeof(Lot).GetProperty(nameof(Lot.DateUnitsEnteredStorage))!
             .SetValue(pastFfLot, DateTime.Now.AddDays(-3));
-        typeof(Lot).GetProperty(nameof(Lot.TimeUnfulfillableSince))!
+        typeof(Lot).GetProperty(nameof(Lot.DateUnitsBecameUnfulfillable))!
             .SetValue(pastUfLot, DateTime.Now.AddDays(-3));
-        typeof(Lot).GetProperty(nameof(Lot.TimeEnteredStorage))!
+        typeof(Lot).GetProperty(nameof(Lot.DateUnitsEnteredStorage))!
             .SetValue(pastFfLot2, DateTime.Now.AddDays(-2));
-        typeof(Lot).GetProperty(nameof(Lot.TimeUnfulfillableSince))!
+        typeof(Lot).GetProperty(nameof(Lot.DateUnitsBecameUnfulfillable))!
             .SetValue(pastUfLot2, DateTime.Now.AddDays(-2));
 
         var ffLots = typeof(ProductInventory)
@@ -92,7 +92,7 @@ public class RemovalServiceUnitTests
             new("PROD-1", fulfillableUnits, unfulfillableUnits),
         };
 
-        var result = _service.RequestReturnForProductStocksFromOldToNew(removalDtos, _validAddress);
+        var result = _service.SendProductStocksForReturn(removalDtos, _validAddress);
 
         var removalFfLots = _testProdInventory.FulfillableLots
             .Where(x => !x.HasUnitsInStock);
@@ -101,12 +101,12 @@ public class RemovalServiceUnitTests
         var remainingFfLots = _testProdInventory.Lots.Except(removalFfLots);
         var remainingUfLots = _testProdInventory.Lots.Except(removalUfLots);
         Assert.DoesNotContain(removalFfLots, fLot =>
-            remainingFfLots.Any(x => x.TimeEnteredStorage < fLot.TimeEnteredStorage));
+            remainingFfLots.Any(x => x.DateUnitsEnteredStorage < fLot.DateUnitsEnteredStorage));
         Assert.DoesNotContain(removalUfLots, uLot =>
-            remainingUfLots.Any(x => x.TimeUnfulfillableSince < uLot.TimeUnfulfillableSince));
+            remainingUfLots.Any(x => x.DateUnitsBecameUnfulfillable < uLot.DateUnitsBecameUnfulfillable));
 
-        Assert.Equal(fulfillableUnits, _testProdInventory.FulfillableUnitsPendingRemoval);
-        Assert.Equal(unfulfillableUnits, _testProdInventory.UnfulfillableUnitsPendingRemoval);
+        Assert.Equal(fulfillableUnits, _testProdInventory.FulfillablePendingRemovalUnits);
+        Assert.Equal(unfulfillableUnits, _testProdInventory.UnfulfillablePendingRemovalUnits);
     }
 
     [Theory]
@@ -116,7 +116,7 @@ public class RemovalServiceUnitTests
     public void RequestReturnForProductStocksFromOldToNew_ReturnsInvalid_WhenDeliveryAddressEmpty(
         string deliveryAddress)
     {
-        var result = _service.RequestReturnForProductStocksFromOldToNew(
+        var result = _service.SendProductStocksForReturn(
             new List<StockUnitsRemovalDto>
             {
                 new("PROD-1", 10, 10)
@@ -135,7 +135,7 @@ public class RemovalServiceUnitTests
             new("PROD-2", 1, 1),
         };
 
-        var result = _service.RequestReturnForProductStocksFromOldToNew(removalDtos, _validAddress);
+        var result = _service.SendProductStocksForReturn(removalDtos, _validAddress);
 
         Assert.Equal(ResultStatus.Invalid, result.Status);
     }
@@ -147,10 +147,10 @@ public class RemovalServiceUnitTests
             .Returns(_testProdInventory);
         var removalDtos = new List<StockUnitsRemovalDto>
         {
-            new("PROD-1", _testProdInventory.FulfillableUnitsInStock + 1, 0)
+            new("PROD-1", _testProdInventory.FulfillableUnits + 1, 0)
         };
 
-        var result = _service.RequestReturnForProductStocksFromOldToNew(removalDtos, _validAddress);
+        var result = _service.SendProductStocksForReturn(removalDtos, _validAddress);
 
         Assert.Equal(ResultStatus.Conflict, result.Status);
     }
@@ -162,10 +162,10 @@ public class RemovalServiceUnitTests
             .Returns(_testProdInventory);
         var removalDtos = new List<StockUnitsRemovalDto>
         {
-            new("PROD-1", 0, _testProdInventory.UnfulfillableUnitsInStock + 1)
+            new("PROD-1", 0, _testProdInventory.UnfulfillableUnits + 1)
         };
 
-        var result = _service.RequestReturnForProductStocksFromOldToNew(removalDtos, _validAddress);
+        var result = _service.SendProductStocksForReturn(removalDtos, _validAddress);
 
         Assert.Equal(ResultStatus.Conflict, result.Status);
     }
@@ -185,7 +185,7 @@ public class RemovalServiceUnitTests
 
         Assert.True(result.IsSuccess);
         Assert.True(lotsBeforeLabeling.All(x => !x.Lot.HasUnitsInStock
-            && x.Lot.UnitsPendingRemoval == x.OriginalUnitsInStock));
+            && x.Lot.PendingRemovalUnits == x.OriginalUnitsInStock));
     }
 
     [Theory]

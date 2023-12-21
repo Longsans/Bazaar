@@ -8,22 +8,17 @@ public class ProductInventory
     private readonly List<Lot> _lots;
     public IReadOnlyCollection<Lot> Lots => _lots.AsReadOnly();
     public IReadOnlyCollection<Lot> FulfillableLots
-        => _lots.Where(x => !x.IsUnfulfillable).ToList().AsReadOnly();
+        => _lots.Where(x => !x.IsUnitsUnfulfillable && !x.IsUnitsStranded).ToList().AsReadOnly();
     public IReadOnlyCollection<Lot> UnfulfillableLots
-        => _lots.Where(x => x.IsUnfulfillable).ToList().AsReadOnly();
+        => _lots.Where(x => x.IsUnitsUnfulfillable).ToList().AsReadOnly();
+    public IReadOnlyCollection<Lot> StrandedLots
+        => _lots.Where(x => x.IsUnitsStranded).ToList().AsReadOnly();
 
-    public uint FulfillableUnitsInStock
-        => (uint)FulfillableLots.Sum(x => x.UnitsInStock);
-    public uint FulfillableUnitsPendingRemoval
-        => (uint)FulfillableLots.Sum(x => x.UnitsPendingRemoval);
-    public uint UnfulfillableUnitsInStock
-        => (uint)UnfulfillableLots.Sum(x => x.UnitsInStock);
-    public uint UnfulfillableUnitsPendingRemoval
-        => (uint)UnfulfillableLots.Sum(x => x.UnitsPendingRemoval);
-
-    public uint TotalUnits => FulfillableUnitsInStock + FulfillableUnitsPendingRemoval
-            + UnfulfillableUnitsInStock + UnfulfillableUnitsPendingRemoval;
-
+    public uint FulfillableUnits => (uint)FulfillableLots.Sum(x => x.UnitsInStock);
+    public uint UnfulfillableUnits => (uint)UnfulfillableLots.Sum(x => x.UnitsInStock);
+    public uint StrandedUnits => (uint)StrandedLots.Sum(x => x.UnitsInStock);
+    public uint AllUnitsInRemoval => (uint)_lots.Sum(x => x.UnitsInRemoval);
+    public uint TotalUnits => FulfillableUnits + UnfulfillableUnits + StrandedUnits + AllUnitsInRemoval;
     public uint RemainingCapacity => MaxStockThreshold - TotalUnits;
 
     public uint RestockThreshold { get; private set; }
@@ -31,6 +26,7 @@ public class ProductInventory
     public SellerInventory SellerInventory { get; private set; }
     public int SellerInventoryId { get; private set; }
 
+    public bool IsStranded { get; private set; }
     public bool HasPickupsInProgress { get; private set; }
 
     public ProductInventory(
@@ -62,129 +58,189 @@ public class ProductInventory
         }
         if (defectiveUnits != 0)
         {
-            _lots.Add(new(this, UnfulfillableCategory.Defective, defectiveUnits));
+            _lots.Add(new(this, defectiveUnits, UnfulfillableCategory.Defective));
         }
         if (warehouseDamagedUnits != 0)
         {
-            _lots.Add(new(this, UnfulfillableCategory.WarehouseDamaged, warehouseDamagedUnits));
+            _lots.Add(new(this, warehouseDamagedUnits, UnfulfillableCategory.WarehouseDamaged));
         }
+
     }
 
     // EF read constructor
     private ProductInventory() { }
 
     #region Domain logic
-    public void ReduceFulfillableStockFromOldToNew(uint units)
+    /// <summary>
+    /// Issues fulfillable/stranded stock (both are referred to as <em>good stock</em>) and 
+    /// unfulfillable stock starting with older stock and ending with newer stock until satisfies
+    /// <paramref name="goodUnits"/> and <paramref name="unfulfillableUnits"/>, respectively.
+    /// Fulfillable stock is issued by date entered storage.
+    /// Unfulfillable stock is issued by date they became unfulfillable.
+    /// Stranded stock is issued by date they became stranded.
+    /// </summary>
+    /// <param name="goodUnits"></param>
+    /// <param name="unfulfillableUnits"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="NotEnoughUnitsException"></exception>
+    public StockIssue IssueStockByDateOldToNew(
+        uint goodUnits, uint unfulfillableUnits, StockIssueReason issueReason)
     {
-        if (units == 0)
+        if (goodUnits + unfulfillableUnits == 0)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to reduce cannot be 0.");
+            throw new ArgumentException("Total units to issue cannot be 0.");
         }
-        if (units > FulfillableUnitsInStock)
+        if (!IsStranded && goodUnits > FulfillableUnits)
         {
             throw new NotEnoughUnitsException("Not enough fulfillable stock.");
         }
-
-        var fulfillableLotsFromOldest = FulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.TimeEnteredStorage)
-            .ToList();
-        ReduceUnitsInStockWithAltIteration(fulfillableLotsFromOldest,
-            _lots, units);
-    }
-
-    public void ReduceUnfulfillableStockFromOldToNew(uint units)
-    {
-        if (units == 0)
+        if (IsStranded && goodUnits > StrandedUnits)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to reduce cannot be 0.");
+            throw new NotEnoughUnitsException("Not enough stranded stock.");
         }
-        if (units > UnfulfillableUnitsInStock)
+        if (unfulfillableUnits > UnfulfillableUnits)
         {
             throw new NotEnoughUnitsException("Not enough unfulfillable stock.");
         }
 
-        var unfulfillableLotsFromOldest = UnfulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.TimeUnfulfillableSince)
-            .ToList();
-        ReduceUnitsInStockWithAltIteration(unfulfillableLotsFromOldest,
-            _lots, units);
+        StockIssue? issue = null;
+        if (goodUnits > 0)
+        {
+            issue = IssueStockByDateCreatedOldToNew(
+                IsStranded ? StrandedLots : FulfillableLots, goodUnits, issueReason);
+        }
+        if (unfulfillableUnits > 0)
+        {
+            var unfulIssue = IssueStockByDateCreatedOldToNew(
+                UnfulfillableLots, unfulfillableUnits, issueReason);
+            if (issue == null)
+            {
+                issue = unfulIssue;
+            }
+            else
+            {
+                issue.AddItems(unfulIssue.Items);
+            }
+        }
+        RemoveEmptyLots();
+        return issue!;
     }
 
-    public void AddFulfillableStock(uint units)
+    public void ReceiveFulfillableStock(uint units)
     {
-        if (units == 0)
+        if (IsStranded)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to restock cannot be 0.");
+            throw new StockStrandedException();
         }
-        if (units > RemainingCapacity)
-        {
-            throw new ExceedingMaxStockThresholdException();
-        }
+        AddFulfillableStock(DateTime.Now.Date, units);
+    }
 
-        var fulfillableQty = FulfillableLots
-            .SingleOrDefault(x => x.TimeEnteredStorage.Date == DateTime.Now.Date);
-        if (fulfillableQty == null)
+    public void ReceiveUnfulfillableStock(UnfulfillableCategory unfulfillableCategory, uint units)
+    {
+        AddUnfulfillableStock(DateTime.Now.Date, DateTime.Now.Date, unfulfillableCategory, units);
+    }
+
+    public void ReceiveStrandedStock(uint units)
+    {
+        if (!IsStranded)
         {
-            _lots.Add(new(this, units));
+            throw new StockNotStrandedException();
+        }
+        AddStrandedStock(DateTime.Now.Date, DateTime.Now.Date, units);
+    }
+
+    public void AdjustFulfillableStock(DateTime dateEnteredStorage, int units)
+    {
+        uint unsignedUnits = (uint)Math.Abs(units);
+        if (units > 0)
+        {
+            if (IsStranded)
+            {
+                throw new StockStrandedException("Product stock is stranded. Cannot adjust fulfillable stock." +
+                    "Adjust stranded stock instead.");
+            }
+            AddFulfillableStock(dateEnteredStorage, unsignedUnits);
         }
         else
         {
-            fulfillableQty.AddStock(units);
+            ReduceFulfillableStock(dateEnteredStorage, unsignedUnits);
+            RemoveEmptyLots();
         }
     }
 
-    public void AddUnfulfillableStock(UnfulfillableCategory category, uint units)
+    public void AdjustUnfulfillableStock(DateTime dateStockEnteredStorage,
+        DateTime dateStockBecameUnfulfillable, UnfulfillableCategory unfulfillableCategory, int units)
     {
-        if (units == 0)
+        uint unsignedUnits = (uint)Math.Abs(units);
+        if (units > 0)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to add cannot be 0.");
-        }
-        if (units > RemainingCapacity)
-        {
-            throw new ExceedingMaxStockThresholdException();
-        }
-
-        var unfulfillableLot = UnfulfillableLots
-            .Where(x => x.UnfulfillableCategory == category
-                && x.TimeUnfulfillableSince!.Value.Date == DateTime.Now.Date)
-            .SingleOrDefault();
-
-        if (unfulfillableLot == null)
-        {
-            _lots.Add(new(this, category, units));
+            AddUnfulfillableStock(dateStockEnteredStorage,
+                dateStockBecameUnfulfillable, unfulfillableCategory, unsignedUnits);
         }
         else
         {
-            unfulfillableLot.AddStock(units);
+            ReduceUnfulfillableStock(dateStockEnteredStorage,
+                dateStockBecameUnfulfillable, unfulfillableCategory, unsignedUnits);
+            RemoveEmptyLots();
         }
     }
 
-    public void LabelAllFulfillableStockAsStrandedStock()
+    public void AdjustStrandedStock(DateTime dateStockEnteredStorage, DateTime dateStockBecameStranded, int units)
     {
-        foreach (var lot in FulfillableLots)
+        uint unsignedUnits = (uint)Math.Abs(units);
+        if (units > 0)
         {
-            lot.LabelUnfulfillable(UnfulfillableCategory.Stranded);
+            if (!IsStranded)
+            {
+                throw new StockNotStrandedException(
+                    "Product stock is not stranded. Adjust fulfillable stock instead.");
+            }
+            AddStrandedStock(dateStockEnteredStorage, dateStockBecameStranded, unsignedUnits);
+        }
+        else
+        {
+            ReduceStrandedStock(dateStockEnteredStorage, dateStockBecameStranded, unsignedUnits);
+            RemoveEmptyLots();
         }
     }
 
-    public void RelabelStrandedStockAsFulfillableStock()
+    public void TurnStranded()
     {
-        foreach (var lot in UnfulfillableLots
-            .Where(x => x.UnfulfillableCategory == UnfulfillableCategory.Stranded))
+        if (IsStranded || FulfillableUnits == 0)
         {
-            lot.RemoveUnfulfillableLabel();
+            return;
+        }
+        IsStranded = true;
+
+        foreach (var lot in FulfillableLots.Where(x => x.HasUnitsInStock))
+        {
+            lot.TurnStranded();
+        }
+    }
+
+    public void ConfirmStrandingResolved()
+    {
+        if (!IsStranded)
+        {
+            return;
+        }
+        var strandedLots = StrandedLots.Where(x => x.HasUnitsInStock).ToList();
+        if (!strandedLots.Any())
+        {
+            return;
+        }
+        IsStranded = false;
+
+        foreach (var lot in strandedLots)
+        {
+            lot.ConfirmStrandingResolved();
         }
     }
 
     public void RemoveEmptyLots()
     {
-        _lots.RemoveAll(x => x.TotalUnits == 0);
+        _lots.RemoveAll(x => !x.HasAnyUnits);
     }
 
     public void UpdateHasPickupsInProgress(bool hasPickupsInProgress)
@@ -194,27 +250,150 @@ public class ProductInventory
     #endregion
 
     #region Helpers
-    private static void ReduceUnitsInStockWithAltIteration<T>(IList<T> iterateList,
-        IList<T> originalList, uint totalReduceUnits)
-        where T : Lot
+    private Lot AddFulfillableStock(DateTime dateEnteredStorage, uint units)
     {
-        foreach (var lot in iterateList)
+        return IncreaseLotUnitsOrAddLot(units,
+            () => FindFulfillableLot(dateEnteredStorage),
+            () => new Lot(this, units, dateEnteredStorage));
+    }
+
+    private Lot AddUnfulfillableStock(DateTime dateEnteredStorage, DateTime dateUnfulfillableSince,
+        UnfulfillableCategory unfulfillableCategory, uint units)
+    {
+        return IncreaseLotUnitsOrAddLot(units,
+            () => FindUnfulfillableLot(dateEnteredStorage, dateUnfulfillableSince, unfulfillableCategory),
+            () => new Lot(this, units, dateEnteredStorage, dateUnfulfillableSince, unfulfillableCategory));
+    }
+
+    private Lot AddStrandedStock(DateTime dateEnteredStorage, DateTime dateWentStranded, uint units)
+    {
+        return IncreaseLotUnitsOrAddLot(units,
+            () => FindStrandedLot(dateEnteredStorage, dateWentStranded),
+            () => new Lot(this, units, dateEnteredStorage, dateWentStranded));
+    }
+
+    private Lot ReduceFulfillableStock(DateTime dateEnteredStorage, uint units)
+    {
+        var lot = FindFulfillableLot(dateEnteredStorage)
+            ?? throw new KeyNotFoundException(
+                "No fulfillable stock entered storage on specified date.");
+        lot.ReduceUnits(units);
+        return lot;
+    }
+
+    private Lot ReduceUnfulfillableStock(DateTime dateEnteredStorage,
+        DateTime dateUnfulfillableSince, UnfulfillableCategory unfulfillableCategory, uint units)
+    {
+        var lot = FindUnfulfillableLot(dateEnteredStorage,
+            dateUnfulfillableSince, unfulfillableCategory)
+            ?? throw new KeyNotFoundException(
+                "No unfulfillable stock with specified enter storage date, " +
+                "unfulfillable date and unfulfillable category.");
+        lot.ReduceUnits(units);
+        return lot;
+    }
+
+    private Lot ReduceStrandedStock(DateTime dateEnteredStorage, DateTime dateWentStranded, uint units)
+    {
+        var lot = FindStrandedLot(dateEnteredStorage, dateWentStranded)
+            ?? throw new KeyNotFoundException(
+                "No stranded stock with specified date entered storage and date went stranded.");
+        lot.ReduceUnits(units);
+        return lot;
+    }
+
+    private Lot? FindFulfillableLot(DateTime dateEnteredStorage)
+    {
+        return _lots.SingleOrDefault(x =>
+            !x.IsUnitsUnfulfillable && !x.IsUnitsStranded
+            && x.DateUnitsEnteredStorage == dateEnteredStorage);
+    }
+
+    private Lot? FindUnfulfillableLot(DateTime dateEnteredStorage,
+        DateTime dateUnfulfillableSince, UnfulfillableCategory unfulfillableCategory)
+    {
+        return _lots.SingleOrDefault(x =>
+            x.DateUnitsEnteredStorage == dateEnteredStorage
+            && x.DateUnitsBecameUnfulfillable == dateUnfulfillableSince
+            && x.UnfulfillableCategory == unfulfillableCategory);
+    }
+
+    private Lot? FindStrandedLot(DateTime dateEnteredStorage, DateTime dateWentStranded)
+    {
+        return _lots.SingleOrDefault(x =>
+            x.DateUnitsEnteredStorage == dateEnteredStorage
+            && x.DateUnitsBecameStranded == dateWentStranded);
+    }
+
+    private Lot IncreaseLotUnitsOrAddLot(uint units, Func<Lot?> findExisingLot, Func<Lot> createNewLot)
+    {
+        if (units == 0)
         {
-            if (totalReduceUnits >= lot.UnitsInStock)
+            throw new ArgumentException("Units cannot be 0.");
+        }
+        if (units > RemainingCapacity)
+        {
+            throw new ExceedingMaxStockThresholdException();
+        }
+
+        var existingLot = findExisingLot();
+        if (existingLot != null)
+        {
+            existingLot.IncreaseUnits(units);
+            return existingLot;
+        }
+        else
+        {
+            var lot = createNewLot();
+            _lots.Add(lot);
+            return lot;
+        }
+    }
+
+    private StockIssue IssueStockByDateCreatedOldToNew(
+        IEnumerable<Lot> lots, uint units, StockIssueReason issueReason)
+    {
+        if (units == 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(units), "Number of stock units to reduce cannot be 0.");
+        }
+
+        var stockIssueItems = new List<StockIssueItem>();
+        var lotsByEventDateOldToNew = lots.Where(x => x.HasUnitsInStock)
+            .OrderBy(x =>
             {
-                originalList.Remove(lot);
-                totalReduceUnits -= lot.UnitsInStock;
-            }
-            else
+                if (x.IsUnitsUnfulfillable)
+                    return x.DateUnitsBecameUnfulfillable;
+                else if (x.IsUnitsStranded)
+                    return x.DateUnitsBecameStranded;
+                else return x.DateUnitsEnteredStorage;
+            });
+        foreach (var lot in lotsByEventDateOldToNew)
+        {
+            var removeUnits = units >= lot.UnitsInStock ? lot.UnitsInStock : units;
+            var issueItem = new StockIssueItem(ProductId, lot.LotNumber, removeUnits);
+            switch (issueReason)
             {
-                lot.ReduceStock(totalReduceUnits);
-                totalReduceUnits = 0;
+                case StockIssueReason.Sale:
+                    lot.ReduceUnits(removeUnits);
+                    break;
+                case StockIssueReason.Return:
+                case StockIssueReason.Disposal:
+                    lot.SendUnitsForRemoval(removeUnits);
+                    break;
+                default:
+                    throw new ArgumentException("Issue reason does not exist.");
             }
-            if (totalReduceUnits == 0)
+
+            stockIssueItems.Add(issueItem);
+            units -= removeUnits;
+            if (units == 0)
             {
                 break;
             }
         }
+        return new StockIssue(stockIssueItems, issueReason);
     }
     #endregion
 }

@@ -15,23 +15,22 @@ public class InventoryReturnCompletedIntegrationEventHandler
 
     public async Task Handle(InventoryReturnCompletedIntegrationEvent @event)
     {
-        var lots = @event.LotsWithReturnedUnits.Select(x =>
+        var returnedInventories = new List<ProductInventory>();
+        foreach (var returnedQuantity in @event.ReturnedLotQuantities)
         {
-            var lot = _lotRepo.GetByLotNumber(x.LotNumber);
-            lot?.RemovePendingUnits(x.Units);
-            return lot;
-        }).ToList();
-        if (lots.Any(x => x == null))
-        {
-            return;
-        }
+            var lot = _lotRepo.GetByLotNumber(returnedQuantity.LotNumber);
+            if (lot == null)
+            {
+                // Should never be possible
+                return;
+            }
 
-        foreach (var lotGroup in lots.GroupBy(x => x.ProductInventoryId))
-        {
-            var inventory = _productInventoryRepo.GetById(lotGroup.Key)!;
+            lot.ConfirmUnitsRemoved(returnedQuantity.Quantity);
+            var inventory = lot.ProductInventory;
             inventory.RemoveEmptyLots();
+            returnedInventories.Add(inventory);
         }
-        _lotRepo.UpdateRange(lots);
+        _productInventoryRepo.UpdateRange(returnedInventories);
 
         await Task.CompletedTask;
     }

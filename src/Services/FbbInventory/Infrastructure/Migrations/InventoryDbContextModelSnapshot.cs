@@ -30,43 +30,43 @@ namespace Inventory.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("DateUnitsBecameStranded")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateUnitsBecameUnfulfillable")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUnitsEnteredStorage")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("LotNumber")
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("nvarchar(max)")
-                        .HasComputedColumnSql("CONCAT('LOT-', [Id])", true);
+                        .HasColumnType("nvarchar(450)")
+                        .HasComputedColumnSql("CONCAT('LOT-', [Id])");
 
                     b.Property<int>("ProductInventoryId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("TimeEnteredStorage")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("TimeUnfulfillableSince")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("TotalUnits")
-                        .HasColumnType("bigint");
-
                     b.Property<int?>("UnfulfillableCategory")
                         .HasColumnType("int");
+
+                    b.Property<long>("UnitsInRemoval")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("UnitsInStock")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("UnitsPendingRemoval")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductInventoryId", "TimeEnteredStorage", "TimeUnfulfillableSince", "UnfulfillableCategory")
-                        .IsUnique()
-                        .HasFilter("[TimeUnfulfillableSince] IS NOT NULL AND [UnfulfillableCategory] IS NOT NULL");
+                    b.HasIndex("LotNumber")
+                        .IsUnique();
 
-                    b.ToTable("Lots", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_TimeUnfulfillableSince_After_TimeEnteredStorage", "[TimeUnfulfillableSince] IS NULL OR [TimeUnfulfillableSince] >= [TimeEnteredStorage]");
-                        });
+                    b.HasIndex("ProductInventoryId", "DateUnitsEnteredStorage", "DateUnitsBecameStranded", "DateUnitsBecameUnfulfillable")
+                        .IsUnique()
+                        .HasFilter("[DateUnitsBecameStranded] IS NOT NULL AND [DateUnitsBecameUnfulfillable] IS NOT NULL");
+
+                    b.ToTable("Lots");
                 });
 
             modelBuilder.Entity("Bazaar.FbbInventory.Domain.Entities.ProductInventory", b =>
@@ -78,6 +78,9 @@ namespace Inventory.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("HasPickupsInProgress")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsStranded")
                         .HasColumnType("bit");
 
                     b.Property<long>("MaxStockThreshold")
@@ -100,7 +103,7 @@ namespace Inventory.Infrastructure.Migrations
 
                     b.HasIndex("SellerInventoryId");
 
-                    b.ToTable("ProductInventories", (string)null);
+                    b.ToTable("ProductInventories");
                 });
 
             modelBuilder.Entity("Bazaar.FbbInventory.Domain.Entities.SellerInventory", b =>
@@ -120,7 +123,7 @@ namespace Inventory.Infrastructure.Migrations
                     b.HasIndex("SellerId")
                         .IsUnique();
 
-                    b.ToTable("SellerInventories", (string)null);
+                    b.ToTable("SellerInventories");
                 });
 
             modelBuilder.Entity("Bazaar.FbbInventory.Domain.Entities.Lot", b =>

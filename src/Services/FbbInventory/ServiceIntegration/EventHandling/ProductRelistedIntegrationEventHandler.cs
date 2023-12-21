@@ -3,24 +3,25 @@
 public class ProductRelistedIntegrationEventHandler :
     IIntegrationEventHandler<ProductRelistedIntegrationEvent>
 {
-    private readonly IProductInventoryRepository _productInventoryRepo;
+    private readonly StockAdjustmentService _stockAdjustmentService;
+    private readonly ILogger<ProductRelistedIntegrationEventHandler> _logger;
 
     public ProductRelistedIntegrationEventHandler(
-        IProductInventoryRepository productInventoryRepo)
+        StockAdjustmentService stockAdjustmentService,
+        ILogger<ProductRelistedIntegrationEventHandler> logger)
     {
-        _productInventoryRepo = productInventoryRepo;
+        _stockAdjustmentService = stockAdjustmentService;
+        _logger = logger;
     }
 
     public async Task Handle(ProductRelistedIntegrationEvent @event)
     {
-        var productInven = _productInventoryRepo.GetByProductId(@event.ProductId);
-        if (productInven == null)
+        var result = _stockAdjustmentService.ConfirmStockStrandingResolved(@event.ProductId);
+        if (!result.IsSuccess)
         {
-            return;
+            _logger.LogError("Error confirming stock stranding resolved for product {ProductId}: {ErrorMessage}",
+                @event.ProductId, result.GetJoinedErrorMessage());
         }
-
-        productInven.RelabelStrandedStockAsFulfillableStock();
-        _productInventoryRepo.Update(productInven);
         await Task.CompletedTask;
     }
 }

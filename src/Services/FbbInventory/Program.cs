@@ -15,9 +15,11 @@ builder.Services.AddDbContext<FbbInventoryDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
-builder.Services.AddScoped<IUpdateProductStockService, UpdateProductStockService>();
+builder.Services.AddScoped<StockTransactionService>();
+builder.Services.AddScoped<StockAdjustmentService>();
+builder.Services.AddScoped<RemovalService>();
+builder.Services.AddScoped<IQualityInspectionService, FixedQualityInspectionService>();
 builder.Services.AddScoped<IDeleteProductInventoryService, DeleteProductInventoryService>();
-builder.Services.AddScoped<IRemovalService, RemovalService>();
 
 builder.Services.AddScoped<ISellerInventoryRepository, SellerInventoryRepository>();
 builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
@@ -105,7 +107,7 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<CatalogItemDeletedIntegrationEventHandler>();
+        //services.AddTransient<CatalogItemDeletedIntegrationEventHandler>();
         services.AddTransient<FbbInventoryPickedUpIntegrationEventHandler>();
         services.AddTransient<ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler>();
         services.AddTransient<DisposalOrderCompletedIntegrationEventHandler>();
@@ -119,9 +121,9 @@ public static class EventBusExtensionMethods
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-        eventBus.Subscribe<
-            CatalogItemDeletedIntegrationEvent,
-            CatalogItemDeletedIntegrationEventHandler>();
+        //eventBus.Subscribe<
+        //    CatalogItemDeletedIntegrationEvent,
+        //    CatalogItemDeletedIntegrationEventHandler>();
         eventBus.Subscribe<
             FbbInventoryPickedUpIntegrationEvent,
             FbbInventoryPickedUpIntegrationEventHandler>();

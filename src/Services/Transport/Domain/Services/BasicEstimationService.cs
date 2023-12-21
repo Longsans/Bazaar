@@ -41,9 +41,9 @@ public class BasicEstimationService : IEstimationService
     public DateTime EstimateInventoryReturnCompletion(IEnumerable<ReturnQuantity> returnQuantities)
     {
         var numOfIncompleteReturns = _returnRepo.GetIncomplete()
-            .Sum(x => x.ReturnQuantities.Sum(item => item.Units));
+            .Sum(x => x.ReturnQuantities.Sum(item => item.Quantity));
         var currentLoadDelay = numOfIncompleteReturns * _perReturnUnitIncrement;
-        var totalReturnUnits = returnQuantities.Sum(item => item.Units);
+        var totalReturnUnits = returnQuantities.Sum(item => item.Quantity);
         return DateTime.Now + currentLoadDelay + totalReturnUnits * _perPickupItemIncrement;
     }
 }

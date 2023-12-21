@@ -3,21 +3,27 @@
 public class FbbInventoryPickedUpIntegrationEventHandler
     : IIntegrationEventHandler<FbbInventoryPickedUpIntegrationEvent>
 {
-    private readonly IUpdateProductStockService _updateStockService;
+    private readonly StockTransactionService _stockTxnService;
+    private readonly ILogger<FbbInventoryPickedUpIntegrationEventHandler> _logger;
 
-    public FbbInventoryPickedUpIntegrationEventHandler(IUpdateProductStockService updateStockService)
+    public FbbInventoryPickedUpIntegrationEventHandler(StockTransactionService stockTxnService,
+        ILogger<FbbInventoryPickedUpIntegrationEventHandler> logger)
     {
-        _updateStockService = updateStockService;
+        _stockTxnService = stockTxnService;
+        _logger = logger;
     }
 
     public async Task Handle(FbbInventoryPickedUpIntegrationEvent @event)
     {
-        foreach (var pickupInventory in @event.Inventories)
+        var inboundQuantities = @event.Inventories.Select(x =>
+            new InboundStockQuantity(x.ProductId, x.StockUnits));
+        var result = _stockTxnService.ReceiveStock(@event.SchedulerId, inboundQuantities);
+        if (!result.IsSuccess)
         {
-            // This should not throw exceeding stock threshold
-            _updateStockService.AddFulfillableStock(
-                pickupInventory.ProductId, pickupInventory.StockUnits);
+            _logger.LogError("Error receiving stock from pickup for scheduler {SchedulerId}: {ErrorMessage}",
+                @event.SchedulerId, result.GetJoinedErrorMessage());
         }
+
         await Task.CompletedTask;
     }
 }

@@ -8,5 +8,6 @@ public interface ICatalogRepository
     IQueryable<CatalogItem> GetBySellerId(string sellerId);
     CatalogItem Create(CatalogItem item);
     void Update(CatalogItem item);
+    void UpdateRange(IEnumerable<CatalogItem> items);
     void Delete(int id);
 }
