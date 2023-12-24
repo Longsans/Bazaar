@@ -1,4 +1,4 @@
-﻿namespace Bazaar.FbbInventory.ServiceIntegration.IntegrationEvents;
+﻿namespace Bazaar.FbbInventory.Application.IntegrationEvents;
 
 public record LotQuantitiesSentForDisposalIntegrationEvent(
     IEnumerable<DisposalLotQuantity> DisposalLotQuantities,

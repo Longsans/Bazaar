@@ -14,6 +14,7 @@ public class Lot
     public int ProductInventoryId { get; private set; }
 
     public uint TotalUnits => UnitsInStock + UnitsInRemoval;
+    public bool IsUnitsFulfillable => !IsUnitsStranded && !IsUnitsUnfulfillable;
     public bool IsUnitsStranded => DateUnitsBecameStranded != null;
     public bool IsUnitsUnfulfillable => DateUnitsBecameUnfulfillable != null;
     public bool HasUnitsInStock => UnitsInStock > 0;
@@ -45,14 +46,19 @@ public class Lot
             throw new ArgumentOutOfRangeException(nameof(dateUnitsEnteredStorage),
                 "Date units entered storage cannot be in the future.");
         }
+        if (dateUnitsBecameStranded?.Date > DateTime.Now.Date)
+        {
+            throw new ArgumentOutOfRangeException(nameof(dateUnitsEnteredStorage),
+                "Date units became stranded cannot be in the future.");
+        }
         if (dateUnitsBecameStranded < dateUnitsEnteredStorage)
         {
             throw new ArgumentException(
                 "Date units went stranded cannot be before date units entered storage.");
         }
 
-        DateUnitsEnteredStorage = dateUnitsEnteredStorage;
-        DateUnitsBecameStranded = dateUnitsBecameStranded;
+        DateUnitsEnteredStorage = dateUnitsEnteredStorage.Date;
+        DateUnitsBecameStranded = dateUnitsBecameStranded.HasValue ? dateUnitsBecameStranded.Value.Date : null;
         UnitsInStock = units;
         ProductInventory = inventory;
         ProductInventoryId = inventory.Id;
@@ -102,7 +108,7 @@ public class Lot
                 "Unfulfillable category does not exist.");
         }
 
-        DateUnitsBecameUnfulfillable = dateUnitsBecameUnfulfillable;
+        DateUnitsBecameUnfulfillable = dateUnitsBecameUnfulfillable.Date;
         UnfulfillableCategory = unfulfillableCategory;
     }
 
@@ -117,7 +123,32 @@ public class Lot
     private Lot() { }
     #endregion
 
-    public void IncreaseUnits(uint units)
+    public StockIssue IssueUnits(uint units, StockIssueReason issueReason)
+    {
+        switch (issueReason)
+        {
+            case StockIssueReason.Sale when IsUnitsFulfillable:
+                AdjustUnits(-(int)units);
+                break;
+            case StockIssueReason.Sale when IsUnitsUnfulfillable || IsUnitsStranded:
+                throw new InvalidOperationException("Cannot issue unfulfillable or stranded stock for sale.");
+
+            case StockIssueReason.Return:
+            case StockIssueReason.Disposal:
+                AdjustUnits(-(int)units);
+                UnitsInRemoval += units;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(issueReason), "Issue reason does not exist.");
+        }
+
+        return new StockIssue(new List<StockIssueItem>
+        {
+            new(ProductInventory.ProductId, LotNumber, units)
+        }, issueReason);
+    }
+
+    public void AdjustUnits(int units)
     {
         if (units == 0)
         {
@@ -128,29 +159,11 @@ public class Lot
         {
             throw new ExceedingMaxStockThresholdException();
         }
-
-        UnitsInStock += units;
-    }
-
-    public void ReduceUnits(uint units)
-    {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(units),
-                "Units cannot be 0.");
-        }
-        if (units > UnitsInStock)
+        if (units < -(int)UnitsInStock)
         {
             throw new NotEnoughUnitsException("Lot does not have enough units to reduce.");
         }
-
-        UnitsInStock -= units;
-    }
-
-    public void SendUnitsForRemoval(uint units)
-    {
-        ReduceUnits(units);
-        UnitsInRemoval += units;
+        UnitsInStock = (uint)((int)UnitsInStock + units);
     }
 
     public void RestoreUnitsFromRemoval(uint units)
@@ -161,11 +174,15 @@ public class Lot
                 "Lot units in removal are fewer than units to restore.");
         }
         UnitsInRemoval -= units;
-        IncreaseUnits(units);
+        AdjustUnits((int)units);
     }
 
     public void ConfirmUnitsRemoved(uint units)
     {
+        if (units == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(units));
+        }
         if (units > UnitsInRemoval)
         {
             throw new NotEnoughUnitsException(
@@ -181,16 +198,23 @@ public class Lot
             throw new InvalidOperationException(
                 "Unfulfillable units cannot be rendered stranded.");
         }
+        if (IsUnitsStranded)
+        {
+            throw new InvalidOperationException("Lot units are already stranded.");
+        }
         DateUnitsBecameStranded = DateTime.Now.Date;
     }
 
     public void ConfirmStrandingResolved()
     {
-        if (!IsUnitsStranded)
+        if (IsUnitsStranded)
+        {
+            DateUnitsBecameStranded = null;
+        }
+        else
         {
             throw new InvalidOperationException("Lot units are not stranded.");
         }
-        DateUnitsBecameStranded = null;
     }
 }
 

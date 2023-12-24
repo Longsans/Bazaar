@@ -13,7 +13,7 @@ public record StockIssue
     private readonly List<StockIssueItem> _items;
     public IReadOnlyCollection<StockIssueItem> Items => _items.AsReadOnly();
 
-    public StockIssue(IEnumerable<StockIssueItem> issueItems, StockIssueReason reason)
+    public StockIssue(IEnumerable<StockIssueItem> issueItems, StockIssueReason issueReason)
     {
         if (issueItems.GroupBy(x => x.LotNumber).Any(g => g.Count() > 1))
         {
@@ -21,8 +21,12 @@ public record StockIssue
         }
 
         DateOfIssue = DateTime.Now.Date;
-        IssueReason = reason;
+        IssueReason = issueReason;
         _items = issueItems.ToList();
+    }
+
+    public StockIssue(StockIssueReason issueReason) : this(new List<StockIssueItem>(), issueReason)
+    {
     }
 
     private StockIssue() { }

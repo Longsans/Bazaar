@@ -1,4 +1,4 @@
-﻿namespace Bazaar.FbbInventory.ServiceIntegration.EventHandling;
+﻿namespace Bazaar.FbbInventory.Application.EventHandling;
 
 public class FbbInventoryPickedUpIntegrationEventHandler
     : IIntegrationEventHandler<FbbInventoryPickedUpIntegrationEvent>
@@ -17,7 +17,7 @@ public class FbbInventoryPickedUpIntegrationEventHandler
     {
         var inboundQuantities = @event.Inventories.Select(x =>
             new InboundStockQuantity(x.ProductId, x.StockUnits));
-        var result = _stockTxnService.ReceiveStock(@event.SchedulerId, inboundQuantities);
+        var result = _stockTxnService.ReceiveStock(inboundQuantities);
         if (!result.IsSuccess)
         {
             _logger.LogError("Error receiving stock from pickup for scheduler {SchedulerId}: {ErrorMessage}",

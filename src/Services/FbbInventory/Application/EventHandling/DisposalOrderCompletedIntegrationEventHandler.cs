@@ -1,4 +1,4 @@
-﻿namespace Bazaar.FbbInventory.ServiceIntegration.EventHandling;
+﻿namespace Bazaar.FbbInventory.Application.EventHandling;
 
 public class DisposalOrderCompletedIntegrationEventHandler
     : IIntegrationEventHandler<DisposalOrderCompletedIntegrationEvent>
@@ -15,7 +15,7 @@ public class DisposalOrderCompletedIntegrationEventHandler
 
     public async Task Handle(DisposalOrderCompletedIntegrationEvent @event)
     {
-        var restoredInventories = new List<ProductInventory>();
+        var updatedInventories = new List<ProductInventory>();
         foreach (var disposedQty in @event.DisposedQuantities)
         {
             var lot = _lotRepo.GetByLotNumber(disposedQty.LotNumber);
@@ -27,11 +27,14 @@ public class DisposalOrderCompletedIntegrationEventHandler
 
             lot.ConfirmUnitsRemoved(disposedQty.DisposedUnits);
             var inventory = lot.ProductInventory;
-            inventory.RemoveEmptyLots();
-            restoredInventories.Add(inventory);
+            updatedInventories.Add(inventory);
         }
-        _productInventoryRepo.UpdateRange(restoredInventories);
 
+        foreach (var inventory in updatedInventories)
+        {
+            inventory.RemoveEmptyLots();
+        }
+        _productInventoryRepo.UpdateRange(updatedInventories);
         await Task.CompletedTask;
     }
 }

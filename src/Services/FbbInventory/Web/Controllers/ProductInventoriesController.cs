@@ -5,10 +5,14 @@
 public class ProductInventoriesController : ControllerBase
 {
     private readonly IProductInventoryRepository _productInventoryRepo;
+    private readonly StockTransactionService _stockTxnService;
 
-    public ProductInventoriesController(IProductInventoryRepository productInventoryRepo)
+    public ProductInventoriesController(
+        IProductInventoryRepository productInventoryRepo,
+        StockTransactionService stockTxnService)
     {
         _productInventoryRepo = productInventoryRepo;
+        _stockTxnService = stockTxnService;
     }
 
     [HttpGet("{productId}")]
@@ -20,5 +24,20 @@ public class ProductInventoriesController : ControllerBase
             return NotFound();
         }
         return new ProductInventoryResponse(productInventory);
+    }
+
+    [HttpPost("/api/received-stocks")]
+    public ActionResult<StockReceipt> ReceiveStock(
+        IEnumerable<InboundStockQuantity> receiptQuantities)
+    {
+        return _stockTxnService.ReceiveStock(receiptQuantities).ToActionResult(this);
+    }
+
+    [HttpPost("/api/issued-stocks")]
+    public ActionResult<StockIssue> IssueStock(IssueStockRequest request)
+    {
+        return _stockTxnService
+            .IssueStocksFifo(request.IssueQuantities, request.IssueReason)
+            .ToActionResult(this);
     }
 }

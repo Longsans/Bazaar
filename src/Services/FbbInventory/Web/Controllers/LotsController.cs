@@ -40,7 +40,7 @@ public class LotsController : ControllerBase
             .ToActionResult(this);
     }
 
-    [HttpPost("/lot-adjustments")]
+    [HttpPost("/api/lot-adjustments")]
     public IActionResult AdjustLotUnits(IEnumerable<LotAdjustmentQuantityDto> adjustmentQuantities)
     {
         if (adjustmentQuantities.Any(x => x.Quantity == 0))

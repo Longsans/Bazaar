@@ -4,30 +4,11 @@
 [ApiController]
 public class SellerInventoriesController : ControllerBase
 {
-    private readonly StockTransactionService _stockTxnService;
     private readonly RemovalService _removalService;
 
-    public SellerInventoriesController(
-        StockTransactionService stockTxnService, RemovalService removalService)
+    public SellerInventoriesController(RemovalService removalService)
     {
-        _stockTxnService = stockTxnService;
         _removalService = removalService;
-    }
-
-    [HttpPost("{sellerId}/received-stocks")]
-    public ActionResult<StockReceipt> ReceiveStock(
-        string sellerId, IEnumerable<InboundStockQuantity> receiptQuantities)
-    {
-        return _stockTxnService.ReceiveStock(sellerId, receiptQuantities).ToActionResult(this);
-    }
-
-    [HttpPost("{sellerId}/issued-stocks")]
-    public ActionResult<StockIssue> IssueStock(
-        string sellerId, IssueStockRequest request)
-    {
-        return _stockTxnService
-            .IssueStockByDateOldToNew(sellerId, request.IssueQuantities, request.IssueReason)
-            .ToActionResult(this);
     }
 
     [HttpPost("{sellerId}/removed-stocks")]

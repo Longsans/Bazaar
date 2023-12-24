@@ -3,23 +3,20 @@
 public class StockTransactionService
 {
     private readonly IQualityInspectionService _qualityInspectionService;
-    private readonly ISellerInventoryRepository _sellerInvenRepo;
     private readonly IProductInventoryRepository _productInvenRepo;
     private readonly IEventBus _eventBus;
 
     public StockTransactionService(
         IQualityInspectionService qualityInspectionService,
-        ISellerInventoryRepository sellerInvenRepo,
         IProductInventoryRepository productInvenRepo,
         IEventBus eventBus)
     {
         _qualityInspectionService = qualityInspectionService;
-        _sellerInvenRepo = sellerInvenRepo;
         _productInvenRepo = productInvenRepo;
         _eventBus = eventBus;
     }
 
-    public Result<StockReceipt> ReceiveStock(string sellerId,
+    public Result<StockReceipt> ReceiveStock(
         IEnumerable<InboundStockQuantity> receiptQuantities)
     {
         if (receiptQuantities.GroupBy(x => x.ProductId).Any(g => g.Count() > 1))
@@ -39,25 +36,44 @@ public class StockTransactionService
             });
         }
 
-        var sellerInven = _sellerInvenRepo.GetWithProductsBySellerId(sellerId);
-        if (sellerInven == null)
-        {
-            return Result.NotFound("Seller inventory not found for seller ID.");
-        }
         var inspectionReport = _qualityInspectionService.ConductInspection(receiptQuantities);
         var receiptItems = inspectionReport.Items.Select(x => new StockReceiptItem(
             x.ProductId, x.GoodQuantity, x.DefectiveQuantity, x.WarehouseDamagedQuantity));
         var receipt = new StockReceipt(receiptItems);
 
-        try
+        var updatedInventories = new List<ProductInventory>();
+        foreach (var receiptItem in receiptItems)
         {
-            sellerInven.ReceiveStock(receipt);
+            var inventory = _productInvenRepo.GetByProductId(receiptItem.ProductId);
+            if (inventory == null)
+            {
+                return Result.NotFound(
+                    $"Product inventory not found for product ID {receiptItem.ProductId}");
+            }
+            try
+            {
+                if (receiptItem.GoodQuantity > 0)
+                {
+                    inventory.ReceiveGoodStock(receiptItem.GoodQuantity);
+                }
+                if (receiptItem.DefectiveQuantity > 0)
+                {
+                    inventory.AddUnfulfillableStock(receiptItem.DefectiveQuantity,
+                        DateTime.Now.Date, DateTime.Now.Date, UnfulfillableCategory.Defective);
+                }
+                if (receiptItem.WarehouseDamagedQuantity > 0)
+                {
+                    inventory.AddUnfulfillableStock(receiptItem.WarehouseDamagedQuantity,
+                        DateTime.Now.Date, DateTime.Now.Date, UnfulfillableCategory.WarehouseDamaged);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Result.Conflict(ex.Message);
+            }
+            updatedInventories.Add(inventory);
         }
-        catch (Exception ex)
-        {
-            return Result.Conflict(ex.Message);
-        }
-        _sellerInvenRepo.Update(sellerInven);
+        _productInvenRepo.UpdateRange(updatedInventories);
 
         var receivedStockItems = receiptItems.Select(x => new ReceivedStockEventItem(
             x.ProductId, x.GoodQuantity, x.DefectiveQuantity, x.WarehouseDamagedQuantity));
@@ -66,9 +82,17 @@ public class StockTransactionService
         return receipt;
     }
 
-    public Result<StockIssue> IssueStockByDateOldToNew(string sellerId,
+    public Result<StockIssue> IssueStocksFifo(
         IEnumerable<OutboundStockQuantity> issueQuantities, StockIssueReason issueReason)
     {
+        if (!issueQuantities.Any())
+        {
+            return Result.Invalid(new ValidationError
+            {
+                Identifier = nameof(issueQuantities),
+                ErrorMessage = "Issue quantities empty."
+            });
+        }
         if (issueQuantities.GroupBy(x => x.ProductId).Any(g => g.Count() > 1))
         {
             return Result.Invalid(new ValidationError
@@ -86,27 +110,57 @@ public class StockTransactionService
             });
         }
 
-        var sellerInven = _sellerInvenRepo.GetWithProductsBySellerId(sellerId);
-        if (sellerInven == null)
-        {
-            return Result.NotFound("Seller inventory not found for seller ID.");
-        }
-
+        var issue = new StockIssue(issueReason);
+        var updatedInventories = new List<ProductInventory>();
         try
         {
-            var issue = sellerInven.IssueStock(issueQuantities, issueReason);
-            _sellerInvenRepo.Update(sellerInven);
+            foreach (var issueQuantity in issueQuantities)
+            {
+                var inventory = _productInvenRepo.GetByProductId(issueQuantity.ProductId);
+                if (inventory == null)
+                {
+                    return Result.NotFound(
+                        $"Product inventory not found for product ID {issueQuantity.ProductId}");
+                }
 
-            var issuedItems = issueQuantities.Select(x =>
-            new IssuedStockEventItem(x.ProductId, x.GoodQuantity, x.UnfulfillableQuantity));
-            var stockIssuedEvent = new StockIssuedIntegrationEvent(
-                DateTime.Now.Date, issueReason, issuedItems);
-            _eventBus.Publish(stockIssuedEvent);
-            return Result.Success(issue);
+                if (issueQuantity.GoodQuantity > 0)
+                {
+                    var demandedLots = inventory.GetGoodLotsFifoForStockDemand(issueQuantity.GoodQuantity);
+                    IssueStockFromLots(demandedLots, issueQuantity.GoodQuantity, ref issue);
+                }
+                if (issueQuantity.UnfulfillableQuantity > 0)
+                {
+                    var demandedLots = inventory.GetUnfulfillabbleLotsFifoForStockDemand(
+                        issueQuantity.UnfulfillableQuantity);
+                    IssueStockFromLots(demandedLots, issueQuantity.UnfulfillableQuantity, ref issue);
+                }
+                inventory.RemoveEmptyLots();
+                updatedInventories.Add(inventory);
+            }
         }
         catch (Exception ex)
         {
             return Result.Conflict(ex.Message);
+        }
+
+        _productInvenRepo.UpdateRange(updatedInventories);
+        var issuedItems = issueQuantities.Select(x =>
+            new IssuedStockEventItem(x.ProductId, x.GoodQuantity, x.UnfulfillableQuantity));
+        var stockIssuedEvent = new StockIssuedIntegrationEvent(
+            DateTime.Now.Date, issueReason, issuedItems);
+        _eventBus.Publish(stockIssuedEvent);
+        return Result.Success(issue);
+    }
+
+    private static void IssueStockFromLots(
+        IEnumerable<Lot> lots, uint quantity, ref StockIssue currentIssue)
+    {
+        foreach (var lot in lots)
+        {
+            var issueUnits = Math.Min(quantity, lot.UnitsInStock);
+            var lotIssue = lot.IssueUnits(issueUnits, currentIssue.IssueReason);
+            currentIssue = currentIssue.AddItems(lotIssue.Items);
+            quantity -= issueUnits;
         }
     }
 }

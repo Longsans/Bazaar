@@ -16,7 +16,17 @@ public class StockAdjustmentService
 
     public Result AdjustStockInLots(IEnumerable<LotAdjustmentQuantityDto> adjustmentQuantities)
     {
+        if (!adjustmentQuantities.Any())
+        {
+            return Result.Invalid(new ValidationError
+            {
+                Identifier = nameof(adjustmentQuantities),
+                ErrorMessage = "Adjustment quantities is empty."
+            });
+        }
+
         var adjustedLots = new List<Lot>();
+        var adjustedInventories = new List<ProductInventory>();
         var adjustedQuantities = new Dictionary<string, AdjustedQuantity>();
         foreach (var adjustmentQty in adjustmentQuantities)
         {
@@ -26,23 +36,16 @@ public class StockAdjustmentService
                 return Result.NotFound($"Lot not found for lot number {adjustmentQty.LotNumber}");
             }
 
-            var unsignedQuantity = (uint)Math.Abs(adjustmentQty.Quantity);
             try
             {
-                if (adjustmentQty.Quantity > 0)
-                {
-                    lot.IncreaseUnits(unsignedQuantity);
-                }
-                else
-                {
-                    lot.ReduceUnits(unsignedQuantity);
-                }
+                lot.AdjustUnits(adjustmentQty.Quantity);
             }
             catch (Exception ex)
             {
                 return Result.Conflict(ex.Message);
             }
             adjustedLots.Add(lot);
+            adjustedInventories.Add(lot.ProductInventory);
 
             var productId = lot.ProductInventory.ProductId;
             var goodQuantityAdjusted = lot.IsUnitsUnfulfillable ? 0 : adjustmentQty.Quantity;
@@ -55,6 +58,11 @@ public class StockAdjustmentService
             }
             adjustedQuantities.Add(productId, new(productId,
                 goodQuantityAdjusted, unfQuantityAdjusted, lot.ProductInventory.IsStranded));
+        }
+
+        foreach (var inventory in adjustedInventories)
+        {
+            inventory.RemoveEmptyLots();
         }
         _lotRepo.UpdateRange(adjustedLots);
         _eventBus.Publish(new StockAdjustedIntegrationEvent(
@@ -88,17 +96,9 @@ public class StockAdjustmentService
         int signedQuantity = (int)quantity;
         try
         {
-            if (inventory.IsStranded)
-            {
-                inventory.AdjustStrandedStock(lot.DateUnitsEnteredStorage,
-                    lot.DateUnitsBecameStranded!.Value, -signedQuantity);
-            }
-            else
-            {
-                inventory.AdjustFulfillableStock(lot.DateUnitsEnteredStorage, -signedQuantity);
-            }
-            inventory.AdjustUnfulfillableStock(lot.DateUnitsEnteredStorage,
-                DateTime.Now.Date, category, signedQuantity);
+            lot.AdjustUnits(-signedQuantity);
+            inventory.AddUnfulfillableStock(
+                quantity, lot.DateUnitsEnteredStorage, DateTime.Now.Date, category);
         }
         catch (Exception ex)
         {

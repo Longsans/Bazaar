@@ -1,4 +1,4 @@
-﻿namespace Bazaar.FbbInventory.ServiceIntegration.EventHandling;
+﻿namespace Bazaar.FbbInventory.Application.EventHandling;
 
 public class InventoryReturnCancelledIntegrationEventHandler
     : IIntegrationEventHandler<InventoryReturnCancelledIntegrationEvent>

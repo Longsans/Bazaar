@@ -26,8 +26,8 @@ public class RemovalService
             });
         }
 
-        var result = _stockTransactionService.IssueStockByDateOldToNew(
-            sellerId, returnQuantities, StockIssueReason.Return);
+        var result = _stockTransactionService.IssueStocksFifo(
+            returnQuantities, StockIssueReason.Return);
         if (!result.IsSuccess)
         {
             return result;
@@ -42,8 +42,8 @@ public class RemovalService
     public Result<StockIssue> SendProductStocksForDisposal(
         string sellerId, IEnumerable<OutboundStockQuantity> disposalQuantities)
     {
-        var result = _stockTransactionService.IssueStockByDateOldToNew(
-            sellerId, disposalQuantities, StockIssueReason.Disposal);
+        var result = _stockTransactionService.IssueStocksFifo(
+            disposalQuantities, StockIssueReason.Disposal);
         if (!result.IsSuccess)
         {
             return result;
@@ -70,7 +70,7 @@ public class RemovalService
 
         foreach (var lot in lotsToSendForRemoval)
         {
-            lot.SendUnitsForRemoval(lot.UnitsInStock);
+            lot.IssueUnits(lot.UnitsInStock, StockIssueReason.Disposal);
         }
         _lotRepo.UpdateRange(lotsToSendForRemoval);
         _eventBus.Publish(new LotQuantitiesSentForDisposalIntegrationEvent(disposalLotUnits, true));
