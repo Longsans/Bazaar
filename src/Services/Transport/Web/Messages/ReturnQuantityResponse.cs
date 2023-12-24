@@ -7,7 +7,7 @@ public record ReturnQuantityResponse(
     int ReturnId)
 {
     public ReturnQuantityResponse(ReturnQuantity returnQty)
-        : this(returnQty.Id, returnQty.LotNumber, returnQty.Units, returnQty.ReturnId)
+        : this(returnQty.Id, returnQty.LotNumber, returnQty.Quantity, returnQty.ReturnId)
     {
 
     }

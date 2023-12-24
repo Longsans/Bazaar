@@ -69,7 +69,7 @@ public class InventoryReturnProcessService
     private void PublishCompletedEvent(InventoryReturn invReturn)
     {
         var returnedLotUnits = invReturn.ReturnQuantities
-            .Select(x => new UnitsFromLot(x.LotNumber, x.Units));
+            .Select(x => new LotQuantity(x.LotNumber, x.Quantity));
         _eventBus.Publish(new InventoryReturnCompletedIntegrationEvent(
             invReturn.Id, returnedLotUnits));
     }
@@ -77,7 +77,7 @@ public class InventoryReturnProcessService
     private void PublishCancelledEvent(InventoryReturn invReturn)
     {
         var returnedLotUnits = invReturn.ReturnQuantities
-            .Select(x => new UnitsFromLot(x.LotNumber, x.Units));
+            .Select(x => new LotQuantity(x.LotNumber, x.Quantity));
         _eventBus.Publish(new InventoryReturnCancelledIntegrationEvent(
             invReturn.Id, returnedLotUnits));
     }

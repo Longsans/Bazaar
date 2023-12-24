@@ -8,22 +8,17 @@ public class ProductInventory
     private readonly List<Lot> _lots;
     public IReadOnlyCollection<Lot> Lots => _lots.AsReadOnly();
     public IReadOnlyCollection<Lot> FulfillableLots
-        => _lots.Where(x => !x.IsUnfulfillable).ToList().AsReadOnly();
+        => _lots.Where(x => x.IsUnitsFulfillable).ToList().AsReadOnly();
     public IReadOnlyCollection<Lot> UnfulfillableLots
-        => _lots.Where(x => x.IsUnfulfillable).ToList().AsReadOnly();
+        => _lots.Where(x => x.IsUnitsUnfulfillable).ToList().AsReadOnly();
+    public IReadOnlyCollection<Lot> StrandedLots
+        => _lots.Where(x => x.IsUnitsStranded).ToList().AsReadOnly();
 
-    public uint FulfillableUnitsInStock
-        => (uint)FulfillableLots.Sum(x => x.UnitsInStock);
-    public uint FulfillableUnitsPendingRemoval
-        => (uint)FulfillableLots.Sum(x => x.UnitsPendingRemoval);
-    public uint UnfulfillableUnitsInStock
-        => (uint)UnfulfillableLots.Sum(x => x.UnitsInStock);
-    public uint UnfulfillableUnitsPendingRemoval
-        => (uint)UnfulfillableLots.Sum(x => x.UnitsPendingRemoval);
-
-    public uint TotalUnits => FulfillableUnitsInStock + FulfillableUnitsPendingRemoval
-            + UnfulfillableUnitsInStock + UnfulfillableUnitsPendingRemoval;
-
+    public uint FulfillableUnits => (uint)FulfillableLots.Sum(x => x.UnitsInStock);
+    public uint UnfulfillableUnits => (uint)UnfulfillableLots.Sum(x => x.UnitsInStock);
+    public uint StrandedUnits => (uint)StrandedLots.Sum(x => x.UnitsInStock);
+    public uint AllUnitsInRemoval => (uint)_lots.Sum(x => x.UnitsInRemoval);
+    public uint TotalUnits => FulfillableUnits + UnfulfillableUnits + StrandedUnits + AllUnitsInRemoval;
     public uint RemainingCapacity => MaxStockThreshold - TotalUnits;
 
     public uint RestockThreshold { get; private set; }
@@ -31,6 +26,7 @@ public class ProductInventory
     public SellerInventory SellerInventory { get; private set; }
     public int SellerInventoryId { get; private set; }
 
+    public bool IsStranded { get; private set; }
     public bool HasPickupsInProgress { get; private set; }
 
     public ProductInventory(
@@ -62,11 +58,11 @@ public class ProductInventory
         }
         if (defectiveUnits != 0)
         {
-            _lots.Add(new(this, UnfulfillableCategory.Defective, defectiveUnits));
+            _lots.Add(new(this, defectiveUnits, UnfulfillableCategory.Defective));
         }
         if (warehouseDamagedUnits != 0)
         {
-            _lots.Add(new(this, UnfulfillableCategory.WarehouseDamaged, warehouseDamagedUnits));
+            _lots.Add(new(this, warehouseDamagedUnits, UnfulfillableCategory.WarehouseDamaged));
         }
     }
 
@@ -74,117 +70,67 @@ public class ProductInventory
     private ProductInventory() { }
 
     #region Domain logic
-    public void ReduceFulfillableStockFromOldToNew(uint units)
+    public IEnumerable<Lot> GetGoodLotsFifoForStockDemand(uint requiredUnits)
     {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to reduce cannot be 0.");
-        }
-        if (units > FulfillableUnitsInStock)
-        {
-            throw new NotEnoughUnitsException("Not enough fulfillable stock.");
-        }
-
-        var fulfillableLotsFromOldest = FulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.TimeEnteredStorage)
-            .ToList();
-        ReduceUnitsInStockWithAltIteration(fulfillableLotsFromOldest,
-            _lots, units);
+        return GetLotsFifoForStockDemand(requiredUnits, lot => !lot.IsUnitsUnfulfillable);
     }
 
-    public void ReduceUnfulfillableStockFromOldToNew(uint units)
+    public IEnumerable<Lot> GetUnfulfillabbleLotsFifoForStockDemand(uint requiredUnits)
     {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to reduce cannot be 0.");
-        }
-        if (units > UnfulfillableUnitsInStock)
-        {
-            throw new NotEnoughUnitsException("Not enough unfulfillable stock.");
-        }
-
-        var unfulfillableLotsFromOldest = UnfulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.TimeUnfulfillableSince)
-            .ToList();
-        ReduceUnitsInStockWithAltIteration(unfulfillableLotsFromOldest,
-            _lots, units);
+        return GetLotsFifoForStockDemand(requiredUnits, lot => lot.IsUnitsUnfulfillable);
     }
 
-    public void AddFulfillableStock(uint units)
+    public void ReceiveGoodStock(uint units)
     {
-        if (units == 0)
+        if (!IsStranded)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to restock cannot be 0.");
-        }
-        if (units > RemainingCapacity)
-        {
-            throw new ExceedingMaxStockThresholdException();
-        }
-
-        var fulfillableQty = FulfillableLots
-            .SingleOrDefault(x => x.TimeEnteredStorage.Date == DateTime.Now.Date);
-        if (fulfillableQty == null)
-        {
-            _lots.Add(new(this, units));
+            AddLotOrIncreaseLotUnits(units,
+                () => _lots.SingleOrDefault(x => x.IsUnitsFulfillable
+                    && x.DateUnitsEnteredStorage == DateTime.Now.Date),
+                () => new Lot(this, units));
         }
         else
         {
-            fulfillableQty.AddStock(units);
+            AddLotOrIncreaseLotUnits(units,
+                () => _lots.SingleOrDefault(x => x.DateUnitsEnteredStorage == DateTime.Now.Date
+                    && x.DateUnitsBecameStranded == DateTime.Now.Date),
+                () => new Lot(this, units, DateTime.Now.Date, DateTime.Now.Date));
         }
     }
 
-    public void AddUnfulfillableStock(UnfulfillableCategory category, uint units)
+    public void AddUnfulfillableStock(uint units, DateTime dateUnitsEnteredStorage,
+        DateTime dateUnitsBecameUnfulfillable, UnfulfillableCategory unfulfillableCategory)
     {
-        if (units == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(units), "Number of stock units to add cannot be 0.");
-        }
-        if (units > RemainingCapacity)
-        {
-            throw new ExceedingMaxStockThresholdException();
-        }
+        AddLotOrIncreaseLotUnits(units,
+            () => _lots.SingleOrDefault(x => x.DateUnitsEnteredStorage == dateUnitsEnteredStorage
+                && x.DateUnitsBecameUnfulfillable == dateUnitsBecameUnfulfillable
+                && x.UnfulfillableCategory == unfulfillableCategory),
+            () => new Lot(this, units, unfulfillableCategory));
+    }
 
-        var unfulfillableLot = UnfulfillableLots
-            .Where(x => x.UnfulfillableCategory == category
-                && x.TimeUnfulfillableSince!.Value.Date == DateTime.Now.Date)
-            .SingleOrDefault();
+    public void TurnStranded()
+    {
+        IsStranded = true;
 
-        if (unfulfillableLot == null)
+        foreach (var lot in FulfillableLots.Where(x => x.HasUnitsInStock))
         {
-            _lots.Add(new(this, category, units));
-        }
-        else
-        {
-            unfulfillableLot.AddStock(units);
+            lot.TurnStranded();
         }
     }
 
-    public void LabelAllFulfillableStockAsStrandedStock()
+    public void ConfirmStrandingResolved()
     {
-        foreach (var lot in FulfillableLots)
-        {
-            lot.LabelUnfulfillable(UnfulfillableCategory.Stranded);
-        }
-    }
+        IsStranded = false;
 
-    public void RelabelStrandedStockAsFulfillableStock()
-    {
-        foreach (var lot in UnfulfillableLots
-            .Where(x => x.UnfulfillableCategory == UnfulfillableCategory.Stranded))
+        foreach (var lot in StrandedLots.Where(x => x.HasUnitsInStock))
         {
-            lot.RemoveUnfulfillableLabel();
+            lot.ConfirmStrandingResolved();
         }
     }
 
     public void RemoveEmptyLots()
     {
-        _lots.RemoveAll(x => x.TotalUnits == 0);
+        _lots.RemoveAll(x => !x.HasAnyUnits);
     }
 
     public void UpdateHasPickupsInProgress(bool hasPickupsInProgress)
@@ -194,27 +140,64 @@ public class ProductInventory
     #endregion
 
     #region Helpers
-    private static void ReduceUnitsInStockWithAltIteration<T>(IList<T> iterateList,
-        IList<T> originalList, uint totalReduceUnits)
-        where T : Lot
+    private Lot AddLotOrIncreaseLotUnits(uint units, Func<Lot?> findExisingLot, Func<Lot> createNewLot)
     {
-        foreach (var lot in iterateList)
+        if (units == 0)
         {
-            if (totalReduceUnits >= lot.UnitsInStock)
-            {
-                originalList.Remove(lot);
-                totalReduceUnits -= lot.UnitsInStock;
-            }
-            else
-            {
-                lot.ReduceStock(totalReduceUnits);
-                totalReduceUnits = 0;
-            }
-            if (totalReduceUnits == 0)
-            {
-                break;
-            }
+            throw new ArgumentOutOfRangeException(nameof(units), "Units cannot be 0.");
         }
+        if (units > RemainingCapacity)
+        {
+            throw new ExceedingMaxStockThresholdException();
+        }
+
+        var existingLot = findExisingLot();
+        if (existingLot != null)
+        {
+            existingLot.AdjustUnits((int)units);
+            return existingLot;
+        }
+        else
+        {
+            var lot = createNewLot();
+            _lots.Add(lot);
+            return lot;
+        }
+    }
+
+    private IEnumerable<Lot> GetLotsFifoForStockDemand(uint requiredUnits, Func<Lot, bool> filter)
+    {
+        if (requiredUnits == 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(requiredUnits), "Required units is zero.");
+        }
+        var lotsOldToNew = _lots.Where(x => filter(x))
+            .OrderBy(x =>
+            {
+                if (x.IsUnitsFulfillable)
+                    return x.DateUnitsEnteredStorage;
+                if (x.IsUnitsUnfulfillable)
+                    return x.DateUnitsBecameUnfulfillable;
+                else
+                    return x.DateUnitsBecameStranded;
+            });
+        var satisfactoryLots = new List<Lot>();
+        foreach (var lot in lotsOldToNew)
+        {
+            var units = requiredUnits >= lot.UnitsInStock
+                ? lot.UnitsInStock : requiredUnits;
+            satisfactoryLots.Add(lot);
+            requiredUnits -= units;
+            if (requiredUnits == 0)
+                break;
+        }
+
+        if (requiredUnits > 0)
+        {
+            throw new NotEnoughUnitsException();
+        }
+        return satisfactoryLots;
     }
     #endregion
 }

@@ -12,45 +12,25 @@ public class LotRepository : ILotRepository
     public Lot? GetById(int id)
     {
         return _context.Lots
-            .Include(x => x.ProductInventory)
+            .Include(x => x.ProductInventory.Lots)
+            .Include(x => x.ProductInventory.SellerInventory)
             .SingleOrDefault(x => x.Id == id);
     }
 
     public Lot? GetByLotNumber(string lotNumber)
     {
         return _context.Lots
-            .Include(x => x.ProductInventory)
+            .Include(x => x.ProductInventory.Lots)
+            .Include(x => x.ProductInventory.SellerInventory)
             .SingleOrDefault(x => x.LotNumber == lotNumber);
-    }
-
-    public IEnumerable<Lot> GetManyByLotNumber(IEnumerable<string> lotNumbers)
-    {
-        return _context.Lots
-            .Include(x => x.ProductInventory)
-            .ThenInclude(p => p.SellerInventory)
-            .Where(x => lotNumbers.Contains(x.LotNumber));
-    }
-
-    public Lot? GetFulfillableById(int id)
-    {
-        return _context.Lots
-            .Include(x => x.ProductInventory)
-            .SingleOrDefault(x => x.Id == id && x.UnfulfillableCategory == null);
     }
 
     public IEnumerable<Lot> GetUnfulfillables()
     {
         return _context.Lots
-            .Include(x => x.ProductInventory)
-            .ThenInclude(p => p.SellerInventory)
-            .Where(x => x.UnfulfillableCategory != null);
-    }
-
-    public Lot? GetUnfulfillableById(int id)
-    {
-        return _context.Lots
-            .Include(x => x.ProductInventory)
-            .SingleOrDefault(x => x.Id == id && x.UnfulfillableCategory != null);
+            .Include(x => x.ProductInventory.Lots)
+            .Include(x => x.ProductInventory.SellerInventory)
+            .Where(x => x.IsUnitsUnfulfillable);
     }
 
     public Lot Create(Lot lot)

@@ -22,7 +22,8 @@ public class FbbInventoryDbContext : DbContext
                 .IsUnique();
 
             inventory.Ignore(x => x.FulfillableLots)
-                .Ignore(x => x.UnfulfillableLots);
+                .Ignore(x => x.UnfulfillableLots)
+                .Ignore(x => x.StrandedLots);
         });
 
         modelBuilder.Entity<Lot>(lot =>
@@ -30,29 +31,20 @@ public class FbbInventoryDbContext : DbContext
             lot.HasIndex(x => new
             {
                 x.ProductInventoryId,
-                x.TimeEnteredStorage,
-                x.TimeUnfulfillableSince,
-                x.UnfulfillableCategory,
-            })
-            .IsUnique();
+                x.DateUnitsEnteredStorage,
+                x.DateUnitsBecameStranded,
+                x.DateUnitsBecameUnfulfillable,
+            }).IsUnique();
+
+            lot.HasIndex(x => x.LotNumber)
+                .IsUnique();
 
             lot.Property(x => x.LotNumber)
-            .HasComputedColumnSql(
-                $"CONCAT('{StoragePolicy.LotCodePrefix}', [Id])", true);
-
-            lot.ToTable(l => l.HasCheckConstraint("CK_TimeUnfulfillableSince_After_TimeEnteredStorage",
-                "[TimeUnfulfillableSince] IS NULL OR [TimeUnfulfillableSince] >= [TimeEnteredStorage]"));
+                .HasComputedColumnSql($"CONCAT('{StoragePolicy.LotPrefix}', [{nameof(Lot.Id)}])");
         });
     }
 
     public DbSet<SellerInventory> SellerInventories { get; set; }
     public DbSet<ProductInventory> ProductInventories { get; set; }
     public DbSet<Lot> Lots { get; set; }
-
-    class Discriminator
-    {
-        public const string ColumnName = "Fulfillability";
-        public const string FulfillableValue = "Fulfillable";
-        public const string UnfulfillableValue = "Unfulfillable";
-    }
 }

@@ -3,15 +3,15 @@
 public class DisposalOrder
 {
     public int Id { get; private set; }
-    private readonly List<DisposeQuantity> _disposeQuantities;
-    public IReadOnlyCollection<DisposeQuantity> DisposeQuantities
+    private readonly List<DisposalQuantity> _disposeQuantities;
+    public IReadOnlyCollection<DisposalQuantity> DisposeQuantities
         => _disposeQuantities.AsReadOnly();
     public DateTime CreatedAt { get; private set; }
     public bool CreatedByBazaar { get; private set; }
     public DisposalStatus Status { get; private set; }
     public string? CancelReason { get; private set; }
 
-    public DisposalOrder(IEnumerable<DisposeQuantity> disposeQuantities, bool createdByBazaar)
+    public DisposalOrder(IEnumerable<DisposalQuantity> disposeQuantities, bool createdByBazaar)
     {
         if (!disposeQuantities.Any())
         {

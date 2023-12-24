@@ -4,43 +4,89 @@ public class LotUnitTests
 {
     #region Test data and helpers
     private const uint _validUnitsInStock = 100;
-    private const uint _validUnitsPendingRemoval = 20;
+    private const uint _validUnitsInRemoval = 20;
     private const uint _defectiveUnits = 5;
     private const uint _wdmgUnits = 10;
+    private const uint _maxStockThreshold = 1000;
     private readonly ProductInventory _inventory = new("PROD-1", _validUnitsInStock,
-        _defectiveUnits, _wdmgUnits, 10, 1000, 1);
+        _defectiveUnits, _wdmgUnits, 10, _maxStockThreshold, 1);
 
-    private Lot GetTestLot()
+    private Lot GetFulfillableTestLot()
+        => _inventory.FulfillableLots.First();
+
+    private Lot GetUnfulfillableTestLot()
+        => _inventory.UnfulfillableLots.First();
+
+    private Lot GetStrandedTestLot()
     {
-        return _inventory.FulfillableLots.First();
+        _inventory.TurnStranded();
+        return _inventory.StrandedLots.First();
     }
 
-    private Lot GetTestLotWithPendingRemovalUnits()
+    private Lot GetTestLotWithUnitsInRemoval()
     {
-        var lot = GetTestLot();
-        lot.LabelUnitsInStockForRemoval(_validUnitsPendingRemoval);
+        var lot = GetFulfillableTestLot();
+        lot.IssueUnits(_validUnitsInRemoval, StockIssueReason.Disposal);
         return lot;
     }
 
-    private static void AssertTotalUnits(Lot lot)
+    private static void AssertUnits(Lot lot, uint inStock, uint inRemoval)
     {
-        Assert.Equal(lot.UnitsInStock + lot.UnitsPendingRemoval, lot.TotalUnits);
+        Assert.Equal(inStock, lot.UnitsInStock);
+        Assert.Equal(inRemoval, lot.UnitsInRemoval);
+    }
+
+    private static void AssertStockIssue(StockIssue issue, StockIssueReason issueReason,
+        ProductInventory inventory, Lot lot, uint issuedUnits, uint remainingUnits)
+    {
+        Assert.Equal(issueReason, issue.IssueReason);
+        var issuedItem = issue.Items.Single();
+        Assert.Equal(inventory.ProductId, issuedItem.ProductId);
+        Assert.Equal(issuedUnits, issuedItem.Quantity);
+        Assert.Equal(remainingUnits, lot.UnitsInStock);
     }
     #endregion
 
-    [Fact]
-    public void FulfillableConstructor_Succeeds_WhenAllValid()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(-30)]
+    public void GoodConstructor_ConstructsFulfillableLot_WhenDateStrandedIsNull(int daysFromNow)
     {
-        var lot = new Lot(_inventory, _validUnitsInStock);
+        var dateEnteredStorage = DateTime.Now.Date.AddDays(daysFromNow);
+        var lot = new Lot(_inventory, _validUnitsInStock, dateEnteredStorage);
 
-        ExtendedAssert.SameTime(lot.TimeEnteredStorage, DateTime.Now);
-        Assert.Equal(_validUnitsInStock, lot.UnitsInStock);
-        Assert.Equal(0u, lot.UnitsPendingRemoval);
-        AssertTotalUnits(lot);
+        Assert.Equal(dateEnteredStorage, lot.DateUnitsEnteredStorage);
+        Assert.True(lot.IsUnitsFulfillable);
+        AssertUnits(lot, _validUnitsInStock, 0u);
     }
 
     [Fact]
-    public void FulfillableConstructor_ThrowsArgOutOfRangeException_WhenUnitsInStockIsZero()
+    public void GoodConstructor_ConstructsFulfillableLotEnteredStorageOnCurrentDate_WhenNoDateSpecified()
+    {
+        var lot = new Lot(_inventory, _validUnitsInStock);
+
+        Assert.Equal(DateTime.Now.Date, lot.DateUnitsEnteredStorage);
+        Assert.True(!lot.IsUnitsUnfulfillable && !lot.IsUnitsStranded);
+        AssertUnits(lot, _validUnitsInStock, 0u);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(-30)]
+    public void GoodConstructor_ConstructsStrandedLot_WhenDateStrandedIsNotNull(int daysFromNow)
+    {
+        var dateEnteredStorage = DateTime.Now.Date.AddDays(daysFromNow);
+        var dateStranded = dateEnteredStorage;
+        var lot = new Lot(_inventory, _validUnitsInStock, dateEnteredStorage, dateStranded);
+
+        Assert.Equal(dateEnteredStorage, lot.DateUnitsEnteredStorage);
+        AssertUnits(lot, _validUnitsInStock, 0u);
+    }
+
+    [Fact]
+    public void GoodConstructor_ThrowsArgOutOfRangeException_WhenUnitsInStockIsZero()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
@@ -49,21 +95,68 @@ public class LotUnitTests
     }
 
     [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void GoodConstructor_ThrowsArgOutOfRangeException_WhenAnyEventDateIsInFuture(
+        bool dateEnteredStorageInFuture, bool dateStrandedInFuture)
+    {
+        var dateEnteredStorage = dateEnteredStorageInFuture ? DateTime.Now.Date.AddDays(1) : DateTime.Now.Date;
+        var dateStranded = dateStrandedInFuture ? DateTime.Now.Date.AddDays(1) : DateTime.Now.Date;
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            var lot = new Lot(_inventory, _validUnitsInStock, dateEnteredStorage, dateStranded);
+        });
+    }
+
+    [Fact]
+    public void GoodConstructor_ThrowsArgException_WhenStrandedBeforeEnteredStorage()
+    {
+        var dateEnteredStorage = DateTime.Now.Date;
+        var dateStranded = dateEnteredStorage.AddDays(-1);
+        Assert.Throws<ArgumentException>(() =>
+        {
+            var lot = new Lot(_inventory, _validUnitsInStock, dateEnteredStorage, dateStranded);
+        });
+    }
+
+    [Theory]
     [InlineData(UnfulfillableCategory.Defective)]
     [InlineData(UnfulfillableCategory.CustomerDamaged)]
     [InlineData(UnfulfillableCategory.WarehouseDamaged)]
-    [InlineData(UnfulfillableCategory.Stranded)]
     public void UnfulfillableConstructor_Succeeds_WhenAllValid(UnfulfillableCategory category)
     {
-        var lot = new Lot(_inventory, category, _validUnitsInStock);
+        var dateEnteredStorage = DateTime.Now.Date;
+        var dateUnfulfillable = dateEnteredStorage;
+        var lot = new Lot(_inventory, _validUnitsInStock, dateEnteredStorage, dateUnfulfillable, category);
 
-        ExtendedAssert.SameTime(lot.TimeEnteredStorage, DateTime.Now);
-        Assert.NotNull(lot.TimeUnfulfillableSince);
-        ExtendedAssert.SameTime(lot.TimeUnfulfillableSince.Value, DateTime.Now);
+        Assert.Equal(DateTime.Now.Date, lot.DateUnitsEnteredStorage);
+        Assert.Equal(DateTime.Now.Date, lot.DateUnitsBecameUnfulfillable!);
         Assert.Equal(category, lot.UnfulfillableCategory);
-        Assert.Equal(_validUnitsInStock, lot.UnitsInStock);
-        Assert.Equal(0u, lot.UnitsPendingRemoval);
-        AssertTotalUnits(lot);
+        AssertUnits(lot, _validUnitsInStock, 0u);
+    }
+
+    [Fact]
+    public void UnfulfillableConstructor_ThrowsArgOutOfRangeException_WhenDateUnfulfillableInFuture()
+    {
+        var dateBecameUnfulfillable = DateTime.Now.Date.AddDays(1);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            var lot = new Lot(_inventory, _validUnitsInStock, DateTime.Now.Date,
+                dateBecameUnfulfillable, UnfulfillableCategory.Defective);
+        });
+    }
+
+    [Fact]
+    public void UnfulfillableConstructor_ThrowsArgException_WhenUnfulfillableBeforeEnteredStorage()
+    {
+        var dateEnteredStorage = DateTime.Now.Date;
+        var dateBecameUnfulfillable = dateEnteredStorage.AddDays(-1);
+        Assert.Throws<ArgumentException>(() =>
+        {
+            var lot = new Lot(_inventory, _validUnitsInStock, dateEnteredStorage,
+                dateBecameUnfulfillable, UnfulfillableCategory.Defective);
+        });
     }
 
     [Fact]
@@ -71,242 +164,243 @@ public class LotUnitTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            var lot = new Lot(_inventory, (UnfulfillableCategory)1111, _validUnitsInStock);
-        });
-    }
-
-    [Fact]
-    public void UnfulfillableConstructor_ThrowsArgOutOfRangeException_WhenUnitsInStockIsZero()
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            var lot = new Lot(_inventory, UnfulfillableCategory.Defective, 0u);
+            var lot = new Lot(_inventory, _validUnitsInStock, (UnfulfillableCategory)1111);
         });
     }
 
     [Theory]
     [InlineData(10)]
     [InlineData(_validUnitsInStock)]
-    public void ReduceStock_ReducesUnitsInStock_WhenAllValid(uint units)
+    public void IssueUnits_ForSale_ReducesUnitsInStockAndReturnsIssue_WhenUnitsFulfillableAndEnoughStock(uint units)
     {
-        var lot = GetTestLot();
-        uint remainingUnits = lot.UnitsInStock - units;
+        var lot = GetFulfillableTestLot();
+        var issueReason = StockIssueReason.Sale;
+        var remainingStock = lot.UnitsInStock - units;
 
-        lot.ReduceStock(units);
+        var issue = lot.IssueUnits(units, issueReason);
 
-        Assert.Equal(remainingUnits, lot.UnitsInStock);
-        AssertTotalUnits(lot);
+        AssertStockIssue(issue, issueReason, _inventory, lot, units, remainingStock);
     }
 
     [Fact]
-    public void ReduceStock_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
+    public void IssueUnits_ForSale_ThrowsInvalidOpException_WhenUnitsUnfulfillable()
     {
-        var lot = GetTestLot();
+        var units = 10u;
+        var lot = GetUnfulfillableTestLot();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
         {
-            lot.ReduceStock(0u);
+            var issue = lot.IssueUnits(units, StockIssueReason.Sale);
         });
     }
 
     [Fact]
-    public void ReduceStock_ThrowsNotEnoughStockException_WhenUnitsInStockFewerThanReduceUnits()
+    public void IssueUnits_ForSale_ThrowsInvalidOpException_WhenUnitsStranded()
     {
-        var lot = GetTestLot();
+        var units = 10u;
+        var lot = GetStrandedTestLot();
 
-        Assert.Throws<NotEnoughUnitsException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
         {
-            lot.ReduceStock(lot.UnitsInStock + 1);
+            var issue = lot.IssueUnits(units, StockIssueReason.Sale);
+        });
+    }
+
+    [Theory]
+    [InlineData(10, StockIssueReason.Return)]
+    [InlineData(10, StockIssueReason.Disposal)]
+    [InlineData(_validUnitsInStock, StockIssueReason.Return)]
+    [InlineData(_validUnitsInStock, StockIssueReason.Disposal)]
+    public void IssueUnits_ForRemoval_MovesUnitsFromStockToRemovalAndReturnsIssue_WhenEnoughStock(
+        uint units, StockIssueReason issueReason)
+    {
+        var lot = GetFulfillableTestLot();
+        var remainingStock = lot.UnitsInStock - units;
+        var resultingUnitsInRemoval = lot.UnitsInRemoval + units;
+
+        var issue = lot.IssueUnits(units, issueReason);
+
+        AssertStockIssue(issue, issueReason, _inventory, lot, units, remainingStock);
+        Assert.Equal(resultingUnitsInRemoval, lot.UnitsInRemoval);
+    }
+
+    [Fact]
+    public void IssueUnits_ThrowsArgOutOfRangeException_WhenIssueReasonNotExist()
+    {
+        var units = 10u;
+        var lot = GetFulfillableTestLot();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            var issue = lot.IssueUnits(units, (StockIssueReason)1111);
         });
     }
 
     [Theory]
     [InlineData(100)]
-    [InlineData(1000 - _validUnitsInStock - _defectiveUnits - _wdmgUnits)]
-    public void AddStock_AddsToUnitsInStock_WhenAllValid(uint units)
+    [InlineData(_maxStockThreshold - _validUnitsInStock - _defectiveUnits - _wdmgUnits)]
+    [InlineData(-10)]
+    [InlineData(-(int)_validUnitsInStock)]
+    public void AdjustUnits_AddsToUnitsInStock_WhenAllValid(int units)
     {
-        var lot = GetTestLot();
-        var addedStock = lot.UnitsInStock + units;
+        var lot = GetFulfillableTestLot();
+        var adjustedUnits = lot.UnitsInStock + units;
 
-        lot.AddStock(units);
+        lot.AdjustUnits(units);
 
-        Assert.Equal(addedStock, lot.UnitsInStock);
-        AssertTotalUnits(lot);
+        Assert.Equal(adjustedUnits, lot.UnitsInStock);
     }
 
     [Fact]
-    public void AddStock_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
+    public void AdjustUnits_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
     {
-        var lot = GetTestLot();
+        var lot = GetFulfillableTestLot();
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            lot.AddStock(0u);
+            lot.AdjustUnits(0);
         });
     }
 
     [Fact]
-    public void AddStock_ThrowsExceedingMaxStockThresholdException_WhenAdditionResultExceedsMaxStockThreshold()
+    public void AdjustUnits_ThrowsExceedingMaxStockThresholdException_WhenAdditionExceedsMaxStockThreshold()
     {
-        var lot = GetTestLot();
+        var lot = GetFulfillableTestLot();
 
         Assert.Throws<ExceedingMaxStockThresholdException>(() =>
         {
-            lot.AddStock(_inventory.MaxStockThreshold - lot.UnitsInStock + 1);
-        });
-    }
-
-    [Theory]
-    [InlineData(10)]
-    [InlineData(_validUnitsInStock)]
-    public void LabelUnitsInStockForRemoval_MovesUnitsInStockToPendingRemoval_WhenAllValid(uint units)
-    {
-        var lot = GetTestLot();
-        var reducedStock = lot.UnitsInStock - units;
-        var increasedPendingRemovalUnits = lot.UnitsPendingRemoval + units;
-
-        lot.LabelUnitsInStockForRemoval(units);
-
-        Assert.Equal(reducedStock, lot.UnitsInStock);
-        Assert.Equal(increasedPendingRemovalUnits, lot.UnitsPendingRemoval);
-        AssertTotalUnits(lot);
-    }
-
-    [Fact]
-    public void LabelUnitsInStockForRemoval_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
-    {
-        var lot = GetTestLot();
-
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            lot.LabelUnitsInStockForRemoval(0u);
+            lot.AdjustUnits((int)(_inventory.MaxStockThreshold - lot.UnitsInStock + 1));
         });
     }
 
     [Fact]
-    public void LabelUnitsInStockForRemoval_ThrowsNotEnoughStockException_WhenUnitsInStockFewerThanUnitsToLabel()
+    public void AdjustUnits_ThrowsNotEnoughUnitsException_WhenNotEnoughUnits()
     {
-        var lot = GetTestLot();
+        var lot = GetFulfillableTestLot();
 
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
-            lot.LabelUnitsInStockForRemoval(lot.UnitsInStock + 1);
+            lot.AdjustUnits(-(int)(lot.UnitsInStock + 1));
         });
     }
 
     [Theory]
     [InlineData(10)]
-    [InlineData(_validUnitsPendingRemoval)]
-    public void RemovePendingUnits_Succeeds_WhenAllValid(uint units)
+    [InlineData(_validUnitsInRemoval)]
+    public void ConfirmUnitsRemoved_Succeeds_WhenAllValid(uint units)
     {
-        var lot = GetTestLotWithPendingRemovalUnits();
-        var pendingUnitsAfterRemoval = lot.UnitsPendingRemoval - units;
+        var lot = GetTestLotWithUnitsInRemoval();
+        var remainingUnitsInRemoval = lot.UnitsInRemoval - units;
 
-        lot.RemovePendingUnits(units);
+        lot.ConfirmUnitsRemoved(units);
 
-        Assert.Equal(pendingUnitsAfterRemoval, lot.UnitsPendingRemoval);
-        AssertTotalUnits(lot);
+        Assert.Equal(remainingUnitsInRemoval, lot.UnitsInRemoval);
     }
 
     [Fact]
-    public void RemovePendingUnits_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
+    public void ConfirmUnitsRemoved_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
     {
-        var lot = GetTestLotWithPendingRemovalUnits();
+        var lot = GetTestLotWithUnitsInRemoval();
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            lot.RemovePendingUnits(0u);
+            lot.ConfirmUnitsRemoved(0u);
         });
     }
 
     [Fact]
-    public void RemovePendingUnits_ThrowsNotEnoughStockException_WhenUnitsPendingRemovalFewerThanUnitsToRemove()
+    public void ConfirmUnitsRemoved_ThrowsNotEnoughStockException_WhenUnitsInRemovalFewerThanBeingConfirmed()
     {
-        var lot = GetTestLotWithPendingRemovalUnits();
+        var lot = GetTestLotWithUnitsInRemoval();
 
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
-            lot.RemovePendingUnits(lot.UnitsPendingRemoval + 1);
+            lot.ConfirmUnitsRemoved(lot.UnitsInRemoval + 1);
         });
     }
 
     [Theory]
     [InlineData(10)]
-    [InlineData(_validUnitsPendingRemoval)]
-    public void ReturnPendingUnitsToStock_Succeeds_WhenAllValid(uint units)
+    [InlineData(_validUnitsInRemoval)]
+    public void RestoreUnitsFromRemoval_Succeeds_WhenAllValid(uint units)
     {
-        var lot = GetTestLotWithPendingRemovalUnits();
+        var lot = GetTestLotWithUnitsInRemoval();
         var stockAfterReturn = lot.UnitsInStock + units;
-        var pendingUnitsAfterReturn = lot.UnitsPendingRemoval - units;
+        var pendingUnitsAfterReturn = lot.UnitsInRemoval - units;
 
-        lot.ReturnPendingUnitsToStock(units);
+        lot.RestoreUnitsFromRemoval(units);
 
         Assert.Equal(stockAfterReturn, lot.UnitsInStock);
-        Assert.Equal(pendingUnitsAfterReturn, lot.UnitsPendingRemoval);
-        AssertTotalUnits(lot);
+        Assert.Equal(pendingUnitsAfterReturn, lot.UnitsInRemoval);
     }
 
     [Fact]
-    public void ReturnPendingUnitsToStock_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
+    public void RestoreUnitsFromRemoval_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
     {
-        var lot = GetTestLotWithPendingRemovalUnits();
+        var lot = GetTestLotWithUnitsInRemoval();
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            lot.ReturnPendingUnitsToStock(0u);
+            lot.RestoreUnitsFromRemoval(0u);
         });
     }
 
     [Fact]
-    public void ReturnPendingUnitsToStock_ThrowsNotEnoughStockException_WhenUnitsPendingRemovalFewerThanUnitsToReturn()
+    public void RestoreUnitsFromRemoval_ThrowsNotEnoughStockException_WhenUnitsInRemovalFewerThanBeingRestored()
     {
-        var lot = GetTestLotWithPendingRemovalUnits();
+        var lot = GetTestLotWithUnitsInRemoval();
 
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
-            lot.ReturnPendingUnitsToStock(lot.UnitsPendingRemoval + 1);
+            lot.RestoreUnitsFromRemoval(lot.UnitsInRemoval + 1);
         });
     }
 
-    [Theory]
-    [InlineData(UnfulfillableCategory.Defective)]
-    [InlineData(UnfulfillableCategory.CustomerDamaged)]
-    [InlineData(UnfulfillableCategory.WarehouseDamaged)]
-    [InlineData(UnfulfillableCategory.Stranded)]
-    public void LabelUnfulfillable_SetsUnfulfillableCategoryAndTimeUnfulfillableSinceToNow(
-        UnfulfillableCategory category)
+    [Fact]
+    public void TurnStranded_SetsDateStrandedToCurrentDate_WhenNotStranded()
     {
-        var lot = GetTestLot();
+        var lot = GetFulfillableTestLot();
 
-        lot.LabelUnfulfillable(category);
+        lot.TurnStranded();
 
-        Assert.NotNull(lot.TimeUnfulfillableSince);
-        ExtendedAssert.SameTime(lot.TimeUnfulfillableSince.Value, DateTime.Now);
-        Assert.Equal(category, lot.UnfulfillableCategory);
+        Assert.True(lot.IsUnitsStranded);
+        Assert.Equal(DateTime.Now.Date, lot.DateUnitsBecameStranded);
     }
 
     [Fact]
-    public void RemoveUnfulfillableLabel_SetsUnfulfillableCategoryAndTimeToNull_WhenCategoryIsStranded()
+    public void TurnStranded_ThrowsInvalidOpException_WhenUnfulfillable()
     {
-        var lot = GetTestLot();
-        lot.LabelUnfulfillable(UnfulfillableCategory.Stranded);
+        var lot = GetUnfulfillableTestLot();
 
-        lot.RemoveUnfulfillableLabel();
+        Assert.Throws<InvalidOperationException>(lot.TurnStranded);
+    }
 
-        Assert.Null(lot.TimeUnfulfillableSince);
-        Assert.Null(lot.UnfulfillableCategory);
+    [Fact]
+    public void TurnStranded_ThrowsInvalidOpException_WhenAlreadyStranded()
+    {
+        var lot = GetStrandedTestLot();
+
+        Assert.Throws<InvalidOperationException>(lot.TurnStranded);
+    }
+
+    [Fact]
+    public void ConfirmStrandingResolved_SetsDateStrandedToNull_WhenStranded()
+    {
+        var lot = GetStrandedTestLot();
+
+        lot.ConfirmStrandingResolved();
+
+        Assert.False(lot.IsUnitsStranded);
+        Assert.Null(lot.DateUnitsBecameStranded);
     }
 
     [Theory]
-    [InlineData(UnfulfillableCategory.Defective)]
-    [InlineData(UnfulfillableCategory.CustomerDamaged)]
-    [InlineData(UnfulfillableCategory.WarehouseDamaged)]
-    public void RemoveUnfulfillableLabel_ThrowsInvalidOpException_WhenCategoryNotStranded(
-        UnfulfillableCategory category)
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ConfirmStrandingResolved_ThrowsInvalidOpException_WhenNotStranded(bool unitsUnfulfillable)
     {
-        var lot = GetTestLot();
-        lot.LabelUnfulfillable(category);
+        var lot = unitsUnfulfillable ? GetUnfulfillableTestLot() : GetFulfillableTestLot();
 
-        Assert.Throws<InvalidOperationException>(lot.RemoveUnfulfillableLabel);
+        Assert.Throws<InvalidOperationException>(lot.ConfirmStrandingResolved);
     }
 }
