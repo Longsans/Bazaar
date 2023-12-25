@@ -5,11 +5,11 @@ namespace Bazaar.Ordering.Web.Controllers;
 public class OrderController : ControllerBase
 {
     private readonly IOrderRepository _orderRepo;
-    private readonly IHandleOrderService _handleOrderService;
+    private readonly HandleOrderService _handleOrderService;
 
     public OrderController(
         IOrderRepository orderRepository,
-        IHandleOrderService handleOrderService)
+        HandleOrderService handleOrderService)
     {
         _orderRepo = orderRepository;
         _handleOrderService = handleOrderService;

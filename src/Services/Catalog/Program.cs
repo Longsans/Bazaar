@@ -11,8 +11,8 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
-builder.Services.AddScoped<IDeleteCatalogItemService, DeleteCatalogItemService>();
-builder.Services.AddScoped<IFulfillmentMethodService, FulfillmentMethodService>();
+builder.Services.AddScoped<DeleteCatalogItemService>();
+builder.Services.AddScoped<FulfillmentMethodService>();
 builder.Services.AddScoped<ListingService>();
 
 builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
@@ -131,8 +131,7 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<BasketCheckoutAcceptedIntegrationEventHandler>();
-        services.AddTransient<ProductFbbInventoryUpdatedIntegrationEventHandler>();
+        services.AddTransient<OrderPlacedIntegrationEventHandler>();
         services.AddTransient<ProductOrdersStatusReportChangedIntegrationEventHandler>();
         services.AddTransient<ClientAccountClosedIntegrationEventHandler>();
         services.AddTransient<StockIssuedIntegrationEventHandler>();
@@ -144,11 +143,8 @@ public static class EventBusExtensionMethods
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
         eventBus.Subscribe<
-            BasketCheckoutAcceptedIntegrationEvent,
-            BasketCheckoutAcceptedIntegrationEventHandler>();
-        eventBus.Subscribe<
-            ProductFbbInventoryUpdatedIntegrationEvent,
-            ProductFbbInventoryUpdatedIntegrationEventHandler>();
+            OrderPlacedIntegrationEvent,
+            OrderPlacedIntegrationEventHandler>();
         eventBus.Subscribe<
             ProductOrdersStatusReportChangedIntegrationEvent,
             ProductOrdersStatusReportChangedIntegrationEventHandler>();

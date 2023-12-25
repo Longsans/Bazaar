@@ -5,11 +5,11 @@
 public class InventoryPickupsController : ControllerBase
 {
     private readonly IInventoryPickupRepository _pickupRepository;
-    private readonly IPickupProcessService _pickupProcessService;
+    private readonly PickupProcessService _pickupProcessService;
 
     public InventoryPickupsController(
         IInventoryPickupRepository pickupRepository,
-        IPickupProcessService pickupProcessService)
+        PickupProcessService pickupProcessService)
     {
         _pickupRepository = pickupRepository;
         _pickupProcessService = pickupProcessService;

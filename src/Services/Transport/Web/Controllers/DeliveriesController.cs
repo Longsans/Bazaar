@@ -5,10 +5,10 @@
 public class DeliveriesController : ControllerBase
 {
     private readonly IDeliveryRepository _deliveryRepository;
-    private readonly IDeliveryProcessService _deliveryProcessService;
+    private readonly DeliveryProcessService _deliveryProcessService;
 
     public DeliveriesController(
-        IDeliveryRepository deliveryRepository, IDeliveryProcessService processService)
+        IDeliveryRepository deliveryRepository, DeliveryProcessService processService)
     {
         _deliveryRepository = deliveryRepository;
         _deliveryProcessService = processService;

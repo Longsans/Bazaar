@@ -6,13 +6,13 @@ namespace OrderingTests.IntegrationTests;
 [Collection("OrderingIntegrationTests")]
 public class OrderStocksConfirmedHandlerIntegrationTests : IDisposable
 {
-    private readonly OrderStocksConfirmedIntegrationEventHandler _handler;
+    private readonly OrderItemsStockConfirmedIntegrationEventHandler _handler;
     private readonly EventBusTestDouble _testEventBus;
     private readonly OrderingDbContext _dbContext;
 
     public OrderStocksConfirmedHandlerIntegrationTests(
         OrderingDbContext dbContext, EventBusTestDouble testEventBus,
-        ILogger<OrderStocksConfirmedIntegrationEventHandler> logger)
+        ILogger<OrderItemsStockConfirmedIntegrationEventHandler> logger)
     {
         _dbContext = dbContext.ReseedWithSingleOrder();
 
@@ -29,7 +29,7 @@ public class OrderStocksConfirmedHandlerIntegrationTests : IDisposable
     public async Task Handle_StartsOrderPaymentAndPublishesStatusEvent_WhenOrderExists()
     {
         var testOrder = _dbContext.Orders.Single();
-        var stocksConfirmedEvent = new OrderStocksConfirmedIntegrationEvent(testOrder.Id);
+        var stocksConfirmedEvent = new OrderItemsStockConfirmedIntegrationEvent(testOrder.Id);
 
         await _handler.Handle(stocksConfirmedEvent);
 
@@ -46,7 +46,7 @@ public class OrderStocksConfirmedHandlerIntegrationTests : IDisposable
     public async Task Handle_DoesNothing_WhenOrderNotExist()
     {
         var testOrder = _dbContext.Orders.Single();
-        var stocksConfirmedEvent = new OrderStocksConfirmedIntegrationEvent(1000);
+        var stocksConfirmedEvent = new OrderItemsStockConfirmedIntegrationEvent(1000);
 
         await _handler.Handle(stocksConfirmedEvent);
 

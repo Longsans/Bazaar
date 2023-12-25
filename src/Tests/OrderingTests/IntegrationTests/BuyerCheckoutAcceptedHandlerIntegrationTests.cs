@@ -6,13 +6,13 @@ namespace OrderingTests.IntegrationTests;
 [CollectionDefinition("OrderingIntegrationTests", DisableParallelization = true)]
 public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
 {
-    private readonly BuyerCheckoutAcceptedIntegrationEventHandler _handler;
+    private readonly BasketCheckoutAcceptedIntegrationEventHandler _handler;
     private readonly IOrderRepository _orderRepo;
     private readonly EventBusTestDouble _testEventBus;
     private readonly OrderingDbContext _dbContext;
 
     #region Test data and helpers
-    private readonly BuyerCheckoutAcceptedIntegrationEvent _testEvent;
+    private readonly BasketCheckoutAcceptedIntegrationEvent _testEvent;
 
     private Order? GetOnlyOrderInDb()
     {
@@ -31,7 +31,7 @@ public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
         _dbContext.Database.EnsureCreated();
 
         _orderRepo = new OrderRepository(_dbContext);
-        _handler = new BuyerCheckoutAcceptedIntegrationEventHandler(
+        _handler = new BasketCheckoutAcceptedIntegrationEventHandler(
             _orderRepo, _testEventBus);
 
         _testEvent = new BuyerCheckoutAcceptedIntegrationEvent()
@@ -84,7 +84,7 @@ public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
             Assert.Equal(eventItem.Quantity, orderItem.Quantity);
         }
 
-        var publishedEvent = _testEventBus.GetEvent<OrderCreatedIntegrationEvent>();
+        var publishedEvent = _testEventBus.GetEvent<OrderPlacedIntegrationEvent>();
         Assert.NotNull(publishedEvent);
         Assert.Equal(createdOrder.Id, publishedEvent.OrderId);
     }
@@ -104,7 +104,7 @@ public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
         var order = GetOnlyOrderInDb();
         Assert.Null(order);
 
-        var publishedEvent = _testEventBus.GetEvent<OrderCreatedIntegrationEvent>();
+        var publishedEvent = _testEventBus.GetEvent<OrderPlacedIntegrationEvent>();
         Assert.Null(publishedEvent);
     }
 }
