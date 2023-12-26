@@ -12,7 +12,7 @@ public class ReturnQuantity
     {
         if (string.IsNullOrWhiteSpace(lotNumber))
         {
-            throw new ArgumentNullException(nameof(lotNumber),
+            throw new ArgumentException(nameof(lotNumber),
                 "Lot number cannot be empty.");
         }
         if (quantity == 0)

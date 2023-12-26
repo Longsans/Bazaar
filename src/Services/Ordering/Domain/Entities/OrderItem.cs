@@ -48,14 +48,14 @@ public class OrderItem
     {
         Status = Status == OrderItemStatus.PendingStock
             ? OrderItemStatus.StockConfirmed
-            : throw new InvalidOperationException();
+            : throw new InvalidOperationException("Stock status has already been determined.");
     }
 
     public void SetStockRejected()
     {
         Status = Status == OrderItemStatus.PendingStock
             ? OrderItemStatus.StockRejected
-            : throw new InvalidOperationException();
+            : throw new InvalidOperationException("Stock status has already been determined.");
     }
 }
 

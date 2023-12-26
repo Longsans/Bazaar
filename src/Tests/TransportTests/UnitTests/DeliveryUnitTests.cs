@@ -28,7 +28,8 @@ public class DeliveryUnitTests
         var delivery = new Delivery(
             _validOrderId, _validAddress, _validPackageItems, _validDeliveryDate);
 
-        Assert.Equal(DateTime.Now.Date, delivery.TimeScheduledAt);
+        ExtendedAssert.SameTime(DateTime.Now, delivery.TimeScheduledAt);
+        Assert.Equal(_validDeliveryDate, delivery.EstimatedDeliveryTime);
         Assert.Equal(DeliveryStatus.Scheduled, delivery.Status);
     }
 
@@ -36,10 +37,10 @@ public class DeliveryUnitTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Constructor_ThrowsArgNullException_WhenDeliveryAddressEmptyOrWhitespaces(
+    public void Constructor_ThrowsArgException_WhenDeliveryAddressEmptyOrWhitespaces(
         string deliveryAddress)
     {
-        Assert.Throws<ArgumentNullException>(nameof(deliveryAddress), () =>
+        Assert.Throws<ArgumentException>(() =>
         {
             var delivery = new Delivery(
                 _validOrderId, deliveryAddress, _validPackageItems, _validDeliveryDate);
@@ -47,11 +48,11 @@ public class DeliveryUnitTests
     }
 
     [Fact]
-    public void Constructor_ThrowsArgNullException_WhenPackageItemsEmpty()
+    public void Constructor_ThrowsArgException_WhenPackageItemsEmpty()
     {
         var packageItems = new List<DeliveryPackageItem>();
 
-        Assert.Throws<ArgumentNullException>(nameof(packageItems), () =>
+        Assert.Throws<ArgumentException>(() =>
         {
             var delivery = new Delivery(
                 _validOrderId, _validAddress, packageItems, _validDeliveryDate);
@@ -63,7 +64,7 @@ public class DeliveryUnitTests
     {
         var expectedDeliveryDate = DateTime.Now.AddDays(-1).Date;
 
-        Assert.Throws<ArgumentOutOfRangeException>(nameof(expectedDeliveryDate), () =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             var delivery = new Delivery(
                 _validOrderId, _validAddress, _validPackageItems, expectedDeliveryDate);
@@ -83,7 +84,7 @@ public class DeliveryUnitTests
             new(duplicateProductId, 2)
         };
 
-        Assert.Throws<ArgumentException>(nameof(packageItems), () =>
+        Assert.Throws<ArgumentException>(() =>
         {
             var delivery = new Delivery(
                 _validOrderId, _validAddress, packageItems, _validDeliveryDate);
@@ -167,8 +168,7 @@ public class DeliveryUnitTests
     [InlineData(DeliveryStatus.Scheduled)]
     [InlineData(DeliveryStatus.Delivering)]
     [InlineData(DeliveryStatus.Postponed)]
-    [InlineData(DeliveryStatus.Cancelled)]
-    public void Cancel_ChangesStatusToCancelled_WhenInitialStatusIsNotCompleted(
+    public void Cancel_ChangesStatusToCancelled_WhenInitialStatusIsNotCompletedNorCancelled(
         DeliveryStatus initialStatus)
     {
         var delivery = GetTestDelivery(initialStatus);
@@ -180,7 +180,8 @@ public class DeliveryUnitTests
 
     [Theory]
     [InlineData(DeliveryStatus.Completed)]
-    public void Cancel_ThrowsInvalidOpException_WhenInitialStatusIsCompleted(
+    [InlineData(DeliveryStatus.Cancelled)]
+    public void Cancel_ThrowsInvalidOpException_WhenInitialStatusIsCompletedOrCancelled(
         DeliveryStatus initialStatus)
     {
         var delivery = GetTestDelivery(initialStatus);

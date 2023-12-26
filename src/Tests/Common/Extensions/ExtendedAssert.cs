@@ -1,4 +1,4 @@
-﻿namespace FbbInventoryTests;
+﻿namespace TestingCommon.Extensions;
 
 public static class ExtendedAssert
 {

@@ -17,7 +17,9 @@ public class OrderStocksConfirmedHandlerIntegrationTests : IDisposable
         _dbContext = dbContext.ReseedWithSingleOrder();
 
         _testEventBus = testEventBus;
-        _handler = new(new OrderRepository(_dbContext), _testEventBus, logger);
+        var orderRepo = new OrderRepository(_dbContext);
+        var handleService = new HandleOrderService(orderRepo, _testEventBus);
+        _handler = new(orderRepo, handleService, logger);
     }
 
     public void Dispose()
@@ -29,7 +31,8 @@ public class OrderStocksConfirmedHandlerIntegrationTests : IDisposable
     public async Task Handle_StartsOrderPaymentAndPublishesStatusEvent_WhenOrderExists()
     {
         var testOrder = _dbContext.Orders.Single();
-        var stocksConfirmedEvent = new OrderItemsStockConfirmedIntegrationEvent(testOrder.Id);
+        var stocksConfirmedEvent = new OrderItemsStockConfirmedIntegrationEvent(
+            testOrder.Id, testOrder.Items.Select(x => x.ProductId));
 
         await _handler.Handle(stocksConfirmedEvent);
 
@@ -46,7 +49,8 @@ public class OrderStocksConfirmedHandlerIntegrationTests : IDisposable
     public async Task Handle_DoesNothing_WhenOrderNotExist()
     {
         var testOrder = _dbContext.Orders.Single();
-        var stocksConfirmedEvent = new OrderItemsStockConfirmedIntegrationEvent(1000);
+        var stocksConfirmedEvent = new OrderItemsStockConfirmedIntegrationEvent(
+            1000, Array.Empty<string>());
 
         await _handler.Handle(stocksConfirmedEvent);
 

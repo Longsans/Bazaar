@@ -1,7 +1,4 @@
-﻿using Ardalis.Result;
-using Bazaar.Basket.Infrastructure.Repositories;
-
-namespace BasketTests.IntegrationTests;
+﻿namespace BasketTests.IntegrationTests;
 
 public class BasketCheckoutServiceIntegrationTests : IDisposable
 {
@@ -13,6 +10,10 @@ public class BasketCheckoutServiceIntegrationTests : IDisposable
 
     private const string _validBuyerId = "PNER-1";
     private const string _newBuyerId = "PNER-1000";
+    private const string _shippingAddress = "308 Negra Arroyo Lane";
+    private const string _city = "Albuquerque, New Mexico";
+    private const string _country = "USA";
+    private const string _zipcode = "73000";
 
     public BasketCheckoutServiceIntegrationTests(
         BasketDbContext dbContext, EventBusTestDouble testEventBus)
@@ -43,10 +44,7 @@ public class BasketCheckoutServiceIntegrationTests : IDisposable
         _testBasket.AddItem(item2);
         _basketRepo.Update(_testBasket);
 
-        //var checkout = new BasketCheckout(_testBasket.BuyerId,
-        //    "New York", "U.S.", "10005", "11 Wall Street",
-        //    "123456789", "Warren Buffett", DateTime.Now.AddYears(5), "987654321");
-        var checkout = new BasketCheckout(_testBasket.BuyerId);
+        var checkout = new BasketCheckout(_testBasket.BuyerId, _shippingAddress, _city, _country, _zipcode);
 
         // act
         var result = _checkoutService.Checkout(checkout);
@@ -69,18 +67,11 @@ public class BasketCheckoutServiceIntegrationTests : IDisposable
     public void Checkout_DoesNotPublishEventsNorDoesAnythingWithBasket_WhenBasketHasNoItems(
         string buyerId)
     {
-        // arrange
-        //var checkout = new BasketCheckout(buyerId,
-        //    "New York", "U.S.", "10005", "11 Wall Street",
-        //    "123456789", "Warren Buffett", DateTime.Now.AddYears(5), "987654321");
-        var checkout = new BasketCheckout(buyerId);
+        var checkout = new BasketCheckout(buyerId, _shippingAddress, _city, _country, _zipcode);
 
-        // act
         var result = _checkoutService.Checkout(checkout);
 
-        // assert
         Assert.Equal(ResultStatus.Conflict, result.Status);
-
         var publishedEvent = _testEventBus.GetEvent<BasketCheckoutAcceptedIntegrationEvent>();
         Assert.Null(publishedEvent);
     }

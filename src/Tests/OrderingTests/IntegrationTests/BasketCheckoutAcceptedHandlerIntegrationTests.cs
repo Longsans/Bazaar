@@ -4,7 +4,7 @@ namespace OrderingTests.IntegrationTests;
 
 [Collection("OrderingIntegrationTests")]
 [CollectionDefinition("OrderingIntegrationTests", DisableParallelization = true)]
-public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
+public class BasketCheckoutAcceptedHandlerIntegrationTests : IDisposable
 {
     private readonly BasketCheckoutAcceptedIntegrationEventHandler _handler;
     private readonly IOrderRepository _orderRepo;
@@ -12,7 +12,7 @@ public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
     private readonly OrderingDbContext _dbContext;
 
     #region Test data and helpers
-    private readonly BasketCheckoutAcceptedIntegrationEvent _testEvent;
+    private BasketCheckoutAcceptedIntegrationEvent _testEvent;
 
     private Order? GetOnlyOrderInDb()
     {
@@ -21,7 +21,7 @@ public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
             .SingleOrDefault();
     }
 
-    public BuyerCheckoutAcceptedHandlerIntegrationTests(
+    public BasketCheckoutAcceptedHandlerIntegrationTests(
         OrderingDbContext dbContext, EventBusTestDouble testEventBus)
     {
         _testEventBus = testEventBus;
@@ -31,27 +31,19 @@ public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
         _dbContext.Database.EnsureCreated();
 
         _orderRepo = new OrderRepository(_dbContext);
-        _handler = new BasketCheckoutAcceptedIntegrationEventHandler(
-            _orderRepo, _testEventBus);
+        var handleService = new HandleOrderService(_orderRepo, _testEventBus);
+        _handler = new BasketCheckoutAcceptedIntegrationEventHandler(handleService);
 
-        _testEvent = new BuyerCheckoutAcceptedIntegrationEvent()
-        {
-            BuyerId = "SPER-1",
-            City = "Albuquerque, N.M",
-            Country = "United States",
-            ZipCode = "87101",
-            ShippingAddress = "308 Negra Arroyo Lane",
-
-            CardNumber = "1",
-            CardHolderName = "Walter White",
-            CardExpiration = DateTime.Now.AddYears(5),
-            CardSecurityNumber = "1000",
-
-            Basket = new("SPER-1", new CheckoutEventBasketItem[]
+        _testEvent = new BasketCheckoutAcceptedIntegrationEvent(
+            "SPER-1",
+            "Albuquerque, N.M",
+            "United States",
+            "87101",
+            "308 Negra Arroyo Lane",
+            new CheckoutEventBasketItem[]
             {
                 new("PROD-1", "The Winds of Winter", 39.99m, 10),
-            })
-        };
+            });
     }
 
     public void Dispose()
@@ -75,13 +67,13 @@ public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
             _testEvent.City, _testEvent.Country);
         Assert.Equal(shippingAddressJoined, createdOrder.ShippingAddress);
 
-        foreach (var (eventItem, index) in _testEvent.Basket.Items
+        foreach (var (basketItem, index) in _testEvent.BasketItems
             .Select((item, index) => (item, index)))
         {
             var orderItem = createdOrder.Items.ElementAt(index);
-            Assert.Equal(eventItem.ProductId, orderItem.ProductId);
-            Assert.Equal(eventItem.ProductUnitPrice, orderItem.ProductUnitPrice);
-            Assert.Equal(eventItem.Quantity, orderItem.Quantity);
+            Assert.Equal(basketItem.ProductId, orderItem.ProductId);
+            Assert.Equal(basketItem.ProductUnitPrice, orderItem.ProductUnitPrice);
+            Assert.Equal(basketItem.Quantity, orderItem.Quantity);
         }
 
         var publishedEvent = _testEventBus.GetEvent<OrderPlacedIntegrationEvent>();
@@ -93,9 +85,13 @@ public class BuyerCheckoutAcceptedHandlerIntegrationTests : IDisposable
     public async Task Handle_DoesNotCreateOrderNorPublishesEvent_WhenBasketEmpty()
     {
         // arrange
-        typeof(CheckoutEventBasket)
-            .GetProperty(nameof(_testEvent.Basket.Items))!
-            .SetValue(_testEvent.Basket, Array.Empty<CheckoutEventBasketItem>());
+        _testEvent = new BasketCheckoutAcceptedIntegrationEvent(
+            "SPER-1",
+            "Albuquerque, N.M",
+            "United States",
+            "87101",
+            "308 Negra Arroyo Lane",
+            Array.Empty<CheckoutEventBasketItem>());
 
         // act
         await _handler.Handle(_testEvent);
