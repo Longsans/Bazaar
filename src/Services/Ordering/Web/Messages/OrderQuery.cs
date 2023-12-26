@@ -2,13 +2,13 @@
 {
     public class OrderQuery
     {
-        public int Id { get; set; }
-        public string BuyerId { get; set; }
-        public List<OrderItemQuery> Items { get; set; } = new();
-        public decimal Total { get; set; }
-        public string ShippingAddress { get; set; }
-        public string Status { get; set; }
-        public string? CancelReason { get; set; }
+        public int Id { get; }
+        public string BuyerId { get; }
+        public List<OrderItemQuery> Items { get; } = new();
+        public decimal Total { get; }
+        public string ShippingAddress { get; }
+        public OrderStatus Status { get; }
+        public string? CancelReason { get; }
 
         public OrderQuery(Order o)
         {
@@ -17,7 +17,7 @@
             Items = o.Items.Select(x => new OrderItemQuery(x)).ToList();
             Total = o.Total;
             ShippingAddress = o.ShippingAddress;
-            Status = Enum.GetName(o.Status)!;
+            Status = o.Status;
             CancelReason = o.CancelReason;
         }
     }

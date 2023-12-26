@@ -9,9 +9,10 @@
       "composeProfile": {
         "includes": [
           "fbbinventory",
-          "disposal",
-          "transport",
-          "catalog"
+          "catalog",
+          "basket",
+          "ordering",
+          "transport"
         ]
       }
     }

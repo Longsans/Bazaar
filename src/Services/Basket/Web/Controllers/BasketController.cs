@@ -1,7 +1,3 @@
-
-using Ardalis.Result.AspNetCore;
-using Microsoft.AspNetCore.Mvc;
-
 namespace Bazaar.Basket.Web.Controllers;
 
 [Route("api/buyer-baskets")]
@@ -80,7 +76,7 @@ public class BasketController : ControllerBase
         return new BuyerBasketQuery(basket);
     }
 
-    [HttpPost("/api/checkout")]
+    [HttpPost("/api/checkouts")]
     public IActionResult Checkout(BasketCheckout checkout)
     {
         var checkoutResult = _checkoutService.Checkout(checkout);

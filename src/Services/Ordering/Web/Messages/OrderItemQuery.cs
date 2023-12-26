@@ -2,11 +2,12 @@
 {
     public class OrderItemQuery
     {
-        public int Id { get; set; }
-        public string ProductId { get; set; }
-        public string ProductName { get; set; }
-        public decimal ProductUnitPrice { get; set; }
-        public uint Quantity { get; set; }
+        public int Id { get; }
+        public string ProductId { get; }
+        public string ProductName { get; }
+        public decimal ProductUnitPrice { get; }
+        public uint Quantity { get; }
+        public OrderItemStatus Status { get; }
 
         public OrderItemQuery(OrderItem item)
         {
@@ -15,6 +16,7 @@
             ProductName = item.ProductName;
             ProductUnitPrice = item.ProductUnitPrice;
             Quantity = item.Quantity;
+            Status = item.Status;
         }
     }
 }

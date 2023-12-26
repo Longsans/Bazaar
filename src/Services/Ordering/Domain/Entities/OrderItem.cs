@@ -1,5 +1,3 @@
-using Newtonsoft.Json;
-
 namespace Bazaar.Ordering.Domain.Entites;
 
 public class OrderItem
@@ -9,10 +7,11 @@ public class OrderItem
     public string ProductName { get; private set; }
     public decimal ProductUnitPrice { get; private set; }
     public uint Quantity { get; private set; }
+    public OrderItemStatus Status { get; private set; }
     public Order Order { get; private set; }
     public int OrderId { get; private set; }
 
-    [JsonConstructor]
+    [Newtonsoft.Json.JsonConstructor]
     public OrderItem(
         int id, string productId, string productName,
         decimal productUnitPrice, uint quantity, int orderId)
@@ -42,5 +41,27 @@ public class OrderItem
         ProductUnitPrice = productUnitPrice;
         Quantity = quantity;
         OrderId = orderId;
+        Status = OrderItemStatus.PendingStock;
     }
+
+    public void SetStockConfirmed()
+    {
+        Status = Status == OrderItemStatus.PendingStock
+            ? OrderItemStatus.StockConfirmed
+            : throw new InvalidOperationException("Stock status has already been determined.");
+    }
+
+    public void SetStockRejected()
+    {
+        Status = Status == OrderItemStatus.PendingStock
+            ? OrderItemStatus.StockRejected
+            : throw new InvalidOperationException("Stock status has already been determined.");
+    }
+}
+
+public enum OrderItemStatus
+{
+    PendingStock,
+    StockConfirmed,
+    StockRejected
 }

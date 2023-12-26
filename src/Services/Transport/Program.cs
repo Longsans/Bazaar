@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -10,8 +13,8 @@ builder.Services.AddSwaggerGen();
 #region Register application services
 builder.Services.AddScoped<InventoryReturnProcessService>();
 builder.Services.AddScoped<IEstimationService, BasicEstimationService>();
-builder.Services.AddScoped<IDeliveryProcessService, DeliveryProcessService>();
-builder.Services.AddScoped<IPickupProcessService, PickupProcessService>();
+builder.Services.AddScoped<DeliveryProcessService>();
+builder.Services.AddScoped<PickupProcessService>();
 
 builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
 builder.Services.AddScoped<IInventoryPickupRepository, InventoryPickupRepository>();
@@ -106,6 +109,7 @@ public static class EventBusExtensionMethods
         });
         services.AddTransient<ProductFbbInventoryDeletedIntegrationEventHandler>();
         services.AddTransient<LotQuantitiesSentForReturnIntegrationEventHandler>();
+        services.AddTransient<OrderStatusChangedToShippingIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -117,5 +121,8 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             LotQuantitiesSentForReturnIntegrationEvent,
             LotQuantitiesSentForReturnIntegrationEventHandler>();
+        eventBus.Subscribe<
+            OrderStatusChangedToShippingIntegrationEvent,
+            OrderStatusChangedToShippingIntegrationEventHandler>();
     }
 }

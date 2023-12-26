@@ -2,9 +2,9 @@
 
 public class BasicEstimationService : IEstimationService
 {
-    private readonly TimeSpan _perDeliveryItemIncrement = TimeSpan.FromMinutes(4);  // 1 hour = 15 items
-    private readonly TimeSpan _perPickupItemIncrement = TimeSpan.FromMinutes(1.2);  // 1 hour = 50 items
-    private readonly TimeSpan _perReturnUnitIncrement = TimeSpan.FromMinutes(2); // 1 hour = 30 items
+    private readonly TimeSpan _perDeliveryItemIncrement;
+    private readonly TimeSpan _perPickupItemIncrement;
+    private readonly TimeSpan _perReturnUnitIncrement;
 
     private readonly IDeliveryRepository _deliveryRepository;
     private readonly IInventoryPickupRepository _pickupRepository;
@@ -13,11 +13,15 @@ public class BasicEstimationService : IEstimationService
     public BasicEstimationService(
         IDeliveryRepository deliveryRepository,
         IInventoryPickupRepository pickupRepository,
-        IInventoryReturnRepository returnRepository)
+        IInventoryReturnRepository returnRepository,
+        IConfiguration config)
     {
         _deliveryRepository = deliveryRepository;
         _pickupRepository = pickupRepository;
         _returnRepo = returnRepository;
+        _perDeliveryItemIncrement = TimeSpan.FromMinutes(double.Parse(config["TimePerDeliveryItem"]!));
+        _perPickupItemIncrement = TimeSpan.FromMinutes(double.Parse(config["TimePerPickupItem"]!));
+        _perReturnUnitIncrement = TimeSpan.FromMinutes(double.Parse(config["TimePerReturnUnit"]!));
     }
 
     public DateTime EstimateDeliveryCompletion(IEnumerable<DeliveryPackageItem> packageItems)

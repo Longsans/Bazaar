@@ -5,12 +5,12 @@ namespace Bazaar.Catalog.Web.Controllers;
 public class CatalogController : ControllerBase
 {
     private readonly ICatalogRepository _catalogRepo;
-    private readonly IDeleteCatalogItemService _deleteService;
+    private readonly DeleteCatalogItemService _deleteService;
     private readonly ListingService _listingService;
 
     public CatalogController(
         ICatalogRepository catalogRepo,
-        IDeleteCatalogItemService deleteService,
+        DeleteCatalogItemService deleteService,
         ListingService listingService)
     {
         _catalogRepo = catalogRepo;
