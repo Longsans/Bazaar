@@ -3,11 +3,11 @@
 public class ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler
     : IIntegrationEventHandler<ProductFbbInventoryPickupsStatusChangedIntegrationEvent>
 {
-    private readonly IProductInventoryRepository _productInventoryRepo;
+    private readonly Repository<ProductInventory> _productInventoryRepo;
     private readonly IEventBus _eventBus;
 
     public ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler(
-        IProductInventoryRepository productInventoryRepo, IEventBus eventBus)
+        Repository<ProductInventory> productInventoryRepo, IEventBus eventBus)
     {
         _productInventoryRepo = productInventoryRepo;
         _eventBus = eventBus;
@@ -15,7 +15,8 @@ public class ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler
 
     public async Task Handle(ProductFbbInventoryPickupsStatusChangedIntegrationEvent @event)
     {
-        var productInventory = _productInventoryRepo.GetByProductId(@event.ProductId);
+        var productInventory = await _productInventoryRepo.SingleOrDefaultAsync(
+            new ProductInventoryWithLotsAndSellerSpec(@event.ProductId));
         if (productInventory == null)
         {
             _eventBus.Publish(
@@ -25,7 +26,7 @@ public class ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler
 
         productInventory.UpdateHasPickupsInProgress(
             @event.InProgressPickups != 0);
-        _productInventoryRepo.Update(productInventory);
+        await _productInventoryRepo.UpdateAsync(productInventory);
         await Task.CompletedTask;
     }
 }

@@ -28,7 +28,7 @@ public class FbbProductsOrderedIntegrationEventHandler
 
         var issueQuantities = @event.OrderedProducts.Select(x =>
             new OutboundStockQuantity(x.ProductId, x.OrderedQuantity, 0u));
-        var result = _stockTxnService.IssueStocksFifo(issueQuantities, StockIssueReason.Sale);
+        var result = await _stockTxnService.IssueStocksFifo(issueQuantities, StockIssueReason.Sale);
         if (result.IsSuccess)
         {
             var issuedProductIds = result.Value.Items.Select(x => x.ProductId);

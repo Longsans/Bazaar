@@ -18,7 +18,7 @@ public class OrderStatusChangedToShippingIntegrationEventHandler
     {
         var packageItems = @event.OrderItems.Select(x =>
             new DeliveryPackageItem(x.ProductId, x.Quantity));
-        var result = _deliveryProcessService.ScheduleDelivery(
+        var result = await _deliveryProcessService.ScheduleDelivery(
             @event.OrderId, @event.ShippingAddress, packageItems);
 
         if (result.IsSuccess)

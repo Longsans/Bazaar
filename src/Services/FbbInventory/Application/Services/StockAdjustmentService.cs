@@ -2,19 +2,19 @@
 
 public class StockAdjustmentService
 {
-    private readonly ILotRepository _lotRepo;
-    private readonly IProductInventoryRepository _productInvenRepo;
+    private readonly Repository<Lot> _lotRepo;
+    private readonly Repository<ProductInventory> _productInvenRepo;
     private readonly IEventBus _eventBus;
 
-    public StockAdjustmentService(ILotRepository lotRepo,
-        IProductInventoryRepository productInvenRepo, IEventBus eventBus)
+    public StockAdjustmentService(Repository<Lot> lotRepo,
+        Repository<ProductInventory> productInvenRepo, IEventBus eventBus)
     {
         _lotRepo = lotRepo;
         _productInvenRepo = productInvenRepo;
         _eventBus = eventBus;
     }
 
-    public Result AdjustStockInLots(IEnumerable<LotAdjustmentQuantityDto> adjustmentQuantities)
+    public async Task<Result> AdjustStockInLots(IEnumerable<LotAdjustmentQuantityDto> adjustmentQuantities)
     {
         if (!adjustmentQuantities.Any())
         {
@@ -30,7 +30,8 @@ public class StockAdjustmentService
         var adjustedQuantities = new Dictionary<string, AdjustedQuantity>();
         foreach (var adjustmentQty in adjustmentQuantities)
         {
-            var lot = _lotRepo.GetByLotNumber(adjustmentQty.LotNumber);
+            var lot = await _lotRepo.SingleOrDefaultAsync(
+                new LotWithInventoriesSpec(adjustmentQty.LotNumber));
             if (lot == null)
             {
                 return Result.NotFound($"Lot not found for lot number {adjustmentQty.LotNumber}");
@@ -64,13 +65,13 @@ public class StockAdjustmentService
         {
             inventory.RemoveEmptyLots();
         }
-        _lotRepo.UpdateRange(adjustedLots);
+        await _lotRepo.UpdateRangeAsync(adjustedLots);
         _eventBus.Publish(new StockAdjustedIntegrationEvent(
             DateTime.Now.Date, adjustedQuantities.Select(x => x.Value)));
         return Result.Success();
     }
 
-    public Result MoveLotUnitsIntoUnfulfillableStock(
+    public async Task<Result> MoveLotUnitsIntoUnfulfillableStock(
         string lotNumber, uint quantity, UnfulfillableCategory category)
     {
         if (quantity == 0)
@@ -82,7 +83,8 @@ public class StockAdjustmentService
             });
         }
 
-        var lot = _lotRepo.GetByLotNumber(lotNumber);
+        var lot = await _lotRepo.SingleOrDefaultAsync(
+            new LotWithInventoriesSpec(lotNumber));
         if (lot == null)
         {
             return Result.NotFound("Lot not found for lot number.");
@@ -105,14 +107,15 @@ public class StockAdjustmentService
             return Result.Conflict(ex.Message);
         }
         inventory.RemoveEmptyLots();
-        _productInvenRepo.Update(inventory);
+        await _productInvenRepo.UpdateAsync(inventory);
         PublishStockAdjustedEvent(inventory, -signedQuantity, signedQuantity);
         return Result.Success();
     }
 
-    public Result RenderProductStockStranded(string productId)
+    public async Task<Result> RenderProductStockStranded(string productId)
     {
-        var inventory = _productInvenRepo.GetByProductId(productId);
+        var inventory = await _productInvenRepo.SingleOrDefaultAsync(
+            new ProductInventoryWithLotsAndSellerSpec(productId));
         if (inventory == null)
         {
             return Result.NotFound("Product inventory not found for product ID.");
@@ -126,14 +129,15 @@ public class StockAdjustmentService
         {
             return Result.Conflict(ex.Message);
         }
-        _productInvenRepo.Update(inventory);
+        await _productInvenRepo.UpdateAsync(inventory);
         PublishStockAdjustedEvent(inventory, 0, 0);
         return Result.Success();
     }
 
-    public Result ConfirmStockStrandingResolved(string productId)
+    public async Task<Result> ConfirmStockStrandingResolved(string productId)
     {
-        var inventory = _productInvenRepo.GetByProductId(productId);
+        var inventory = await _productInvenRepo.SingleOrDefaultAsync(
+            new ProductInventoryWithLotsAndSellerSpec(productId));
         if (inventory == null)
         {
             return Result.NotFound("Product inventory not found for product ID.");
@@ -147,7 +151,7 @@ public class StockAdjustmentService
         {
             return Result.Conflict(ex.Message);
         }
-        _productInvenRepo.Update(inventory);
+        await _productInvenRepo.UpdateAsync(inventory);
         PublishStockAdjustedEvent(inventory, 0, 0);
         return Result.Success();
     }

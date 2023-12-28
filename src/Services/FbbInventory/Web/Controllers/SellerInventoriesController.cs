@@ -12,20 +12,27 @@ public class SellerInventoriesController : ControllerBase
     }
 
     [HttpPost("{sellerId}/removed-stocks")]
-    public ActionResult<StockIssue> SendProductStocksForRemoval(string sellerId, StockRemovalRequest request)
+    public async Task<ActionResult<StockIssue>> SendProductStocksForRemoval(
+        string sellerId, StockRemovalRequest request)
     {
         if (request.RemovalMethod == RemovalMethod.Return
             && string.IsNullOrWhiteSpace(request.DeliveryAddress))
         {
             return BadRequest(new { error = "Delivery address must be specified for return." });
         }
+        if (request.RemovalQuantities.Any(x => x.GoodQuantity + x.UnfulfillableQuantity == 0))
+        {
+            return BadRequest(new { error = "One or more removal items have zero total removal quantity." });
+        }
 
         var removalQuantities = request.RemovalQuantities.Select(x =>
             new OutboundStockQuantity(x.ProductId, x.GoodQuantity, x.UnfulfillableQuantity));
 
         return (request.RemovalMethod == RemovalMethod.Return
-            ? _removalService.SendProductStocksForReturn(sellerId, removalQuantities, request.DeliveryAddress!)
-            : _removalService.SendProductStocksForDisposal(sellerId, removalQuantities))
+            ? (await _removalService.SendProductStocksForReturn(
+                sellerId, removalQuantities, request.DeliveryAddress!))
+            : (await _removalService.SendProductStocksForDisposal(
+                sellerId, removalQuantities)))
             .ToActionResult(this);
     }
 }

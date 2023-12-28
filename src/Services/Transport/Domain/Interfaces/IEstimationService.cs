@@ -2,7 +2,7 @@
 
 public interface IEstimationService
 {
-    DateTime EstimateDeliveryCompletion(IEnumerable<DeliveryPackageItem> packageItems);
-    DateTime EstimatePickupCompletion(IEnumerable<ProductInventory> pickupItems);
-    DateTime EstimateInventoryReturnCompletion(IEnumerable<ReturnQuantity> returnQuantities);
+    Task<DateTime> EstimateDeliveryCompletion(IEnumerable<DeliveryPackageItem> packageItems);
+    Task<DateTime> EstimatePickupCompletion(IEnumerable<PickupProductStock> pickupItems);
+    Task<DateTime> EstimateInventoryReturnCompletion(IEnumerable<ReturnQuantity> returnQuantities);
 }

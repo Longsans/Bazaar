@@ -3,10 +3,10 @@
 public class RemovalService
 {
     private readonly StockTransactionService _stockTransactionService;
-    private readonly ILotRepository _lotRepo;
+    private readonly Repository<Lot> _lotRepo;
     private readonly IEventBus _eventBus;
 
-    public RemovalService(ILotRepository lotRepo, IEventBus eventBus,
+    public RemovalService(Repository<Lot> lotRepo, IEventBus eventBus,
         StockTransactionService updateStockService)
     {
         _lotRepo = lotRepo;
@@ -14,7 +14,7 @@ public class RemovalService
         _stockTransactionService = updateStockService;
     }
 
-    public Result<StockIssue> SendProductStocksForReturn(string sellerId,
+    public async Task<Result<StockIssue>> SendProductStocksForReturn(string sellerId,
         IEnumerable<OutboundStockQuantity> returnQuantities, string deliveryAddress)
     {
         if (string.IsNullOrWhiteSpace(deliveryAddress))
@@ -26,7 +26,7 @@ public class RemovalService
             });
         }
 
-        var result = _stockTransactionService.IssueStocksFifo(
+        var result = await _stockTransactionService.IssueStocksFifo(
             returnQuantities, StockIssueReason.Return);
         if (!result.IsSuccess)
         {
@@ -39,10 +39,10 @@ public class RemovalService
         return result;
     }
 
-    public Result<StockIssue> SendProductStocksForDisposal(
+    public async Task<Result<StockIssue>> SendProductStocksForDisposal(
         string sellerId, IEnumerable<OutboundStockQuantity> disposalQuantities)
     {
-        var result = _stockTransactionService.IssueStocksFifo(
+        var result = await _stockTransactionService.IssueStocksFifo(
             disposalQuantities, StockIssueReason.Disposal);
         if (!result.IsSuccess)
         {
@@ -55,15 +55,12 @@ public class RemovalService
         return result;
     }
 
-    public void SendLotsUnfulfillableBeyondPolicyDurationForDisposal()
+    public async Task SendLotsUnfulfillableBeyondPolicyDurationForDisposal()
     {
-        // this needs to be refactored into specs...
-        // and also reduce joins to improve performance.
-        var lotsToSendForRemoval = _lotRepo.GetUnfulfillables()
-            .Where(x => x.IsUnfulfillableBeyondPolicyDuration && x.HasUnitsInStock)
-            .ToList();
+        var lotsToSendForRemoval = (await _lotRepo.ListAsync(
+                new LotsUnfulfillableBeyondPolicyDurationAndHasStockSpec())).ToList();
 
-        var disposalLotUnits = lotsToSendForRemoval.Select(x =>
+        var disposalQuantities = lotsToSendForRemoval.Select(x =>
             new DisposalLotQuantity(x.LotNumber, x.UnitsInStock,
                 x.ProductInventory.SellerInventory.SellerId))
             .ToList();
@@ -72,8 +69,8 @@ public class RemovalService
         {
             lot.IssueUnits(lot.UnitsInStock, StockIssueReason.Disposal);
         }
-        _lotRepo.UpdateRange(lotsToSendForRemoval);
-        _eventBus.Publish(new LotQuantitiesSentForDisposalIntegrationEvent(disposalLotUnits, true));
+        await _lotRepo.UpdateRangeAsync(lotsToSendForRemoval);
+        _eventBus.Publish(new LotQuantitiesSentForDisposalIntegrationEvent(disposalQuantities, true));
     }
 
     /// <summary>
@@ -81,14 +78,15 @@ public class RemovalService
     /// </summary>
     /// <param name="restoreQuantities">The quantities to restore, 
     /// where the key is lot number and the value is quantity to restore.</param>
-    public Result RestoreLotUnitsFromRemoval(Dictionary<string, uint> restoreQuantities)
+    public async Task<Result> RestoreLotUnitsFromRemoval(Dictionary<string, uint> restoreQuantities)
     {
         var lotsWithRestoredUnits = new List<Lot>();
         var categorizedRestoreQuantities = new Dictionary<string,
             (uint GoodQty, uint UnfulfillableQty, bool IsStranded)>();
         foreach (var (lotNumber, restoreQuantity) in restoreQuantities.Select(x => (x.Key, x.Value)))
         {
-            var lot = _lotRepo.GetByLotNumber(lotNumber);
+            var lot = await _lotRepo.SingleOrDefaultAsync(
+                new LotWithInventoriesSpec(lotNumber));
             if (lot == null)
             {
                 return Result.NotFound($"Lot not found for lot number: {lotNumber}");
@@ -125,7 +123,7 @@ public class RemovalService
             categorizedRestoreQuantities.Add(productId,
                 (goodQty, unfulfillableQty, lot.ProductInventory.IsStranded));
         }
-        _lotRepo.UpdateRange(lotsWithRestoredUnits);
+        await _lotRepo.UpdateRangeAsync(lotsWithRestoredUnits);
         var restoredEventItems = categorizedRestoreQuantities.Select(x =>
             new AdjustedQuantity(x.Key, x.Value.GoodQty, x.Value.UnfulfillableQty, x.Value.IsStranded));
         _eventBus.Publish(new StockAdjustedIntegrationEvent(

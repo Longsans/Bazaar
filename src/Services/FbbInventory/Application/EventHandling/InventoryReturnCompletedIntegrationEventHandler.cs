@@ -3,11 +3,11 @@
 public class InventoryReturnCompletedIntegrationEventHandler
     : IIntegrationEventHandler<InventoryReturnCompletedIntegrationEvent>
 {
-    private readonly ILotRepository _lotRepo;
-    private readonly IProductInventoryRepository _productInventoryRepo;
+    private readonly Repository<Lot> _lotRepo;
+    private readonly Repository<ProductInventory> _productInventoryRepo;
 
-    public InventoryReturnCompletedIntegrationEventHandler(ILotRepository lotRepo,
-        IProductInventoryRepository productInventoryRepo)
+    public InventoryReturnCompletedIntegrationEventHandler(
+        Repository<Lot> lotRepo, Repository<ProductInventory> productInventoryRepo)
     {
         _lotRepo = lotRepo;
         _productInventoryRepo = productInventoryRepo;
@@ -18,7 +18,8 @@ public class InventoryReturnCompletedIntegrationEventHandler
         var returnedInventories = new List<ProductInventory>();
         foreach (var returnedQuantity in @event.ReturnedLotQuantities)
         {
-            var lot = _lotRepo.GetByLotNumber(returnedQuantity.LotNumber);
+            var lot = await _lotRepo.SingleOrDefaultAsync(
+                new LotWithInventoriesSpec(returnedQuantity.LotNumber));
             if (lot == null)
             {
                 // Should never be possible
@@ -30,7 +31,7 @@ public class InventoryReturnCompletedIntegrationEventHandler
             inventory.RemoveEmptyLots();
             returnedInventories.Add(inventory);
         }
-        _productInventoryRepo.UpdateRange(returnedInventories);
+        await _productInventoryRepo.UpdateRangeAsync(returnedInventories);
 
         await Task.CompletedTask;
     }

@@ -3,11 +3,11 @@
 public class LotQuantitiesSentForReturnIntegrationEventHandler
     : IIntegrationEventHandler<LotQuantitiesSentForReturnIntegrationEvent>
 {
-    private readonly IInventoryReturnRepository _returnRepo;
+    private readonly Repository<InventoryReturn> _returnRepo;
     private readonly IEstimationService _estimationService;
 
     public LotQuantitiesSentForReturnIntegrationEventHandler(
-        IInventoryReturnRepository returnRepo, IEstimationService estimationService)
+        Repository<InventoryReturn> returnRepo, IEstimationService estimationService)
     {
         _returnRepo = returnRepo;
         _estimationService = estimationService;
@@ -17,12 +17,12 @@ public class LotQuantitiesSentForReturnIntegrationEventHandler
     {
         var returnQuantities = @event.LotQuantities.Select(
             x => new ReturnQuantity(x.LotNumber, x.Quantity));
-        var expectedDeliveryDate = _estimationService
+        var expectedDeliveryDate = await _estimationService
             .EstimateInventoryReturnCompletion(returnQuantities);
         var inventoryReturn = new InventoryReturn(@event.DeliveryAddress, returnQuantities,
             expectedDeliveryDate, @event.InventoryOwnerId);
 
-        _returnRepo.Create(inventoryReturn);
+        await _returnRepo.AddAsync(inventoryReturn);
         await Task.CompletedTask;
     }
 }

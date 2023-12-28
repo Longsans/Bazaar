@@ -15,6 +15,7 @@ services:
       - ordering
       - basket
       - disposal
+      - transport
       - all
   
   sqldata:

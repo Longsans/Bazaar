@@ -19,11 +19,9 @@ builder.Services.AddScoped<StockTransactionService>();
 builder.Services.AddScoped<StockAdjustmentService>();
 builder.Services.AddScoped<RemovalService>();
 builder.Services.AddScoped<IQualityInspectionService, FixedQualityInspectionService>();
-builder.Services.AddScoped<IDeleteProductInventoryService, DeleteProductInventoryService>();
+builder.Services.AddScoped<DeleteProductInventoryService>();
 
-builder.Services.AddScoped<ISellerInventoryRepository, SellerInventoryRepository>();
-builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
-builder.Services.AddScoped<ILotRepository, LotRepository>();
+builder.Services.AddScoped(typeof(Repository<>));
 
 builder.Services.RegisterEventBus(builder.Configuration);
 

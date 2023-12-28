@@ -4,10 +4,10 @@
 [ApiController]
 public class InventoryReturnsController : ControllerBase
 {
-    private readonly IInventoryReturnRepository _returnRepo;
+    private readonly Repository<InventoryReturn> _returnRepo;
     private readonly InventoryReturnProcessService _returnConclusionService;
 
-    public InventoryReturnsController(IInventoryReturnRepository returnRepo,
+    public InventoryReturnsController(Repository<InventoryReturn> returnRepo,
         InventoryReturnProcessService returnConclusionService)
     {
         _returnRepo = returnRepo;
@@ -15,9 +15,10 @@ public class InventoryReturnsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public ActionResult<InventoryReturnResponse> GetById(int id)
+    public async Task<ActionResult<InventoryReturnResponse>> GetById(int id)
     {
-        var invReturn = _returnRepo.GetById(id);
+        var invReturn = await _returnRepo
+            .SingleOrDefaultAsync(new ReturnByIdSpec(id));
         if (invReturn == null)
         {
             return NotFound();
@@ -26,8 +27,8 @@ public class InventoryReturnsController : ControllerBase
         return new InventoryReturnResponse(invReturn);
     }
 
-    [HttpPatch("{returnId}/status")]
-    public IActionResult UpdateStatus(int returnId,
+    [HttpPatch("{returnId}")]
+    public async Task<IActionResult> UpdateStatus(int returnId,
         UpdateInventoryReturnStatusRequest request)
     {
         if (request.Status == DeliveryStatus.Cancelled
@@ -38,11 +39,11 @@ public class InventoryReturnsController : ControllerBase
 
         return (request.Status switch
         {
-            DeliveryStatus.Delivering => _returnConclusionService.StartReturnDelivery(returnId),
-            DeliveryStatus.Completed => _returnConclusionService.CompleteInventoryReturn(returnId),
-            DeliveryStatus.Postponed => _returnConclusionService.PostponeInventoryReturn(returnId),
-            DeliveryStatus.Cancelled => _returnConclusionService
-                .CancelInventoryReturn(returnId, request.CancelReason),
+            DeliveryStatus.Delivering => await _returnConclusionService.StartReturnDelivery(returnId),
+            DeliveryStatus.Completed => await _returnConclusionService.CompleteInventoryReturn(returnId),
+            DeliveryStatus.Postponed => await _returnConclusionService.PostponeInventoryReturn(returnId),
+            DeliveryStatus.Cancelled => await _returnConclusionService
+                .CancelInventoryReturn(returnId, request.CancelReason!),
             _ => Result.Invalid(new ValidationError
             {
                 Identifier = nameof(request.Status),

@@ -2,11 +2,11 @@
 
 public class StockAdjustedIntegrationEventHandler : IIntegrationEventHandler<StockAdjustedIntegrationEvent>
 {
-    private readonly ICatalogRepository _catalogRepo;
+    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
     private readonly ILogger<StockAdjustedIntegrationEventHandler> _logger;
 
     public StockAdjustedIntegrationEventHandler(
-        ICatalogRepository catalogRepo,
+        IRepositoryBase<CatalogItem> catalogRepo,
         ILogger<StockAdjustedIntegrationEventHandler> logger)
     {
         _catalogRepo = catalogRepo;
@@ -18,7 +18,8 @@ public class StockAdjustedIntegrationEventHandler : IIntegrationEventHandler<Sto
         var updatedItems = new List<CatalogItem>();
         foreach (var quantityAdjusted in @event.QuantitiesAdjusted)
         {
-            var catalogItem = _catalogRepo.GetByProductId(quantityAdjusted.ProductId);
+            var catalogItem = await _catalogRepo.SingleOrDefaultAsync(
+                new CatalogItemByProductIdSpec(quantityAdjusted.ProductId));
             if (catalogItem == null || catalogItem.IsDeleted)
             {
                 _logger.LogInformation("Notified of stock adjusted for deleted listing {ProductId}",
@@ -46,7 +47,7 @@ public class StockAdjustedIntegrationEventHandler : IIntegrationEventHandler<Sto
             }
             updatedItems.Add(catalogItem);
         }
-        _catalogRepo.UpdateRange(updatedItems);
+        await _catalogRepo.UpdateRangeAsync(updatedItems);
         await Task.CompletedTask;
     }
 }

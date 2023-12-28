@@ -3,25 +3,22 @@
 public class ProductFbbInventoryDeletedIntegrationEventHandler
     : IIntegrationEventHandler<ProductFbbInventoryDeletedIntegrationEvent>
 {
-    private readonly IInventoryPickupRepository _pickupRepo;
+    private readonly Repository<InventoryPickup> _pickupRepo;
 
     public ProductFbbInventoryDeletedIntegrationEventHandler(
-        IInventoryPickupRepository pickupRepo)
+        Repository<InventoryPickup> pickupRepo)
     {
         _pickupRepo = pickupRepo;
     }
 
     public async Task Handle(ProductFbbInventoryDeletedIntegrationEvent @event)
     {
-        var pickupsForProduct = _pickupRepo.GetByProductId(@event.ProductId)
-            .Where(x => x.Status == InventoryPickupStatus.Scheduled)
-            .ToList();
+        var pickupsForProduct = await _pickupRepo.ListAsync(
+            new PickupsScheduledSpec(@event.ProductId));
         foreach (var pickup in pickupsForProduct)
         {
             pickup.Cancel(CommonCancelReasons.ProductFbbInventoryCancelled);
-            _pickupRepo.Update(pickup);
         }
-
-        await Task.CompletedTask;
+        await _pickupRepo.UpdateRangeAsync(pickupsForProduct);
     }
 }

@@ -15,7 +15,7 @@ builder.Services.AddScoped<DeleteCatalogItemService>();
 builder.Services.AddScoped<FulfillmentMethodService>();
 builder.Services.AddScoped<ListingService>();
 
-builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
+builder.Services.AddScoped(typeof(IRepositoryBase<>), typeof(Repository<>));
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 
 builder.Services.RegisterEventBus(builder.Configuration);

@@ -20,12 +20,12 @@ public class BasicEstimationServiceUnitTests
     };
     private static readonly IEnumerable<InventoryPickup> _validPickups = new InventoryPickup[]
     {
-        new("Test location", new ProductInventory[]
+        new("Test location", new PickupProductStock[]
         {
             new("PROD-1", 100),
             new("PROD-2", 200),
         }, DateTime.Now.AddDays(7), "CLNT-1"),
-        new("Test location 2", new ProductInventory[]
+        new("Test location 2", new PickupProductStock[]
         {
             new("PROD-3", 300),
             new("PROD-4", 400),
@@ -116,7 +116,7 @@ public class BasicEstimationServiceUnitTests
         _mockPickupRepo.Setup(x => x.GetIncomplete())
             .Returns(currentPickups);
 
-        var productInventories = new ProductInventory[]
+        var productInventories = new PickupProductStock[]
         {
             new("PROD-5", 50),
             new("PROD-6", 60),

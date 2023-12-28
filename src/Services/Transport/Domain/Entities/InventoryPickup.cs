@@ -4,7 +4,7 @@ public class InventoryPickup
 {
     public int Id { get; private set; }
     public string PickupLocation { get; private set; }
-    public List<ProductInventory> ProductInventories { get; private set; }
+    public List<PickupProductStock> ProductStocks { get; private set; }
     public DateTime TimeScheduledAt { get; private set; }
     public DateTime EstimatedPickupTime { get; private set; }
     public string SchedulerId { get; private set; }
@@ -13,7 +13,7 @@ public class InventoryPickup
     public string? CancelReason { get; private set; }
 
     public InventoryPickup(
-        string pickupLocation, IEnumerable<ProductInventory> productInventories,
+        string pickupLocation, IEnumerable<PickupProductStock> productInventories,
         DateTime estimatedPickupTime, string schedulerId)
     {
         if (string.IsNullOrWhiteSpace(pickupLocation))
@@ -46,7 +46,7 @@ public class InventoryPickup
         }
 
         PickupLocation = pickupLocation;
-        ProductInventories = productInventories.ToList();
+        ProductStocks = productInventories.ToList();
         TimeScheduledAt = DateTime.Now;
         EstimatedPickupTime = estimatedPickupTime;
         SchedulerId = schedulerId;
@@ -99,9 +99,9 @@ public class InventoryPickup
 
 public enum InventoryPickupStatus
 {
-    Scheduled,
-    EnRouteToPickupLocation,
-    DeliveringToWarehouse,
-    Completed,
-    Cancelled
+    Scheduled = 1,
+    EnRouteToPickupLocation = 2,
+    DeliveringToWarehouse = 4,
+    Completed = 8,
+    Cancelled = 16
 }

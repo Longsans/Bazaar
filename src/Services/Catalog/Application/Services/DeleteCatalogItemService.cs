@@ -2,11 +2,11 @@
 
 public class DeleteCatalogItemService
 {
-    private readonly ICatalogRepository _catalogRepo;
+    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
     private readonly IEventBus _eventBus;
 
     public DeleteCatalogItemService(
-        ICatalogRepository catalogRepo,
+        IRepositoryBase<CatalogItem> catalogRepo,
         IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
@@ -28,29 +28,30 @@ public class DeleteCatalogItemService
         }
     }
 
-    public void SoftDeleteById(int id)
+    public async Task SoftDeleteById(int id)
     {
-        var catalogItem = _catalogRepo.GetById(id);
+        var catalogItem = await _catalogRepo.GetByIdAsync(id);
         if (catalogItem == null)
         {
             return;
         }
 
-        TrySoftDelete(catalogItem);
+        await TrySoftDelete(catalogItem);
     }
 
-    public void SoftDeleteByProductId(string productId)
+    public async Task SoftDeleteByProductId(string productId)
     {
-        var catalogItem = _catalogRepo.GetByProductId(productId);
+        var catalogItem = await _catalogRepo.SingleOrDefaultAsync(
+            new CatalogItemByProductIdSpec(productId));
         if (catalogItem == null)
         {
             return;
         }
 
-        TrySoftDelete(catalogItem);
+        await TrySoftDelete(catalogItem);
     }
 
-    private void TrySoftDelete(CatalogItem item)
+    private async Task TrySoftDelete(CatalogItem item)
     {
         if (item.IsDeleted)
         {
@@ -61,7 +62,7 @@ public class DeleteCatalogItemService
 
         item.ReduceStock(item.AvailableStock);
         item.Delete();
-        _catalogRepo.Update(item);
+        await _catalogRepo.UpdateAsync(item);
         _eventBus.Publish(
             new CatalogItemDeletedIntegrationEvent(item.ProductId));
 

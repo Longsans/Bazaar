@@ -19,7 +19,7 @@ public record LotResponse(
               lot.UnitsInStock, lot.UnitsInRemoval, lot.TotalUnits,
               lot.DateUnitsEnteredStorage, lot.DateUnitsBecameStranded,
               lot.DateUnitsBecameUnfulfillable, lot.UnfulfillableCategory,
-              lot.IsUnfulfillableBeyondPolicyDuration)
+              lot.IsUnitsUnfulfillableBeyondPolicyDuration)
     {
 
     }

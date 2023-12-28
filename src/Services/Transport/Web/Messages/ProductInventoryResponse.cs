@@ -6,7 +6,7 @@ public class ProductInventoryResponse
     public string ProductId { get; private set; }
     public uint NumberOfUnits { get; private set; }
 
-    public ProductInventoryResponse(ProductInventory productInventory)
+    public ProductInventoryResponse(PickupProductStock productInventory)
     {
         Id = productInventory.Id;
         ProductId = productInventory.ProductId;

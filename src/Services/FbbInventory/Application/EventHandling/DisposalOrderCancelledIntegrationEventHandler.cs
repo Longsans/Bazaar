@@ -16,7 +16,7 @@ public class DisposalOrderCancelledIntegrationEventHandler
     public async Task Handle(DisposalOrderCancelledIntegrationEvent @event)
     {
         var restoreQuantities = @event.UndisposedQuantities.ToDictionary(x => x.LotNumber, x => x.UndisposedUnits);
-        var result = _removalService.RestoreLotUnitsFromRemoval(restoreQuantities);
+        var result = await _removalService.RestoreLotUnitsFromRemoval(restoreQuantities);
         if (!result.IsSuccess)
         {
             _logger.LogError("Error restoring units to lots for disposal order {DisposalOrderId}: {ErrorMessage}",

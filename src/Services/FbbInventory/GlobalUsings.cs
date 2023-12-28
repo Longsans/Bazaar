@@ -1,5 +1,6 @@
 ﻿global using Ardalis.Result;
 global using Ardalis.Result.AspNetCore;
+global using Ardalis.Specification;
 global using Bazaar.BuildingBlocks.EventBus;
 global using Bazaar.BuildingBlocks.EventBus.Abstractions;
 global using Bazaar.BuildingBlocks.EventBus.Events;
@@ -15,6 +16,7 @@ global using Bazaar.FbbInventory.Domain.Enums;
 global using Bazaar.FbbInventory.Domain.Exceptions;
 global using Bazaar.FbbInventory.Domain.Interfaces;
 global using Bazaar.FbbInventory.Domain.Services;
+global using Bazaar.FbbInventory.Domain.Specifications;
 global using Bazaar.FbbInventory.Domain.ValueObjects;
 global using Bazaar.FbbInventory.Infrastructure.Database;
 global using Bazaar.FbbInventory.Infrastructure.Repositories;

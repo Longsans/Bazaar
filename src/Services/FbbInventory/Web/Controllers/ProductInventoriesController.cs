@@ -4,11 +4,11 @@
 [ApiController]
 public class ProductInventoriesController : ControllerBase
 {
-    private readonly IProductInventoryRepository _productInventoryRepo;
+    private readonly Repository<ProductInventory> _productInventoryRepo;
     private readonly StockTransactionService _stockTxnService;
 
     public ProductInventoriesController(
-        IProductInventoryRepository productInventoryRepo,
+        Repository<ProductInventory> productInventoryRepo,
         StockTransactionService stockTxnService)
     {
         _productInventoryRepo = productInventoryRepo;
@@ -16,9 +16,10 @@ public class ProductInventoriesController : ControllerBase
     }
 
     [HttpGet("{productId}")]
-    public ActionResult<ProductInventoryResponse> GetByProductId(string productId)
+    public async Task<ActionResult<ProductInventoryResponse>> GetByProductId(string productId)
     {
-        var productInventory = _productInventoryRepo.GetByProductId(productId);
+        var productInventory = await _productInventoryRepo.SingleOrDefaultAsync(
+            new ProductInventoryWithLotsAndSellerSpec(productId));
         if (productInventory == null)
         {
             return NotFound();
@@ -27,17 +28,17 @@ public class ProductInventoriesController : ControllerBase
     }
 
     [HttpPost("/api/received-stocks")]
-    public ActionResult<StockReceipt> ReceiveStock(
+    public async Task<ActionResult<StockReceipt>> ReceiveStock(
         IEnumerable<InboundStockQuantity> receiptQuantities)
     {
-        return _stockTxnService.ReceiveStock(receiptQuantities).ToActionResult(this);
+        return (await _stockTxnService.ReceiveStock(receiptQuantities)).ToActionResult(this);
     }
 
     [HttpPost("/api/issued-stocks")]
-    public ActionResult<StockIssue> IssueStock(IssueStockRequest request)
+    public async Task<ActionResult<StockIssue>> IssueStock(IssueStockRequest request)
     {
-        return _stockTxnService
-            .IssueStocksFifo(request.IssueQuantities, request.IssueReason)
+        return (await _stockTxnService
+            .IssueStocksFifo(request.IssueQuantities, request.IssueReason))
             .ToActionResult(this);
     }
 }

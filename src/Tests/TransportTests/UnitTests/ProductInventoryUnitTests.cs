@@ -8,7 +8,7 @@ public class ProductInventoryUnitTests
     [Fact]
     public void Constructor_SucceedsWithDefaultPickupId_WhenAllValid()
     {
-        var inventory = new ProductInventory(_validProductId, _validNumberOfUnits);
+        var inventory = new PickupProductStock(_validProductId, _validNumberOfUnits);
 
         Assert.Equal(_validProductId, inventory.ProductId);
         Assert.Equal(_validNumberOfUnits, inventory.NumberOfUnits);
@@ -20,7 +20,7 @@ public class ProductInventoryUnitTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            var inventory = new ProductInventory(_validProductId, 0);
+            var inventory = new PickupProductStock(_validProductId, 0);
         });
     }
 }

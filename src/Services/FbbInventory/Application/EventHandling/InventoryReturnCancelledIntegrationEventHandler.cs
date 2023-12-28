@@ -16,7 +16,7 @@ public class InventoryReturnCancelledIntegrationEventHandler
     public async Task Handle(InventoryReturnCancelledIntegrationEvent @event)
     {
         var restoreQuantities = @event.UnreturnedLotQuantities.ToDictionary(x => x.LotNumber, x => x.Quantity);
-        var result = _removalService.RestoreLotUnitsFromRemoval(restoreQuantities);
+        var result = await _removalService.RestoreLotUnitsFromRemoval(restoreQuantities);
         if (!result.IsSuccess)
         {
             _logger.LogError("Error restoring units to lots for return order {ReturnId}: {ErrorMessage}",

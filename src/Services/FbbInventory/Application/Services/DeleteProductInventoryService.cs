@@ -1,40 +1,36 @@
 ﻿namespace Bazaar.FbbInventory.Application.Services;
 
-public class DeleteProductInventoryService : IDeleteProductInventoryService
+public class DeleteProductInventoryService
 {
-    private readonly IProductInventoryRepository _productInventoryRepo;
+    private readonly Repository<ProductInventory> _productInventoryRepo;
     private readonly IEventBus _eventBus;
 
     public DeleteProductInventoryService(
-        IProductInventoryRepository productInventoryRepo,
-        IEventBus eventBus)
+        Repository<ProductInventory> productInventoryRepo, IEventBus eventBus)
     {
         _productInventoryRepo = productInventoryRepo;
         _eventBus = eventBus;
     }
 
-    public Result DeleteProductInventory(int id)
+    public async Task<Result> DeleteProductInventory(int id)
     {
-        var productInventory = _productInventoryRepo.GetById(id);
+        return await DeleteAndPublishEvent(
+            new ProductInventoryWithLotsAndSellerSpec(id));
+    }
+
+    public async Task<Result> DeleteProductInventory(string productId)
+    {
+        return await DeleteAndPublishEvent(
+            new ProductInventoryWithLotsAndSellerSpec(productId));
+    }
+
+    private async Task<Result> DeleteAndPublishEvent(ISingleResultSpecification<ProductInventory> spec)
+    {
+        var productInventory = await _productInventoryRepo.SingleOrDefaultAsync(spec);
         if (productInventory == null)
         {
             return Result.Success();
         }
-        return DeleteAndPublishEvent(productInventory);
-    }
-
-    public Result DeleteProductInventory(string productId)
-    {
-        var productInventory = _productInventoryRepo.GetByProductId(productId);
-        if (productInventory == null)
-        {
-            return Result.Success();
-        }
-        return DeleteAndPublishEvent(productInventory);
-    }
-
-    private Result DeleteAndPublishEvent(ProductInventory productInventory)
-    {
         if (productInventory.TotalUnits > 0)
         {
             return Result.Conflict(

@@ -2,51 +2,52 @@
 
 public class InventoryReturnProcessService
 {
-    private readonly IInventoryReturnRepository _returnRepo;
+    private readonly Repository<InventoryReturn> _returnRepo;
     private readonly IEventBus _eventBus;
 
     public InventoryReturnProcessService(
-        IInventoryReturnRepository returnRepository, IEventBus eventBus)
+        Repository<InventoryReturn> returnRepository, IEventBus eventBus)
     {
         _returnRepo = returnRepository;
         _eventBus = eventBus;
     }
 
-    public Result StartReturnDelivery(int returnId)
+    public async Task<Result> StartReturnDelivery(int returnId)
     {
-        return UpdateStatusAndPublishEvent(returnId,
+        return await UpdateStatusAndPublishEvent(returnId,
             invReturn => invReturn.StartDelivery());
     }
 
-    public Result PostponeInventoryReturn(int returnId)
+    public async Task<Result> PostponeInventoryReturn(int returnId)
     {
-        return UpdateStatusAndPublishEvent(returnId,
+        return await UpdateStatusAndPublishEvent(returnId,
             invReturn => invReturn.Postpone());
     }
 
-    public Result CompleteInventoryReturn(int returnId)
+    public async Task<Result> CompleteInventoryReturn(int returnId)
     {
-        return UpdateStatusAndPublishEvent(returnId,
+        return await UpdateStatusAndPublishEvent(returnId,
             invReturn => invReturn.Complete(),
             PublishCompletedEvent);
     }
 
-    public Result CancelInventoryReturn(int returnId, string reason)
+    public async Task<Result> CancelInventoryReturn(int returnId, string reason)
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
             return Result.Conflict("Cancel reason cannot be empty.");
         }
-        return UpdateStatusAndPublishEvent(returnId,
+        return await UpdateStatusAndPublishEvent(returnId,
             invReturn => invReturn.Cancel(reason),
             PublishCancelledEvent);
     }
 
     // Helpers
-    private Result UpdateStatusAndPublishEvent(int returnId,
+    private async Task<Result> UpdateStatusAndPublishEvent(int returnId,
         Action<InventoryReturn> statusUpdate, Action<InventoryReturn>? publishEvent = null)
     {
-        var invReturn = _returnRepo.GetById(returnId);
+        var invReturn = await _returnRepo
+            .SingleOrDefaultAsync(new ReturnByIdSpec(returnId));
         if (invReturn == null)
         {
             return Result.NotFound();
@@ -60,7 +61,7 @@ public class InventoryReturnProcessService
         {
             return Result.Conflict(ex.Message);
         }
-        _returnRepo.Update(invReturn);
+        await _returnRepo.UpdateAsync(invReturn);
 
         publishEvent?.Invoke(invReturn);
         return Result.Success();
