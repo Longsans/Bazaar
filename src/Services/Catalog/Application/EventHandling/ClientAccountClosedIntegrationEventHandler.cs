@@ -3,12 +3,12 @@
 public class ClientAccountClosedIntegrationEventHandler
     : IIntegrationEventHandler<ClientAccountClosedIntegrationEvent>
 {
-    private readonly ICatalogRepository _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly DeleteCatalogItemService _deleteCatalogItemService;
     private readonly IEventBus _eventBus;
 
     public ClientAccountClosedIntegrationEventHandler(
-        ICatalogRepository catalogRepo,
+        IRepository<CatalogItem> catalogRepo,
         DeleteCatalogItemService deleteCatalogItemService,
         IEventBus eventBus)
     {
@@ -19,7 +19,7 @@ public class ClientAccountClosedIntegrationEventHandler
 
     public async Task Handle(ClientAccountClosedIntegrationEvent @event)
     {
-        var products = _catalogRepo.GetBySellerId(@event.ClientId).ToList();
+        var products = await _catalogRepo.ListAsync(new CatalogItemsBySellerIdSpec(@event.ClientId));
         var productsWithOrdersInProgress = new List<string>();
         var productsWithFbbStocks = new List<string>();
         foreach (var product in products)
@@ -52,7 +52,7 @@ public class ClientAccountClosedIntegrationEventHandler
         {
             foreach (var product in products)
             {
-                _deleteCatalogItemService.SoftDeleteById(product.Id);
+                await _deleteCatalogItemService.SoftDeleteById(product.Id);
             }
         }
 

@@ -154,7 +154,7 @@ public class CatalogItem
         FulfillmentMethod = FulfillmentMethod.Merchant;
     }
 
-    public void UpdateHasOrdersInProgressStatus(bool hasOrdersInProgress)
+    public void UpdateHasOrdersInProgress(bool hasOrdersInProgress)
     {
         HasOrdersInProgress = hasOrdersInProgress;
     }

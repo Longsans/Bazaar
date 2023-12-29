@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Bazaar.Transport.Domain.Specifications;
+using Microsoft.Extensions.Configuration;
 
 namespace TransportTests.UnitTests;
 
@@ -20,12 +21,12 @@ public class BasicEstimationServiceUnitTests
     };
     private static readonly IEnumerable<InventoryPickup> _validPickups = new InventoryPickup[]
     {
-        new("Test location", new ProductInventory[]
+        new("Test location", new PickupProductStock[]
         {
             new("PROD-1", 100),
             new("PROD-2", 200),
         }, DateTime.Now.AddDays(7), "CLNT-1"),
-        new("Test location 2", new ProductInventory[]
+        new("Test location 2", new PickupProductStock[]
         {
             new("PROD-3", 300),
             new("PROD-4", 400),
@@ -51,9 +52,9 @@ public class BasicEstimationServiceUnitTests
     private static bool SameTime(DateTime a, DateTime b) => a - b < TimeSpan.FromSeconds(1);
     #endregion
 
-    private readonly Mock<IDeliveryRepository> _mockDeliveryRepo;
-    private readonly Mock<IInventoryPickupRepository> _mockPickupRepo;
-    private readonly Mock<IInventoryReturnRepository> _mockReturnRepo;
+    private readonly Mock<IRepository<Delivery>> _mockDeliveryRepo;
+    private readonly Mock<IRepository<InventoryPickup>> _mockPickupRepo;
+    private readonly Mock<IRepository<InventoryReturn>> _mockReturnRepo;
     private readonly BasicEstimationService _service;
 
     public BasicEstimationServiceUnitTests()
@@ -76,7 +77,7 @@ public class BasicEstimationServiceUnitTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void EstimateDeliveryCompletion_Returns4MinutesForEveryItemToBeDelivered(
+    public async Task EstimateDeliveryCompletion_Returns4MinutesForEveryItemToBeDelivered(
         bool hasExistingDeliveries)
     {
         // arrange
@@ -84,8 +85,9 @@ public class BasicEstimationServiceUnitTests
             ? _validDeliveries
             : Array.Empty<Delivery>();
 
-        _mockDeliveryRepo.Setup(x => x.GetIncomplete())
-            .Returns(currentDeliveries);
+        _mockDeliveryRepo.Setup(x => x.ListAsync(
+                It.IsAny<DeliveriesIncompleteSpec>(), CancellationToken.None))
+            .Returns(Task.FromResult(currentDeliveries.ToList()));
 
         var packageItems = new DeliveryPackageItem[]
         {
@@ -94,18 +96,17 @@ public class BasicEstimationServiceUnitTests
         };
 
         // act
-        var estimatedTime = _service.EstimateDeliveryCompletion(packageItems);
+        var estimatedTime = await _service.EstimateDeliveryCompletion(packageItems);
 
         // assert
         var expectedTime = DateTime.Now + (hasExistingDeliveries ? 13 : 3) * _delayPerDeliveryItem;
-
         Assert.True(SameTime(expectedTime, estimatedTime));
     }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void EstimatePickupCompletion_Returns1Minute12SecondsForEveryItemToBeDelivered(
+    public async Task EstimatePickupCompletion_Returns1Minute12SecondsForEveryItemToBeDelivered(
         bool hasExistingPickups)
     {
         // arrange
@@ -113,35 +114,37 @@ public class BasicEstimationServiceUnitTests
             ? _validPickups
             : Array.Empty<InventoryPickup>();
 
-        _mockPickupRepo.Setup(x => x.GetIncomplete())
-            .Returns(currentPickups);
+        _mockPickupRepo.Setup(x => x.ListAsync(
+                It.IsAny<PickupsIncompleteSpec>(), CancellationToken.None))
+            .Returns(Task.FromResult(currentPickups.ToList()));
 
-        var productInventories = new ProductInventory[]
+        var productInventories = new PickupProductStock[]
         {
             new("PROD-5", 50),
             new("PROD-6", 60),
         };
 
         // act
-        var estimatedTime = _service.EstimatePickupCompletion(productInventories);
+        var estimatedTime = await _service.EstimatePickupCompletion(productInventories);
 
         // assert
         var expectedTime = DateTime.Now + (hasExistingPickups ? 1110 : 110) * _delayPerPickupItem;
-
         Assert.True(SameTime(expectedTime, estimatedTime));
     }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void EstimateInventoryReturnCompletion_Returns2MinutesForEveryItemToBeReturned(
+    public async Task EstimateInventoryReturnCompletion_Returns2MinutesForEveryItemToBeReturned(
         bool hasExistingReturns)
     {
+        // arrange
         var currentReturns = hasExistingReturns
             ? _validReturns
             : Array.Empty<InventoryReturn>();
-        _mockReturnRepo.Setup(x => x.GetIncomplete())
-            .Returns(currentReturns);
+        _mockReturnRepo.Setup(x => x.ListAsync(
+                It.IsAny<ReturnsIncompleteSpec>(), CancellationToken.None))
+            .Returns(Task.FromResult(currentReturns.ToList()));
 
         var returnQuantities = new ReturnQuantity[]
         {
@@ -149,8 +152,11 @@ public class BasicEstimationServiceUnitTests
             new("LOT-6", 66),
         };
 
-        var estimatedTime = _service.EstimateInventoryReturnCompletion(returnQuantities);
+        // act
+        var estimatedTime = await _service.EstimateInventoryReturnCompletion(returnQuantities);
 
+        // assert
         var expectedTime = DateTime.Now + (hasExistingReturns ? 1121 : 121) * _delayPerReturnItem;
+        Assert.True(SameTime(expectedTime, estimatedTime));
     }
 }

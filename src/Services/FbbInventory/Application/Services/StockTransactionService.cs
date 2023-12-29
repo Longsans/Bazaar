@@ -3,12 +3,12 @@
 public class StockTransactionService
 {
     private readonly IQualityInspectionService _qualityInspectionService;
-    private readonly IProductInventoryRepository _productInvenRepo;
+    private readonly IRepository<ProductInventory> _productInvenRepo;
     private readonly IEventBus _eventBus;
 
     public StockTransactionService(
         IQualityInspectionService qualityInspectionService,
-        IProductInventoryRepository productInvenRepo,
+        IRepository<ProductInventory> productInvenRepo,
         IEventBus eventBus)
     {
         _qualityInspectionService = qualityInspectionService;
@@ -16,7 +16,7 @@ public class StockTransactionService
         _eventBus = eventBus;
     }
 
-    public Result<StockReceipt> ReceiveStock(
+    public async Task<Result<StockReceipt>> ReceiveStock(
         IEnumerable<InboundStockQuantity> receiptQuantities)
     {
         if (receiptQuantities.GroupBy(x => x.ProductId).Any(g => g.Count() > 1))
@@ -25,14 +25,6 @@ public class StockTransactionService
             {
                 Identifier = nameof(receiptQuantities),
                 ErrorMessage = "Quantities cannot contain duplicate products."
-            });
-        }
-        if (receiptQuantities.Any(x => x.Quantity == 0))
-        {
-            return Result.Invalid(new ValidationError()
-            {
-                Identifier = nameof(receiptQuantities),
-                ErrorMessage = "Each quantity must have at least 1 unit."
             });
         }
 
@@ -44,7 +36,8 @@ public class StockTransactionService
         var updatedInventories = new List<ProductInventory>();
         foreach (var receiptItem in receiptItems)
         {
-            var inventory = _productInvenRepo.GetByProductId(receiptItem.ProductId);
+            var inventory = await _productInvenRepo.SingleOrDefaultAsync(
+                new ProductInventoryWithLotsAndSellerSpec(receiptItem.ProductId));
             if (inventory == null)
             {
                 return Result.NotFound(
@@ -73,7 +66,7 @@ public class StockTransactionService
             }
             updatedInventories.Add(inventory);
         }
-        _productInvenRepo.UpdateRange(updatedInventories);
+        await _productInvenRepo.UpdateRangeAsync(updatedInventories);
 
         var receivedStockItems = receiptItems.Select(x => new ReceivedStockEventItem(
             x.ProductId, x.GoodQuantity, x.DefectiveQuantity, x.WarehouseDamagedQuantity));
@@ -82,7 +75,7 @@ public class StockTransactionService
         return receipt;
     }
 
-    public Result<StockIssue> IssueStocksFifo(
+    public async Task<Result<StockIssue>> IssueStocksFifo(
         IEnumerable<OutboundStockQuantity> issueQuantities, StockIssueReason issueReason)
     {
         if (!issueQuantities.Any())
@@ -101,14 +94,6 @@ public class StockTransactionService
                 ErrorMessage = "Quantities cannot contain duplicate products."
             });
         }
-        if (issueQuantities.Any(x => x.GoodQuantity + x.UnfulfillableQuantity == 0))
-        {
-            return Result.Invalid(new ValidationError()
-            {
-                Identifier = nameof(issueQuantities),
-                ErrorMessage = "Each quantity must have at least 1 unit."
-            });
-        }
 
         var issue = new StockIssue(issueReason);
         var updatedInventories = new List<ProductInventory>();
@@ -116,7 +101,8 @@ public class StockTransactionService
         {
             foreach (var issueQuantity in issueQuantities)
             {
-                var inventory = _productInvenRepo.GetByProductId(issueQuantity.ProductId);
+                var inventory = await _productInvenRepo.SingleOrDefaultAsync(
+                    new ProductInventoryWithLotsAndSellerSpec(issueQuantity.ProductId));
                 if (inventory == null)
                 {
                     return Result.NotFound(
@@ -143,7 +129,7 @@ public class StockTransactionService
             return Result.Conflict(ex.Message);
         }
 
-        _productInvenRepo.UpdateRange(updatedInventories);
+        await _productInvenRepo.UpdateRangeAsync(updatedInventories);
         var issuedItems = issueQuantities.Select(x =>
             new IssuedStockEventItem(x.ProductId, x.GoodQuantity, x.UnfulfillableQuantity));
         var stockIssuedEvent = new StockIssuedIntegrationEvent(

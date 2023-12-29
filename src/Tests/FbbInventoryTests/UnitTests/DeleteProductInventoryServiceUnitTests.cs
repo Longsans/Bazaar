@@ -3,25 +3,23 @@
 public class DeleteProductInventoryServiceUnitTests
 {
     private readonly DeleteProductInventoryService _service;
-    private readonly Mock<IProductInventoryRepository> _productInvRepoMock;
-
-    private readonly ProductInventory _testProductInv;
+    private readonly ProductInventory _testInventory;
     private readonly SellerInventory _testSellerInv;
 
     public DeleteProductInventoryServiceUnitTests(EventBusTestDouble testEventBus)
     {
-        _productInvRepoMock = new Mock<IProductInventoryRepository>();
-        _service = new(_productInvRepoMock.Object, testEventBus);
+        var repoMock = new Mock<IRepository<ProductInventory>>();
+        _service = new(repoMock.Object, testEventBus);
 
-        _testProductInv = new("PROD-1", 100, 5, 10, 10, 1000, 1);
+        _testInventory = new("PROD-1", 100, 5, 10, 10, 1000, 1);
         _testSellerInv = new SellerInventory("CLNT-1");
-        _testSellerInv.ProductInventories.Add(_testProductInv);
+        _testSellerInv.ProductInventories.Add(_testInventory);
         typeof(ProductInventory).GetProperty(nameof(ProductInventory.SellerInventory))!
-            .SetValue(_testProductInv, _testSellerInv);
+            .SetValue(_testInventory, _testSellerInv);
 
-        SetProductInventoryUnits(_testProductInv, 0, 0);
-        _productInvRepoMock.Setup(x => x.GetByProductId(It.IsAny<string>()))
-            .Returns(_testProductInv);
+        repoMock.Setup(x => x.SingleOrDefaultAsync(
+                It.IsAny<ProductInventoryWithLotsAndSellerSpec>(), CancellationToken.None))
+            .Returns(Task.FromResult(_testInventory));
     }
 
     #region Helpers
@@ -47,36 +45,39 @@ public class DeleteProductInventoryServiceUnitTests
     #endregion
 
     [Fact]
-    public void DeleteProductInventory_RemovesProductInventoryAndReturnsSuccess_WhenAllValid()
+    public async Task DeleteProductInventory_RemovesProductInventoryAndReturnsSuccess_WhenAllValid()
     {
-        var result = _service.DeleteProductInventory(_testProductInv.ProductId);
+        SetProductInventoryUnits(_testInventory, 0, 0);
+
+        var result = await _service.DeleteProductInventory(_testInventory.ProductId);
 
         Assert.True(result.IsSuccess);
-        Assert.DoesNotContain(_testProductInv, _testSellerInv.ProductInventories);
+        Assert.DoesNotContain(_testInventory, _testSellerInv.ProductInventories);
     }
 
     [Theory]
     [InlineData(1, 0)]
     [InlineData(0, 1)]
-    public void DeleteProductInventory_ReturnsConflict_WhenProductInventoryStillHasUnits(
+    public async Task DeleteProductInventory_ReturnsConflict_WhenProductInventoryStillHasUnits(
         uint ffUnits, uint ufUnits)
     {
-        SetProductInventoryUnits(_testProductInv, ffUnits, ufUnits);
+        SetProductInventoryUnits(_testInventory, ffUnits, ufUnits);
 
-        var result = _service.DeleteProductInventory(_testProductInv.ProductId);
+        var result = await _service.DeleteProductInventory(_testInventory.ProductId);
 
         Assert.Equal(ResultStatus.Conflict, result.Status);
-        Assert.Contains(_testProductInv, _testSellerInv.ProductInventories);
+        Assert.Contains(_testInventory, _testSellerInv.ProductInventories);
     }
 
     [Fact]
-    public void DeleteProductInventory_ReturnsConflict_WhenProductInventoryHasPickupsInProgress()
+    public async Task DeleteProductInventory_ReturnsConflict_WhenProductInventoryHasPickupsInProgress()
     {
-        SetProductInventoryHasPickups(_testProductInv, true);
+        SetProductInventoryUnits(_testInventory, 0u, 0u);
+        SetProductInventoryHasPickups(_testInventory, true);
 
-        var result = _service.DeleteProductInventory(_testProductInv.ProductId);
+        var result = await _service.DeleteProductInventory(_testInventory.ProductId);
 
         Assert.Equal(ResultStatus.Conflict, result.Status);
-        Assert.Contains(_testProductInv, _testSellerInv.ProductInventories);
+        Assert.Contains(_testInventory, _testSellerInv.ProductInventories);
     }
 }

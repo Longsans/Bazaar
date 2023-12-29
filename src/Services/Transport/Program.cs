@@ -11,21 +11,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 #region Register application services
-builder.Services.AddScoped<InventoryReturnProcessService>();
 builder.Services.AddScoped<IEstimationService, BasicEstimationService>();
+builder.Services.AddScoped<InventoryReturnProcessService>();
 builder.Services.AddScoped<DeliveryProcessService>();
 builder.Services.AddScoped<PickupProcessService>();
 
-builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
-builder.Services.AddScoped<IInventoryPickupRepository, InventoryPickupRepository>();
-builder.Services.AddScoped<IInventoryReturnRepository, InventoryReturnRepository>();
-
-builder.Services.RegisterEventBus(builder.Configuration);
-
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddDbContext<TransportDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
+
+builder.Services.RegisterEventBus(builder.Configuration);
 #endregion
 
 var app = builder.Build();

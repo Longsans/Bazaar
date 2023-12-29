@@ -16,7 +16,7 @@ public class ProductRelistedIntegrationEventHandler :
 
     public async Task Handle(ProductRelistedIntegrationEvent @event)
     {
-        var result = _stockAdjustmentService.ConfirmStockStrandingResolved(@event.ProductId);
+        var result = await _stockAdjustmentService.ConfirmStockStrandingResolved(@event.ProductId);
         if (!result.IsSuccess)
         {
             _logger.LogError("Error confirming stock stranding resolved for product {ProductId}: {ErrorMessage}",

@@ -3,11 +3,11 @@
 public class DisposalOrderCompletedIntegrationEventHandler
     : IIntegrationEventHandler<DisposalOrderCompletedIntegrationEvent>
 {
-    private readonly IProductInventoryRepository _productInventoryRepo;
-    private readonly ILotRepository _lotRepo;
+    private readonly IRepository<ProductInventory> _productInventoryRepo;
+    private readonly IRepository<Lot> _lotRepo;
 
     public DisposalOrderCompletedIntegrationEventHandler(
-        IProductInventoryRepository productInventoryRepo, ILotRepository lotRepo)
+        IRepository<ProductInventory> productInventoryRepo, IRepository<Lot> lotRepo)
     {
         _productInventoryRepo = productInventoryRepo;
         _lotRepo = lotRepo;
@@ -18,7 +18,8 @@ public class DisposalOrderCompletedIntegrationEventHandler
         var updatedInventories = new List<ProductInventory>();
         foreach (var disposedQty in @event.DisposedQuantities)
         {
-            var lot = _lotRepo.GetByLotNumber(disposedQty.LotNumber);
+            var lot = await _lotRepo.SingleOrDefaultAsync(
+                new LotWithInventoriesSpec(disposedQty.LotNumber));
             if (lot == null)
             {
                 // This should not be possible
@@ -34,7 +35,7 @@ public class DisposalOrderCompletedIntegrationEventHandler
         {
             inventory.RemoveEmptyLots();
         }
-        _productInventoryRepo.UpdateRange(updatedInventories);
+        await _productInventoryRepo.UpdateRangeAsync(updatedInventories);
         await Task.CompletedTask;
     }
 }

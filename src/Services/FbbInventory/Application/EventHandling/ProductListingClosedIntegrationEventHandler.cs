@@ -16,7 +16,7 @@ public class ProductListingClosedIntegrationEventHandler
 
     public async Task Handle(ProductListingClosedIntegrationEvent @event)
     {
-        var result = _stockAdjustmentService.RenderProductStockStranded(@event.ProductId);
+        var result = await _stockAdjustmentService.RenderProductStockStranded(@event.ProductId);
         if (!result.IsSuccess)
         {
             _logger.LogError("Error rendering stock stranded for product {ProductId}: {ErrorMessage}",

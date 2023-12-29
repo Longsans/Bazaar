@@ -20,17 +20,11 @@ builder.Services.AddDbContext<ContractingDbContext>(options =>
 });
 
 // Domain services
-builder.Services.AddScoped<
-    IUpdateClientEmailAddressService,
-    UpdateClientEmailAddressService>();
-builder.Services.AddScoped<
-    ICloseClientAccountService,
-    CloseClientAccountService>();
+builder.Services.AddScoped<UpdateClientEmailAddressService>();
+builder.Services.AddScoped<CloseClientAccountService>();
 
 // Data services
-builder.Services.AddScoped<IClientRepository, ClientRepository>();
-builder.Services.AddScoped<IContractRepository, ContractRepository>();
-builder.Services.AddScoped<ISellingPlanRepository, SellingPlanRepository>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 
 // Event bus

@@ -14,7 +14,7 @@ public class LotsController : ControllerBase
     }
 
     [HttpPatch]
-    public IActionResult SendLotsUnfulfillableBeyondPolicyDurationForDisposal(
+    public async Task<IActionResult> SendLotsUnfulfillableBeyondPolicyDurationForDisposal(
         bool unfulfillableBeyondPolicyDuration,
         LotsUnfulfillableBeyondPolicyDurationDisposalRequest request)
     {
@@ -24,29 +24,31 @@ public class LotsController : ControllerBase
         }
         if (request.SentForDisposal)
         {
-            _removalService
+            await _removalService
                 .SendLotsUnfulfillableBeyondPolicyDurationForDisposal();
         }
         return NoContent();
     }
 
     [HttpPatch("{lotNumber}/unfulfillable-records")]
-    public IActionResult RecordLotUnitsUnfulfillable(string lotNumber,
+    public async Task<IActionResult> RecordLotUnitsUnfulfillable(string lotNumber,
         RecordUnfulfillableStockRequest request)
     {
-        return _stockAdjustmentService
+        return (await _stockAdjustmentService
             .MoveLotUnitsIntoUnfulfillableStock(
-                lotNumber, request.Quantity, request.UnfulfillableCategory)
+                lotNumber, request.Quantity, request.UnfulfillableCategory))
             .ToActionResult(this);
     }
 
     [HttpPost("/api/lot-adjustments")]
-    public IActionResult AdjustLotUnits(IEnumerable<LotAdjustmentQuantityDto> adjustmentQuantities)
+    public async Task<IActionResult> AdjustLotUnits(
+        IEnumerable<LotAdjustmentQuantityDto> adjustmentQuantities)
     {
         if (adjustmentQuantities.Any(x => x.Quantity == 0))
         {
             return BadRequest(new { error = "Quantity adjusted cannot be 0." });
         }
-        return _stockAdjustmentService.AdjustStockInLots(adjustmentQuantities).ToActionResult(this);
+        return (await _stockAdjustmentService.AdjustStockInLots(adjustmentQuantities))
+            .ToActionResult(this);
     }
 }

@@ -4,16 +4,16 @@ namespace Bazaar.Contracting.Web.Controllers;
 [ApiController]
 public class ClientController : ControllerBase
 {
-    private readonly IClientRepository _clientRepo;
-    private readonly ISellingPlanRepository _planRepo;
-    private readonly IUpdateClientEmailAddressService _updateEmailAddressService;
-    private readonly ICloseClientAccountService _closeClientAccountService;
+    private readonly IRepository<Client> _clientRepo;
+    private readonly IRepository<SellingPlan> _planRepo;
+    private readonly UpdateClientEmailAddressService _updateEmailAddressService;
+    private readonly CloseClientAccountService _closeClientAccountService;
 
     public ClientController(
-        IClientRepository clientRepo,
-        ISellingPlanRepository planRepo,
-        IUpdateClientEmailAddressService updateEmailAddressService,
-        ICloseClientAccountService closeClientAccountService)
+        IRepository<Client> clientRepo,
+        IRepository<SellingPlan> planRepo,
+        UpdateClientEmailAddressService updateEmailAddressService,
+        CloseClientAccountService closeClientAccountService)
     {
         _clientRepo = clientRepo;
         _planRepo = planRepo;
@@ -22,37 +22,34 @@ public class ClientController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public ActionResult<ClientResponse> GetById(int id)
+    public async Task<ActionResult<ClientResponse>> GetById(int id)
     {
-        var client = _clientRepo.GetWithContractsAndPlanById(id);
-        if (client == null || client.IsAccountClosed)
+        var client = await _clientRepo.SingleOrDefaultAsync(new ClientByIdSpec(id));
+        if (client == null)
             return NotFound();
 
         return new ClientResponse(client);
     }
 
     [HttpGet]
-    public ActionResult<ClientResponse> GetByExternalId(string externalId)
+    public async Task<ActionResult<ClientResponse>> GetByExternalId(string externalId)
     {
-        var client = _clientRepo
-            .GetWithContractsAndPlanByExternalId(externalId);
-
-        if (client == null || client.IsAccountClosed)
+        var client = await _clientRepo.SingleOrDefaultAsync(new ClientByExternalIdSpec(externalId));
+        if (client == null)
             return NotFound();
 
         return new ClientResponse(client);
     }
 
     [HttpPost]
-    public ActionResult<ClientResponse> Register(RegisterClientRequest request)
+    public async Task<ActionResult<ClientResponse>> Register(RegisterClientRequest request)
     {
-        var sellingPlan = _planRepo.GetById(request.SellingPlanId);
+        var sellingPlan = await _planRepo.GetByIdAsync(request.SellingPlanId);
         if (sellingPlan == null)
             return NotFound(new { error = "Selling plan not found." });
 
-        var existingEmailAddressOwner = _clientRepo
-            .GetWithContractsAndPlanByEmailAddress(request.EmailAddress);
-
+        var existingEmailAddressOwner = await _clientRepo
+            .SingleOrDefaultAsync(new ClientByEmailAddressSpec(request.EmailAddress));
         if (existingEmailAddressOwner != null)
         {
             return Conflict(new
@@ -68,7 +65,7 @@ public class ClientController : ControllerBase
                 request.EmailAddress, request.PhoneNumber,
                 request.DateOfBirth, request.Gender, sellingPlan.Id);
 
-            _clientRepo.Create(client);
+            await _clientRepo.AddAsync(client);
             return new ClientResponse(client);
         }
         catch (ClientUnderMinimumAgeException)
@@ -78,11 +75,10 @@ public class ClientController : ControllerBase
     }
 
     [HttpPut("{externalId}")]
-    public IActionResult UpdateInfo(string externalId, UpdateClientInfoRequest request)
+    public async Task<IActionResult> UpdateInfo(string externalId, UpdateClientInfoRequest request)
     {
-        var client = _clientRepo
-            .GetWithContractsAndPlanByExternalId(externalId);
-        if (client == null || client.IsAccountClosed)
+        var client = await _clientRepo.SingleOrDefaultAsync(new ClientByExternalIdSpec(externalId));
+        if (client == null)
         {
             return NotFound(new { error = "Client not found." });
         }
@@ -98,27 +94,27 @@ public class ClientController : ControllerBase
             return BadRequest(new { error = ClientCompliance.ClientMinimumAgeStatement });
         }
 
-        _clientRepo.Update(client);
+        await _clientRepo.UpdateAsync(client);
         return Ok();
     }
 
     [HttpPut("{externalId}/email-address")]
-    public IActionResult UpdateEmailAddress(string externalId, string newEmailAddress)
+    public async Task<IActionResult> UpdateEmailAddress(string externalId, string newEmailAddress)
     {
-        return _updateEmailAddressService
-            .UpdateClientEmailAddress(externalId, newEmailAddress)
+        return (await _updateEmailAddressService
+            .UpdateClientEmailAddress(externalId, newEmailAddress))
             .ToActionResult(this);
     }
 
     [HttpPut("{externalId}/selling-plan")]
-    public ActionResult<ClientResponse> ChangeSellingPlan(
+    public async Task<ActionResult<ClientResponse>> ChangeSellingPlan(
         string externalId, ChangeSellingPlanRequest request)
     {
-        var client = _clientRepo.GetWithContractsAndPlanByExternalId(externalId);
+        var client = await _clientRepo.SingleOrDefaultAsync(new ClientByExternalIdSpec(externalId));
         if (client is null || client.IsAccountClosed)
             return NotFound(new { error = "Client not found." });
 
-        var sellingPlan = _planRepo.GetById(request.SellingPlanId);
+        var sellingPlan = await _planRepo.GetByIdAsync(request.SellingPlanId);
         if (sellingPlan is null)
             return NotFound(new { error = "Selling plan not found." });
 
@@ -126,15 +122,15 @@ public class ClientController : ControllerBase
             return NoContent();
 
         client.ChangeSellingPlan(sellingPlan);
-        _clientRepo.Update(client);
+        await _clientRepo.UpdateAsync(client);
 
         return new ClientResponse(client);
     }
 
     [HttpDelete("{externalId}")]
-    public IActionResult CloseAccount(string externalId)
+    public async Task<IActionResult> CloseAccount(string externalId)
     {
-        return _closeClientAccountService.CloseAccount(externalId)
+        return (await _closeClientAccountService.CloseAccount(externalId))
             .ToActionResult(this);
     }
 }

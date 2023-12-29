@@ -19,7 +19,7 @@ public class Lot
     public bool IsUnitsUnfulfillable => DateUnitsBecameUnfulfillable != null;
     public bool HasUnitsInStock => UnitsInStock > 0;
     public bool HasAnyUnits => TotalUnits > 0;
-    public bool IsUnfulfillableBeyondPolicyDuration =>
+    public bool IsUnitsUnfulfillableBeyondPolicyDuration =>
         DateUnitsBecameUnfulfillable + StoragePolicy.MaximumUnfulfillableDuration <= DateTime.Now.Date;
 
     #region Constructors

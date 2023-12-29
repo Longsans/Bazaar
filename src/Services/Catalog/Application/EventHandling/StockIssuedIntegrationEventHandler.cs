@@ -3,10 +3,10 @@
 public class StockIssuedIntegrationEventHandler
     : IIntegrationEventHandler<StockIssuedIntegrationEvent>
 {
-    private readonly ICatalogRepository _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly ILogger<StockIssuedIntegrationEventHandler> _logger;
 
-    public StockIssuedIntegrationEventHandler(ICatalogRepository catalogRepo,
+    public StockIssuedIntegrationEventHandler(IRepository<CatalogItem> catalogRepo,
         ILogger<StockIssuedIntegrationEventHandler> logger)
     {
         _catalogRepo = catalogRepo;
@@ -33,7 +33,8 @@ public class StockIssuedIntegrationEventHandler
         var updatedItems = new List<CatalogItem>();
         foreach (var issueItem in @event.Items)
         {
-            var catalogItem = _catalogRepo.GetByProductId(issueItem.ProductId);
+            var catalogItem = await _catalogRepo.SingleOrDefaultAsync(
+                new CatalogItemByProductIdSpec(issueItem.ProductId));
             if (catalogItem == null || catalogItem.IsDeleted)
             {
                 _logger.LogInformation("Notified of stock issued for deleted listing {ProductId}",
@@ -53,7 +54,7 @@ public class StockIssuedIntegrationEventHandler
             }
             updatedItems.Add(catalogItem);
         }
-        _catalogRepo.UpdateRange(updatedItems);
+        await _catalogRepo.UpdateRangeAsync(updatedItems);
         await Task.CompletedTask;
     }
 }

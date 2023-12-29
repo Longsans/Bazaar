@@ -1,5 +1,4 @@
-﻿using Bazaar.Contracting.Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ContractingTests;
@@ -15,5 +14,6 @@ internal class Startup
         });
 
         services.AddTransient<EventBusTestDouble>();
+        services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
     }
 }

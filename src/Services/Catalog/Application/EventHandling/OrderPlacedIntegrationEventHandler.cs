@@ -3,10 +3,10 @@
 public class OrderPlacedIntegrationEventHandler
     : IIntegrationEventHandler<OrderPlacedIntegrationEvent>
 {
-    private readonly ICatalogRepository _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly IEventBus _eventBus;
 
-    public OrderPlacedIntegrationEventHandler(ICatalogRepository catalogRepo, IEventBus eventBus)
+    public OrderPlacedIntegrationEventHandler(IRepository<CatalogItem> catalogRepo, IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
         _eventBus = eventBus;
@@ -20,7 +20,8 @@ public class OrderPlacedIntegrationEventHandler
 
         foreach (var orderItem in @event.OrderItems)
         {
-            var catalogItem = _catalogRepo.GetByProductId(orderItem.ProductId);
+            var catalogItem = await _catalogRepo.SingleOrDefaultAsync(
+                new CatalogItemByProductIdSpec(orderItem.ProductId));
             if (catalogItem == null)
             {
                 stockRejectedItems.Add(new(
@@ -69,7 +70,7 @@ public class OrderPlacedIntegrationEventHandler
 
         if (nonFbbItems.Any())
         {
-            _catalogRepo.UpdateRange(nonFbbItems);
+            await _catalogRepo.UpdateRangeAsync(nonFbbItems);
             _eventBus.Publish(new OrderItemsStockConfirmedIntegrationEvent(
                 @event.OrderId, nonFbbItems.Select(x => x.ProductId)));
         }

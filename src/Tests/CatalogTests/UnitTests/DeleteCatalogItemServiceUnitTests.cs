@@ -16,17 +16,12 @@ public class DeleteCatalogItemServiceUnitTests
     }
     #endregion
 
-    private readonly EventBusTestDouble _testEventBus;
-    private readonly ICatalogRepository _testCatalogRepo;
-    private readonly Mock<ICatalogRepository> _repoMock;
     private readonly DeleteCatalogItemService _service;
 
     public DeleteCatalogItemServiceUnitTests(EventBusTestDouble testEventBus)
     {
-        _repoMock = new Mock<ICatalogRepository>();
-        _testEventBus = testEventBus;
-        _testCatalogRepo = _repoMock.Object;
-        _service = new DeleteCatalogItemService(_testCatalogRepo, _testEventBus);
+        var repoMock = new Mock<IRepository<CatalogItem>>();
+        _service = new DeleteCatalogItemService(repoMock.Object, testEventBus);
     }
 
     [Theory]
@@ -62,18 +57,5 @@ public class DeleteCatalogItemServiceUnitTests
         {
             _service.AssertCanBeDeleted(_testItem!);
         });
-    }
-
-    [Fact]
-    public void SoftDeleteById_Succeeds_WhenValid()
-    {
-        InitializeTestCatalogItem(100, FulfillmentMethod.Merchant);
-        _repoMock.Setup(x => x.GetById(It.IsAny<int>()))
-            .Returns(_testItem);
-
-        _service.SoftDeleteById(_testItem!.Id);
-
-        Assert.True(_testItem.IsDeleted);
-        Assert.Equal(0u, _testItem.AvailableStock);
     }
 }

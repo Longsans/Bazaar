@@ -3,10 +3,10 @@
 public class ProductOrdersStatusReportChangedIntegrationEventHandler
     : IIntegrationEventHandler<ProductOrdersStatusReportChangedIntegrationEvent>
 {
-    private readonly ICatalogRepository _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
 
     public ProductOrdersStatusReportChangedIntegrationEventHandler(
-        ICatalogRepository catalogRepo)
+        IRepository<CatalogItem> catalogRepo)
     {
         _catalogRepo = catalogRepo;
     }
@@ -15,9 +15,10 @@ public class ProductOrdersStatusReportChangedIntegrationEventHandler
     {
         // Catalog item cannot be null here since it's not possible to
         // place or fulfill an order for a product that's been deleted and vice versa
-        var catalogItem = _catalogRepo.GetByProductId(@event.ProductId)!;
-        catalogItem.UpdateHasOrdersInProgressStatus(@event.OrdersInProgress != 0);
-        _catalogRepo.Update(catalogItem);
+        var catalogItem = await _catalogRepo.SingleOrDefaultAsync(
+            new CatalogItemByProductIdSpec(@event.ProductId));
+        catalogItem!.UpdateHasOrdersInProgress(@event.OrdersInProgress != 0);
+        await _catalogRepo.UpdateAsync(catalogItem);
 
         await Task.CompletedTask;
     }

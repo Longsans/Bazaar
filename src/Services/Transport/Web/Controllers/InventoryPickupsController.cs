@@ -4,11 +4,11 @@
 [ApiController]
 public class InventoryPickupsController : ControllerBase
 {
-    private readonly IInventoryPickupRepository _pickupRepository;
+    private readonly IRepository<InventoryPickup> _pickupRepository;
     private readonly PickupProcessService _pickupProcessService;
 
     public InventoryPickupsController(
-        IInventoryPickupRepository pickupRepository,
+        IRepository<InventoryPickup> pickupRepository,
         PickupProcessService pickupProcessService)
     {
         _pickupRepository = pickupRepository;
@@ -16,7 +16,7 @@ public class InventoryPickupsController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<InventoryPickupResponse> SchedulePickup(
+    public async Task<ActionResult<InventoryPickupResponse>> SchedulePickup(
         ScheduleInventoryPickupRequest request)
     {
         if (request.InventoryItems.Any(x => x.NumberOfUnits == 0))
@@ -25,18 +25,19 @@ public class InventoryPickupsController : ControllerBase
         }
 
         var pickupItems = request.InventoryItems
-            .Select(x => new ProductInventory(x.ProductId, x.NumberOfUnits));
+            .Select(x => new PickupProductStock(x.ProductId, x.NumberOfUnits));
 
-        return _pickupProcessService.SchedulePickup(
-            request.PickupLocation, pickupItems, request.SchedulerId)
+        return (await _pickupProcessService.SchedulePickup(
+            request.PickupLocation, pickupItems, request.SchedulerId))
             .Map(x => new InventoryPickupResponse(x))
             .ToActionResult(this);
     }
 
     [HttpGet("{id}")]
-    public ActionResult<InventoryPickupResponse> GetById(int id)
+    public async Task<ActionResult<InventoryPickupResponse>> GetById(int id)
     {
-        var pickup = _pickupRepository.GetById(id);
+        var pickup = await _pickupRepository
+            .SingleOrDefaultAsync(new PickupByIdSpec(id));
         if (pickup == null)
         {
             return NotFound();
@@ -44,31 +45,38 @@ public class InventoryPickupsController : ControllerBase
         return new InventoryPickupResponse(pickup);
     }
 
-    [HttpPut("{id}/status")]
-    public IActionResult UpdateStatus(int id, [FromBody] UpdatePickupStatusRequest request)
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdatePickupStatusRequest request)
     {
-        return request.Status switch
+        var result = request.Status switch
         {
-            InventoryPickupStatus.EnRouteToPickupLocation => _pickupProcessService.DispatchPickup(id).ToActionResult(this),
-            InventoryPickupStatus.DeliveringToWarehouse => _pickupProcessService.ConfirmPickupInventory(id).ToActionResult(this),
-            InventoryPickupStatus.Completed => _pickupProcessService.CompletePickup(id).ToActionResult(this),
+            InventoryPickupStatus.EnRouteToPickupLocation => await _pickupProcessService.DispatchPickup(id),
+            InventoryPickupStatus.DeliveringToWarehouse => await _pickupProcessService.ConfirmPickupInventory(id),
+            InventoryPickupStatus.Completed => await _pickupProcessService.CompletePickup(id),
             InventoryPickupStatus.Cancelled => request.CancelReason != null
-                ? _pickupProcessService.CancelPickup(id, request.CancelReason).ToActionResult(this)
-                : BadRequest(new { error = "Cancel reason cannot be empty." }),
-            _ => Conflict(new { error = "Invalid status for inventory pickup." }),
+                ? await _pickupProcessService.CancelPickup(id, request.CancelReason)
+                : Result.Invalid(new ValidationError
+                {
+                    Identifier = nameof(request.CancelReason),
+                    ErrorMessage = "Cancel reason cannot be empty."
+                }),
+            _ => Result.Invalid(new ValidationError
+            {
+                Identifier = nameof(request.Status),
+                ErrorMessage = "Invalid pickup status."
+            })
         };
+        return result.ToActionResult(this);
     }
 
     [HttpDelete]
-    public IActionResult DeleteCancelledPickups(bool cancelled)
+    public async Task<IActionResult> DeleteCancelledPickups(bool cancelled)
     {
         if (cancelled)
         {
-            var cancelledPickups = _pickupRepository.GetAllCancelled();
-            foreach (var pickup in cancelledPickups)
-            {
-                _pickupRepository.Delete(pickup);
-            }
+            var cancelledPickups = await _pickupRepository
+                .ListAsync(new PickupsCancelledSpec());
+            await _pickupRepository.DeleteRangeAsync(cancelledPickups);
         }
         return NoContent();
     }

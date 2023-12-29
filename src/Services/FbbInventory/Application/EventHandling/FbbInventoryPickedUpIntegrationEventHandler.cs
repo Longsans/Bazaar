@@ -15,9 +15,17 @@ public class FbbInventoryPickedUpIntegrationEventHandler
 
     public async Task Handle(FbbInventoryPickedUpIntegrationEvent @event)
     {
+        var productWithNoStock = @event.Inventories.FirstOrDefault(x => x.StockUnits == 0);
+        if (productWithNoStock != null)
+        {
+            _logger.LogError("Error receiving stock from pickup for scheduler {schedulerId}: " +
+                "Product {productId} of pickup has zero stock units.",
+                @event.SchedulerId, productWithNoStock.ProductId);
+        }
+
         var inboundQuantities = @event.Inventories.Select(x =>
             new InboundStockQuantity(x.ProductId, x.StockUnits));
-        var result = _stockTxnService.ReceiveStock(inboundQuantities);
+        var result = await _stockTxnService.ReceiveStock(inboundQuantities);
         if (!result.IsSuccess)
         {
             _logger.LogError("Error receiving stock from pickup for scheduler {SchedulerId}: {ErrorMessage}",

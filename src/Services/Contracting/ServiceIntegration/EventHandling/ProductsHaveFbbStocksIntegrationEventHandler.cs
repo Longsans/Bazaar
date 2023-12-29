@@ -3,21 +3,22 @@
 public class ProductsHaveFbbStocksIntegrationEventHandler
     : IIntegrationEventHandler<ProductsHaveFbbStocksIntegrationEvent>
 {
-    private readonly IClientRepository _clientRepo;
+    private readonly IRepository<Client> _clientRepo;
 
     public ProductsHaveFbbStocksIntegrationEventHandler(
-        IClientRepository clientRepo)
+        IRepository<Client> clientRepo)
     {
         _clientRepo = clientRepo;
     }
 
     public async Task Handle(ProductsHaveFbbStocksIntegrationEvent @event)
     {
-        var client = _clientRepo.GetWithContractsAndPlanByExternalId(@event.SellerId);
+        var client = await _clientRepo.SingleOrDefaultAsync(
+            new ClientByExternalIdSpec(@event.SellerId, true));
         if (client != null && client.IsAccountClosed)
         {
             client.ReopenAccount();
-            _clientRepo.Update(client);
+            await _clientRepo.UpdateAsync(client);
 
             // Do other things like logging, notify clients,...
         }

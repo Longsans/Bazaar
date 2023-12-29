@@ -1,16 +1,14 @@
-﻿using Bazaar.Contracting.Infrastructure.Repositories;
-using Bazaar.Contracting.ServiceIntegration.IntegrationEvents;
-
-namespace ContractingTests.IntegrationTests;
+﻿namespace ContractingTests.IntegrationTests;
 
 [Collection(Constants.INTEGRATION_TESTS_COLLECTION)]
 public class ProductsHaveFbbStocksHandlerIntegrationTests
 {
     private readonly ProductsHaveFbbStocksIntegrationEventHandler _handler;
-    private readonly IClientRepository _clientRepo;
+    private readonly IRepository<Client> _clientRepo;
     private readonly Client _testClient;
 
-    public ProductsHaveFbbStocksHandlerIntegrationTests(ContractingDbContext dbContext)
+    public ProductsHaveFbbStocksHandlerIntegrationTests(
+        ContractingDbContext dbContext, IRepository<Client> clientRepo)
     {
         dbContext.Database.EnsureDeleted();
         dbContext.Database.EnsureCreated();
@@ -25,7 +23,7 @@ public class ProductsHaveFbbStocksHandlerIntegrationTests
         dbContext.Clients.Add(_testClient);
         dbContext.SaveChanges();
 
-        _clientRepo = new ClientRepository(dbContext);
+        _clientRepo = clientRepo;
         _handler = new(_clientRepo);
     }
 
@@ -34,7 +32,7 @@ public class ProductsHaveFbbStocksHandlerIntegrationTests
     {
         // arrange
         _testClient.CloseAccount();
-        _clientRepo.Update(_testClient);
+        await _clientRepo.UpdateAsync(_testClient);
         var @event = new ProductsHaveFbbStocksIntegrationEvent(
             new string[] { "PROD-1", "PROD-2" }, _testClient.ExternalId);
 

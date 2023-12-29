@@ -4,7 +4,7 @@ public class InventoryPickupUnitTests
 {
     #region Test data and helpers
     private const string _validLocation = "11 Wall St, New York, NY 10005, USA";
-    private static readonly List<ProductInventory> _validInventories = new()
+    private static readonly List<PickupProductStock> _validInventories = new()
     {
         new("PROD-1", 100),
         new("PROD-2", 200),
@@ -68,7 +68,7 @@ public class InventoryPickupUnitTests
     [Fact]
     public void Constructor_ThrowsArgNullException_WhenInventoryListEmpty()
     {
-        var productInventories = new List<ProductInventory>();
+        var productInventories = new List<PickupProductStock>();
 
         Assert.Throws<ArgumentNullException>(nameof(productInventories), () =>
         {
@@ -84,7 +84,7 @@ public class InventoryPickupUnitTests
     public void Constructor_ThrowsArgException_WhenInventoriesHaveDuplicateProducts(
         string duplicateProductId)
     {
-        var productInventories = new List<ProductInventory>()
+        var productInventories = new List<PickupProductStock>()
         {
             new(duplicateProductId, 100),
             new(duplicateProductId, 200),

@@ -2,12 +2,12 @@
 
 public class DeliveryProcessService
 {
-    private readonly IDeliveryRepository _deliveryRepo;
+    private readonly IRepository<Delivery> _deliveryRepo;
     private readonly IEstimationService _estimationService;
     private readonly IEventBus _eventBus;
 
     public DeliveryProcessService(
-        IDeliveryRepository deliveryRepo,
+        IRepository<Delivery> deliveryRepo,
         IEstimationService estimationService,
         IEventBus eventBus)
     {
@@ -16,16 +16,16 @@ public class DeliveryProcessService
         _eventBus = eventBus;
     }
 
-    public Result<Delivery> ScheduleDelivery(int orderId, string deliveryAddress,
+    public async Task<Result<Delivery>> ScheduleDelivery(int orderId, string deliveryAddress,
         IEnumerable<DeliveryPackageItem> packageItems)
     {
-        var estimatedDeliveryTime = _estimationService
+        var estimatedDeliveryTime = await _estimationService
             .EstimateDeliveryCompletion(packageItems);
         try
         {
             var delivery = new Delivery(orderId, deliveryAddress,
                 packageItems, estimatedDeliveryTime);
-            _deliveryRepo.Create(delivery);
+            await _deliveryRepo.AddAsync(delivery);
             PublishStatusChangedEvent(delivery);
 
             return Result.Success(delivery);
@@ -40,43 +40,44 @@ public class DeliveryProcessService
         }
     }
 
-    public Result StartDelivery(int deliveryId)
+    public async Task<Result> StartDelivery(int deliveryId)
     {
-        return FindAndUpdateStatus(deliveryId, (delivery) =>
+        return await FindAndUpdateStatus(deliveryId, (delivery) =>
         {
             delivery.StartDelivery();
         });
     }
 
-    public Result CompleteDelivery(int deliveryId)
+    public async Task<Result> CompleteDelivery(int deliveryId)
     {
-        return FindAndUpdateStatus(deliveryId, (delivery) =>
+        return await FindAndUpdateStatus(deliveryId, (delivery) =>
         {
             delivery.Complete();
         }, PublishStatusChangedEvent);
     }
 
-    public Result PostponeDelivery(int deliveryId)
+    public async Task<Result> PostponeDelivery(int deliveryId)
     {
-        return FindAndUpdateStatus(deliveryId, (delivery) =>
+        return await FindAndUpdateStatus(deliveryId, (delivery) =>
         {
             delivery.Postpone();
         }, PublishStatusChangedEvent);
     }
 
-    public Result CancelDelivery(int deliveryId)
+    public async Task<Result> CancelDelivery(int deliveryId)
     {
-        return FindAndUpdateStatus(deliveryId, (delivery) =>
+        return await FindAndUpdateStatus(deliveryId, (delivery) =>
         {
             delivery.Cancel();
         }, PublishStatusChangedEvent);
     }
 
     #region Helpers
-    private Result FindAndUpdateStatus(int deliveryId,
+    private async Task<Result> FindAndUpdateStatus(int deliveryId,
         Action<Delivery> statusChange, Action<Delivery>? afterUpdateDo = null)
     {
-        var delivery = _deliveryRepo.GetById(deliveryId);
+        var delivery = await _deliveryRepo
+            .SingleOrDefaultAsync(new DeliveryByIdSpec(deliveryId));
         if (delivery == null)
         {
             return Result.NotFound();
@@ -85,7 +86,7 @@ public class DeliveryProcessService
         try
         {
             statusChange(delivery);
-            _deliveryRepo.Update(delivery);
+            await _deliveryRepo.UpdateAsync(delivery);
             afterUpdateDo?.Invoke(delivery);
             return Result.Success();
         }

@@ -2,19 +2,20 @@
 
 public class FulfillmentMethodService
 {
-    private readonly ICatalogRepository _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly IEventBus _eventBus;
 
     public FulfillmentMethodService(
-        ICatalogRepository catalogRepo, IEventBus eventBus)
+        IRepository<CatalogItem> catalogRepo, IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
         _eventBus = eventBus;
     }
 
-    public Result ChangeFulfillmentMethodToFbb(string productId)
+    public async Task<Result> ChangeFulfillmentMethodToFbb(string productId)
     {
-        var catalogItem = _catalogRepo.GetByProductId(productId);
+        var catalogItem = await _catalogRepo.SingleOrDefaultAsync(
+            new CatalogItemByProductIdSpec(productId));
         if (catalogItem == null)
         {
             return Result.NotFound();
@@ -28,15 +29,16 @@ public class FulfillmentMethodService
         {
             return Result.Conflict(ex.Message);
         }
-        _catalogRepo.Update(catalogItem);
+        await _catalogRepo.UpdateAsync(catalogItem);
         _eventBus.Publish(
             new ProductFulfillmentMethodChangedToFbbIntegrationEvent(productId));
         return Result.Success();
     }
 
-    public Result ChangeFulfillmentMethodToMerchant(string productId)
+    public async Task<Result> ChangeFulfillmentMethodToMerchant(string productId)
     {
-        var catalogItem = _catalogRepo.GetByProductId(productId);
+        var catalogItem = await _catalogRepo.SingleOrDefaultAsync(
+            new CatalogItemByProductIdSpec(productId));
         if (catalogItem == null)
         {
             return Result.NotFound();
@@ -50,7 +52,7 @@ public class FulfillmentMethodService
         {
             return Result.Conflict(ex.Message);
         }
-        _catalogRepo.Update(catalogItem);
+        await _catalogRepo.UpdateAsync(catalogItem);
         _eventBus.Publish(
             new ProductFulfillmentMethodChangedToMerchantIntegrationEvent(productId));
         return Result.Success();
