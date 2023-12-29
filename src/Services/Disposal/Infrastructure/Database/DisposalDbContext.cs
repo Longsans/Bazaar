@@ -12,11 +12,11 @@ public class DisposalDbContext(
             .WithOne(x => x.DisposalOrder)
             .IsRequired();
 
-        modelBuilder.Entity<DisposeQuantity>()
+        modelBuilder.Entity<DisposalQuantity>()
             .HasIndex(x => new { x.LotNumber, x.DisposalOrderId })
             .IsUnique();
     }
 
     public DbSet<DisposalOrder> DisposalOrders { get; set; }
-    public DbSet<DisposeQuantity> DisposeQuantities { get; set; }
+    public DbSet<DisposalQuantity> DisposeQuantities { get; set; }
 }

@@ -7,7 +7,7 @@ public record DisposeQuantityResponse(
     int DisposalOrderId,
     string InventoryOwnerId)
 {
-    public DisposeQuantityResponse(DisposeQuantity disposeQty)
+    public DisposeQuantityResponse(DisposalQuantity disposeQty)
         : this(disposeQty.Id, disposeQty.LotNumber, disposeQty.UnitsToDispose,
               disposeQty.DisposalOrderId, disposeQty.InventoryOwnerId)
     {

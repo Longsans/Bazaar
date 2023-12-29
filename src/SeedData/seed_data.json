@@ -6,7 +6,7 @@
       "Price": 34.99,
       "AvailableStock": 100,
       "SellerId": "CLNT-1",
-      "IsFulfilledByBazaar": true,
+      "FulfillmentMethod": 1,
       "HasOrdersInProgress": false
     },
     {
@@ -15,7 +15,7 @@
       "Price": 45.99,
       "AvailableStock": 1000,
       "SellerId": "CLNT-1",
-      "IsFulfilledByBazaar": false,
+      "FulfillmentMethod": 0,
       "HasOrdersInProgress": false
     },
     {
@@ -24,7 +24,7 @@
       "Price": 16.54,
       "AvailableStock": 1000,
       "SellerId": "CLNT-1",
-      "IsFulfilledByBazaar": false,
+      "FulfillmentMethod": 0,
       "HasOrdersInProgress": false
     },
     {
@@ -33,7 +33,7 @@
       "Price": 62.47,
       "AvailableStock": 1000,
       "SellerId": "CLNT-1",
-      "IsFulfilledByBazaar": false,
+      "FulfillmentMethod": 0,
       "HasOrdersInProgress": false
     }
   ],
@@ -97,7 +97,7 @@
         }
       ],
       "ShippingAddress": "1600 Pennsylvania Avenue, NW Washington D.C., United States",
-      "Status": "AwaitingSellerConfirmation"
+      "Status": "PendingSellerConfirmation"
     }
   ],
   "baskets": [

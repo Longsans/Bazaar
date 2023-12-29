@@ -7,9 +7,9 @@ public class CreateCatalogItemRequest
     public decimal Price { get; set; }
     public uint AvailableStock { get; set; }
     public string SellerId { get; set; }
-    public bool FulfilledByBazaar { get; set; }
+    public FulfillmentMethod FulfillmentMethod { get; set; }
 
-    public CatalogItem ToNewCatalogItem() => new(
-        default, string.Empty, Name, Description,
-        Price, AvailableStock, SellerId, FulfilledByBazaar);
+    public CatalogItem ToNewCatalogItem()
+        => new(Name, Description,
+        Price, AvailableStock, SellerId, FulfillmentMethod);
 }

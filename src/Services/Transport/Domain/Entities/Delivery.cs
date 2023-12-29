@@ -20,12 +20,12 @@ public class Delivery
     {
         if (string.IsNullOrWhiteSpace(deliveryAddress))
         {
-            throw new ArgumentNullException(nameof(deliveryAddress),
+            throw new ArgumentException(nameof(deliveryAddress),
                 "Delivery address cannot be empty.");
         }
         if (!packageItems.Any())
         {
-            throw new ArgumentNullException(nameof(packageItems),
+            throw new ArgumentException(nameof(packageItems),
                 "Package items cannot be empty.");
         }
         if (estimateDeliveryTime < DateTime.Now)

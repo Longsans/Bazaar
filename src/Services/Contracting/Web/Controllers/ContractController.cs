@@ -4,17 +4,17 @@
 [ApiController]
 public class ContractController : ControllerBase
 {
-    private readonly IContractRepository _contractRepo;
+    private readonly IRepository<Contract> _contractRepo;
 
-    public ContractController(IContractRepository contractRepository)
+    public ContractController(IRepository<Contract> contractRepository)
     {
         _contractRepo = contractRepository;
     }
 
     [HttpGet("{id}")]
-    public ActionResult<ContractResponse> GetById(int id)
+    public async Task<ActionResult<ContractResponse>> GetById(int id)
     {
-        var contract = _contractRepo.GetById(id);
+        var contract = await _contractRepo.GetByIdAsync(id);
         if (contract == null)
             return NotFound();
 
@@ -22,11 +22,11 @@ public class ContractController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<ContractResponse>> GetByClientId(
+    public async Task<ActionResult<IEnumerable<ContractResponse>>> GetByClientId(
         string clientId)
     {
-        return _contractRepo
-            .GetByClientExternalId(clientId)
+        return (await _contractRepo
+            .ListAsync(new ContractsByClientExternalIdSpec(clientId)))
             .Select(c => new ContractResponse(c))
             .ToList();
     }

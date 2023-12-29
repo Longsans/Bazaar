@@ -15,66 +15,22 @@ services:
       - ordering
       - basket
       - disposal
+      - transport
+      - contracting
       - all
   
-  identity-sql:
+  sqldata:
    image: mcr.microsoft.com/mssql/server:2022-latest
    profiles:
       - id
-      - all
-
-  catalog-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
       - catalog
-      - all
-
-  fbbinventory-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
       - fbbinventory
-      - all
-
-  transport-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
       - transport
-      - all
-
-  disposal-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
       - disposal
-      - all
-
-  basket-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
       - basket
-      - all
-
-  ordering-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
       - ordering
-      - all
-
-  shopper-info-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
       - shopper-info
-      - all
-
-  contracting-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
       - contracting
-      - all
-
-  task-scheduler-sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles:
-      - fbbinventory
       - all
 
   identity-api:
@@ -83,7 +39,7 @@ services:
       context: .
       dockerfile: Services/Identity/Dockerfile
     depends_on:
-      - identity-sql
+      - sqldata
       - internallb
     profiles:
       - id
@@ -96,9 +52,10 @@ services:
       dockerfile: Services/ScheduledTasks/Dockerfile
     depends_on:
       - fbbinventory-api
-      - task-scheduler-sql
+      - sqldata
     profiles:
       - fbbinventory
+      - all
   
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api
@@ -106,7 +63,7 @@ services:
       context: .
       dockerfile: Services/Catalog/Dockerfile
     depends_on:
-      - catalog-sql
+      - sqldata
       - internallb
       - rabbitmq
     profiles:
@@ -119,7 +76,7 @@ services:
       context: .
       dockerfile: Services/FbbInventory/Dockerfile
     depends_on:
-      - fbbinventory-sql
+      - sqldata
       - rabbitmq
     profiles:
       - fbbinventory
@@ -131,7 +88,7 @@ services:
       context: .
       dockerfile: Services/Transport/Dockerfile
     depends_on:
-      - transport-sql
+      - sqldata
       - rabbitmq
     profiles:
       - transport
@@ -143,7 +100,7 @@ services:
       context: .
       dockerfile: Services/Disposal/Dockerfile
     depends_on:
-      - disposal-sql
+      - sqldata
       - rabbitmq
     profiles:
       - disposal
@@ -156,7 +113,7 @@ services:
       dockerfile: Services/ShopperInfo/Dockerfile
     depends_on:
       - internallb
-      - shopper-info-sql
+      - sqldata
     profiles:
       - shopper-info
       - all
@@ -168,7 +125,8 @@ services:
       dockerfile: Services/Contracting/Dockerfile
     depends_on:
       - internallb
-      - contracting-sql
+      - sqldata
+      - rabbitmq
     profiles:
       - contracting
       - all
@@ -180,7 +138,7 @@ services:
       dockerfile: Services/Basket/Dockerfile
     depends_on:
       - internallb
-      - basket-sql
+      - sqldata
     profiles:
       - basket
       - all
@@ -193,7 +151,7 @@ services:
     depends_on:
       - rabbitmq
       - internallb
-      - ordering-sql
+      - sqldata
     profiles:
       - ordering
       - all

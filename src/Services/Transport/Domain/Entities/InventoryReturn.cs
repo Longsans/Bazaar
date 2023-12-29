@@ -21,7 +21,7 @@ public class InventoryReturn
     {
         if (string.IsNullOrWhiteSpace(deliveryAddress))
         {
-            throw new ArgumentNullException(nameof(deliveryAddress),
+            throw new ArgumentException(nameof(deliveryAddress),
                 "Delivery address cannot be empty.");
         }
         if (estimatedDeliveryTime < DateTime.Now)
@@ -31,7 +31,7 @@ public class InventoryReturn
         }
         if (string.IsNullOrWhiteSpace(inventoryOwnerId))
         {
-            throw new ArgumentNullException(nameof(inventoryOwnerId),
+            throw new ArgumentException(nameof(inventoryOwnerId),
                 "Inventory owner ID cannot be empty.");
         }
 
@@ -71,17 +71,25 @@ public class InventoryReturn
 
     public void Postpone()
     {
-        Status = Status != DeliveryStatus.Completed && Status != DeliveryStatus.Cancelled
-            ? DeliveryStatus.Postponed
-            : throw new InvalidOperationException(
+        if (Status == DeliveryStatus.Completed || Status == DeliveryStatus.Cancelled)
+        {
+            throw new InvalidOperationException(
                 "Cannot postpone a completed or cancelled inventory return.");
+        }
+        if (Status == DeliveryStatus.Postponed)
+        {
+            throw new InvalidOperationException(
+                "Return has already been postponed.");
+        }
+
+        Status = DeliveryStatus.Postponed;
     }
 
     public void Cancel(string reason)
     {
         if (string.IsNullOrWhiteSpace(reason))
         {
-            throw new ArgumentNullException(nameof(reason),
+            throw new ArgumentException(nameof(reason),
                 "Reason cannot be empty.");
         }
 

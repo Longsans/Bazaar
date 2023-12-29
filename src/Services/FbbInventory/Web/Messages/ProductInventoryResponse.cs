@@ -2,36 +2,41 @@
 
 public record ProductInventoryResponse
 {
-    public int Id { get; init; }
-    public string ProductId { get; init; }
-    public List<FulfillableLotResponse> FulfillableLots { get; init; }
-    public List<UnfulfillableLotResponse> UnfulfillableLots { get; init; }
+    public int Id { get; }
+    public string ProductId { get; }
+    public bool IsStranded { get; }
+    public IEnumerable<LotResponse> FulfillableLots { get; }
+    public IEnumerable<LotResponse> UnfulfillableLots { get; }
+    public IEnumerable<LotResponse> StrandedLots { get; }
 
-    public uint FulfillableUnitsInStock { get; init; }
-    public uint FulfillableUnitsPendingRemoval { get; init; }
-    public uint UnfulfillableUnitsInStock { get; init; }
-    public uint UnfulfillableUnitsPendingRemoval { get; init; }
-    public uint TotalUnits { get; init; }
-    public uint RestockThreshold { get; init; }
-    public uint MaxStockThreshold { get; init; }
-    public int SellerInventoryId { get; init; }
+    public uint FulfillableUnits { get; }
+    public uint UnfulfillableUnits { get; }
+    public uint StrandedUnits { get; }
+    public uint AllUnitsInRemoval { get; }
+    public uint TotalUnits { get; }
+    public uint RemainingCapacity { get; }
+    public uint RestockThreshold { get; }
+    public uint MaxStockThreshold { get; }
+    public int SellerInventoryId { get; }
 
-    public bool HasPickupsInProgress { get; init; }
+    public bool HasPickupsInProgress { get; }
 
     public ProductInventoryResponse(ProductInventory inventory)
     {
         Id = inventory.Id;
         ProductId = inventory.ProductId;
-        FulfillableLots = inventory.FulfillableLots
-            .Select(x => new FulfillableLotResponse(x)).ToList();
-        UnfulfillableLots = inventory.UnfulfillableLots
-            .Select(x => new UnfulfillableLotResponse(x)).ToList();
+        IsStranded = inventory.IsStranded;
 
-        FulfillableUnitsInStock = inventory.FulfillableUnitsInStock;
-        FulfillableUnitsPendingRemoval = inventory.FulfillableUnitsPendingRemoval;
-        UnfulfillableUnitsInStock = inventory.UnfulfillableUnitsInStock;
-        UnfulfillableUnitsPendingRemoval = inventory.UnfulfillableUnitsPendingRemoval;
-        TotalUnits = inventory.TotalUnits;
+        FulfillableLots = inventory.FulfillableLots.Select(x => new LotResponse(x));
+        UnfulfillableLots = inventory.UnfulfillableLots.Select(x => new LotResponse(x));
+        StrandedLots = inventory.StrandedLots.Select(x => new LotResponse(x));
+
+        FulfillableUnits = (uint)FulfillableLots.Sum(x => x.UnitsInStock);
+        UnfulfillableUnits = (uint)UnfulfillableLots.Sum(x => x.UnitsInStock);
+        StrandedUnits = (uint)StrandedLots.Sum(x => x.UnitsInStock);
+        AllUnitsInRemoval = inventory.AllUnitsInRemoval;
+        TotalUnits = FulfillableUnits + UnfulfillableUnits + StrandedUnits + AllUnitsInRemoval;
+        RemainingCapacity = inventory.MaxStockThreshold - TotalUnits;
         RestockThreshold = inventory.RestockThreshold;
         MaxStockThreshold = inventory.MaxStockThreshold;
         SellerInventoryId = inventory.SellerInventoryId;

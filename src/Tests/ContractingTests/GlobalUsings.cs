@@ -1,11 +1,14 @@
 global using Ardalis.Result;
+global using Bazaar.Contracting.Application.Services;
 global using Bazaar.Contracting.Domain.Constants;
 global using Bazaar.Contracting.Domain.Entities;
 global using Bazaar.Contracting.Domain.Enums;
 global using Bazaar.Contracting.Domain.Exceptions;
-global using Bazaar.Contracting.Domain.Interfaces;
-global using Bazaar.Contracting.Domain.Services;
+global using Bazaar.Contracting.Domain.Specifications;
+global using Bazaar.Contracting.Infrastructure.Database;
+global using Bazaar.Contracting.Infrastructure.Repositories;
 global using Bazaar.Contracting.ServiceIntegration.EventHandling;
+global using Bazaar.Contracting.ServiceIntegration.IntegrationEvents;
 global using ContractingTests.Helpers;
 global using Moq;
 global using TestingCommon.TestDoubles;

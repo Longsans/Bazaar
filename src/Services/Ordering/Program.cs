@@ -22,7 +22,7 @@ builder.Services.AddDbContext<OrderingDbContext>(options =>
     });
 });
 
-builder.Services.AddScoped<IHandleOrderService, HandleOrderService>();
+builder.Services.AddScoped<HandleOrderService, HandleOrderService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 builder.Services.RegisterEventBus(builder.Configuration);
@@ -41,7 +41,8 @@ builder.Services.AddAuthorization(builder =>
 });
 #endregion
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -129,30 +130,36 @@ public static class EventBusExtensionMethods
                     subscriptionClientName,
                     retryCount);
             });
+
+        services.AddTransient<BasketCheckoutAcceptedIntegrationEventHandler>();
+        services.AddTransient<OrderItemsStockConfirmedIntegrationEventHandler>();
+        services.AddTransient<OrderItemsStockRejectedIntegrationEventHandler>();
         services.AddTransient<OrderPaymentSucceededIntegrationEventHandler>();
         services.AddTransient<OrderPaymentFailedIntegrationEventHandler>();
-
-        services.AddTransient<OrderStocksInadequateIntegrationEventHandler>();
-        services.AddTransient<OrderItemsUnavailableIntegrationEventHandler>();
-
-        services.AddTransient<BuyerCheckoutAcceptedIntegrationEventHandler>();
-        services.AddTransient<OrderStocksConfirmedIntegrationEventHandler>();
         services.AddTransient<DeliveryStatusChangedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-        eventBus.Subscribe<OrderPaymentSucceededIntegrationEvent, OrderPaymentSucceededIntegrationEventHandler>();
-        eventBus.Subscribe<OrderPaymentFailedIntegrationEvent, OrderPaymentFailedIntegrationEventHandler>();
 
-        eventBus.Subscribe<OrderItemsUnavailableIntegrationEvent, OrderItemsUnavailableIntegrationEventHandler>();
-        eventBus.Subscribe<OrderStocksInadequateIntegrationEvent, OrderStocksInadequateIntegrationEventHandler>();
-
-        //eventBus.Subscribe<BuyerCheckoutAcceptedIntegrationEvent, BuyerCheckoutAcceptedIntegrationEventHandler>();
         eventBus.Subscribe<
-            OrderStocksConfirmedIntegrationEvent,
-            OrderStocksConfirmedIntegrationEventHandler>();
+            BasketCheckoutAcceptedIntegrationEvent,
+            BasketCheckoutAcceptedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            OrderItemsStockConfirmedIntegrationEvent,
+            OrderItemsStockConfirmedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            OrderItemsStockRejectedIntegrationEvent,
+            OrderItemsStockRejectedIntegrationEventHandler>();
+
+        eventBus.Subscribe<
+            OrderPaymentSucceededIntegrationEvent,
+            OrderPaymentSucceededIntegrationEventHandler>();
+        eventBus.Subscribe<
+            OrderPaymentFailedIntegrationEvent,
+            OrderPaymentFailedIntegrationEventHandler>();
+
         eventBus.Subscribe<
             DeliveryStatusChangedIntegrationEvent,
             DeliveryStatusChangedIntegrationEventHandler>();

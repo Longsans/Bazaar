@@ -1,5 +1,3 @@
-using Newtonsoft.Json;
-
 namespace Bazaar.Ordering.Domain.Entites;
 
 public class Order
@@ -14,6 +12,9 @@ public class Order
     public string BuyerId { get; private set; }
     public OrderStatus Status { get; private set; }
     public string? CancelReason { get; private set; }
+
+    public bool IsAllStocksConfirmed => Items.All(x => x.Status == OrderItemStatus.StockConfirmed);
+    public bool CanProceedToPayment => Status == OrderStatus.PendingValidation && IsAllStocksConfirmed;
 
     // Create constructor
     public Order(string shippingAddress, string buyerId, IEnumerable<OrderItem> items)
@@ -72,10 +73,13 @@ public class Order
 
     public void StartPayment()
     {
-        Status = Status == OrderStatus.PendingValidation
-            ? OrderStatus.ProcessingPayment
-            : throw new InvalidOperationException(
-                "Can only start payment if order was previously pending validation.");
+        if (!CanProceedToPayment)
+        {
+            throw new InvalidOperationException(
+                "Can only start payment if all items' stocks have been confirmed " +
+                "and order is pending validation.");
+        }
+        Status = OrderStatus.ProcessingPayment;
     }
 
     public void RequestSellerConfirmation()

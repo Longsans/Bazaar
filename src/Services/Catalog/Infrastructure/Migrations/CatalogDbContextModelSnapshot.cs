@@ -32,17 +32,14 @@ namespace Catalog.Infrastructure.Migrations
                     b.Property<long>("AvailableStock")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("FulfillmentMethod")
+                        .HasColumnType("int");
+
                     b.Property<bool>("HasOrdersInProgress")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsFulfilledByBazaar")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsOfficiallyListed")
-                        .HasColumnType("bit");
+                    b.Property<int>("ListingStatus")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");

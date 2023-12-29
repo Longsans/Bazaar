@@ -14,70 +14,37 @@ public class FbbInventoryDbContext : DbContext
 
         modelBuilder.Entity<ProductInventory>(inventory =>
         {
+            inventory.HasMany(x => x.Lots)
+                .WithOne(l => l.ProductInventory)
+                .HasForeignKey(l => l.ProductInventoryId);
+
             inventory.HasIndex(x => x.ProductId)
                 .IsUnique();
+
+            inventory.Ignore(x => x.FulfillableLots)
+                .Ignore(x => x.UnfulfillableLots)
+                .Ignore(x => x.StrandedLots);
         });
 
         modelBuilder.Entity<Lot>(lot =>
         {
-            lot.HasOne(x => x.ProductInventory)
-            .WithMany()
-            .HasForeignKey(x => x.ProductInventoryId)
-            .OnDelete(DeleteBehavior.Cascade);
+            lot.HasIndex(x => new
+            {
+                x.ProductInventoryId,
+                x.DateUnitsEnteredStorage,
+                x.DateUnitsBecameStranded,
+                x.DateUnitsBecameUnfulfillable,
+            }).IsUnique();
 
-            lot.HasDiscriminator<string>(Discriminator.ColumnName)
-                .HasValue<FulfillableLot>(Discriminator.FulfillableValue)
-                .HasValue<UnfulfillableLot>(Discriminator.UnfulfillableValue);
+            lot.HasIndex(x => x.LotNumber)
+                .IsUnique();
 
             lot.Property(x => x.LotNumber)
-            .HasComputedColumnSql(
-                $"CONCAT(IIF([{Discriminator.ColumnName}] = '{Discriminator.FulfillableValue}', " +
-                $"'{StoragePolicy.FulfillableLotCodePrefix}', " +
-                $"'{StoragePolicy.UnfulfillableLotCodePrefix}'), [Id])", true);
-        });
-
-        modelBuilder.Entity<FulfillableLot>(ffLot =>
-        {
-            ffLot.HasIndex(x => new
-            {
-                x.ProductInventoryId,
-                x.DateEnteredStorage,
-            })
-            .IsUnique();
-
-            ffLot.HasOne(x => x.ProductInventory)
-            .WithMany()
-            .HasForeignKey(x => x.ProductInventoryId)
-            .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        modelBuilder.Entity<UnfulfillableLot>(ufLot =>
-        {
-            ufLot.HasIndex(x => new
-            {
-                x.ProductInventoryId,
-                x.DateUnfulfillableSince,
-                x.UnfulfillableCategory,
-            })
-            .IsUnique();
-
-            ufLot.HasOne(x => x.ProductInventory)
-            .WithMany()
-            .HasForeignKey(x => x.ProductInventoryId)
-            .OnDelete(DeleteBehavior.Restrict);
+                .HasComputedColumnSql($"CONCAT('{StoragePolicy.LotPrefix}', [{nameof(Lot.Id)}])");
         });
     }
 
     public DbSet<SellerInventory> SellerInventories { get; set; }
     public DbSet<ProductInventory> ProductInventories { get; set; }
-    public DbSet<FulfillableLot> FulfillableLots { get; set; }
-    public DbSet<UnfulfillableLot> UnfulfillableLots { get; set; }
     public DbSet<Lot> Lots { get; set; }
-
-    class Discriminator
-    {
-        public const string ColumnName = "Fulfillability";
-        public const string FulfillableValue = "Fulfillable";
-        public const string UnfulfillableValue = "Unfulfillable";
-    }
 }

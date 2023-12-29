@@ -4,18 +4,17 @@
 [ApiController]
 public class SellingPlanController : ControllerBase
 {
-    private readonly ISellingPlanRepository _planRepo;
+    private readonly IRepository<SellingPlan> _planRepo;
 
-    public SellingPlanController(ISellingPlanRepository planRepository)
+    public SellingPlanController(IRepository<SellingPlan> planRepository)
     {
         _planRepo = planRepository;
     }
 
     [HttpGet("{id}")]
-    public ActionResult<SellingPlan> GetById(int id)
+    public async Task<ActionResult<SellingPlan>> GetById(int id)
     {
-        var plan = _planRepo.GetById(id);
-
+        var plan = await _planRepo.GetByIdAsync(id);
         if (plan == null)
             return NotFound();
 
@@ -23,13 +22,13 @@ public class SellingPlanController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<SellingPlan> CreatePlan(SellingPlanRequest request)
+    public async Task<ActionResult<SellingPlan>> CreatePlan(SellingPlanRequest request)
     {
         try
         {
             var plan = new SellingPlan(request.Name, request.MonthlyFee,
                 request.PerSaleFee, request.RegularPerSaleFeePercent);
-            _planRepo.Create(plan);
+            await _planRepo.AddAsync(plan);
             return plan;
         }
         catch (MonthlyAndPerSaleFeesEqualZeroException)
@@ -51,9 +50,9 @@ public class SellingPlanController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public IActionResult UpdatePlan(int id, SellingPlanRequest request)
+    public async Task<IActionResult> UpdatePlan(int id, SellingPlanRequest request)
     {
-        var plan = _planRepo.GetById(id);
+        var plan = await _planRepo.GetByIdAsync(id);
         if (plan == null)
             return NotFound(new { error = "Selling plan not found." });
 
@@ -82,7 +81,7 @@ public class SellingPlanController : ControllerBase
             });
         }
 
-        _planRepo.Update(plan);
+        await _planRepo.UpdateAsync(plan);
         return Ok();
     }
 }

@@ -2,7 +2,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -13,13 +15,13 @@ builder.Services.AddDbContext<FbbInventoryDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
-builder.Services.AddScoped<IUpdateProductStockService, UpdateProductStockService>();
-builder.Services.AddScoped<IDeleteProductInventoryService, DeleteProductInventoryService>();
-builder.Services.AddScoped<IRemovalService, RemovalService>();
+builder.Services.AddScoped<StockTransactionService>();
+builder.Services.AddScoped<StockAdjustmentService>();
+builder.Services.AddScoped<RemovalService>();
+builder.Services.AddScoped<IQualityInspectionService, FixedQualityInspectionService>();
+builder.Services.AddScoped<DeleteProductInventoryService>();
 
-builder.Services.AddScoped<ISellerInventoryRepository, SellerInventoryRepository>();
-builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
-builder.Services.AddScoped<ILotRepository, LotRepository>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.RegisterEventBus(builder.Configuration);
 
@@ -103,21 +105,24 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<CatalogItemDeletedIntegrationEventHandler>();
+        //services.AddTransient<CatalogItemDeletedIntegrationEventHandler>();
         services.AddTransient<FbbInventoryPickedUpIntegrationEventHandler>();
         services.AddTransient<ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler>();
         services.AddTransient<DisposalOrderCompletedIntegrationEventHandler>();
         services.AddTransient<DisposalOrderCancelledIntegrationEventHandler>();
         services.AddTransient<InventoryReturnCompletedIntegrationEventHandler>();
         services.AddTransient<InventoryReturnCancelledIntegrationEventHandler>();
+        services.AddTransient<ProductListingClosedIntegrationEventHandler>();
+        services.AddTransient<ProductRelistedIntegrationEventHandler>();
+        services.AddTransient<FbbProductsOrderedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-        eventBus.Subscribe<
-            CatalogItemDeletedIntegrationEvent,
-            CatalogItemDeletedIntegrationEventHandler>();
+        //eventBus.Subscribe<
+        //    CatalogItemDeletedIntegrationEvent,
+        //    CatalogItemDeletedIntegrationEventHandler>();
         eventBus.Subscribe<
             FbbInventoryPickedUpIntegrationEvent,
             FbbInventoryPickedUpIntegrationEventHandler>();
@@ -136,5 +141,16 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             InventoryReturnCancelledIntegrationEvent,
             InventoryReturnCancelledIntegrationEventHandler>();
+
+        eventBus.Subscribe<
+            ProductListingClosedIntegrationEvent,
+            ProductListingClosedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductRelistedIntegrationEvent,
+            ProductRelistedIntegrationEventHandler>();
+
+        eventBus.Subscribe<
+            FbbProductsOrderedIntegrationEvent,
+            FbbProductsOrderedIntegrationEventHandler>();
     }
 }

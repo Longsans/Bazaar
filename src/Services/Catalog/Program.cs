@@ -11,10 +11,11 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
-builder.Services.AddScoped<IDeleteCatalogItemService, DeleteCatalogItemService>();
-builder.Services.AddScoped<IFulfillmentMethodService, FulfillmentMethodService>();
+builder.Services.AddScoped<DeleteCatalogItemService>();
+builder.Services.AddScoped<FulfillmentMethodService>();
+builder.Services.AddScoped<ListingService>();
 
-builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 
 builder.Services.RegisterEventBus(builder.Configuration);
@@ -45,8 +46,8 @@ builder.Services.AddAuthorization(options =>
 #endregion
 
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    .AddJsonOptions(options => options.JsonSerializerOptions
+        .Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -130,22 +131,20 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<BasketCheckoutAcceptedIntegrationEventHandler>();
-        services.AddTransient<ProductFbbInventoryUpdatedIntegrationEventHandler>();
+        services.AddTransient<OrderPlacedIntegrationEventHandler>();
         services.AddTransient<ProductOrdersStatusReportChangedIntegrationEventHandler>();
         services.AddTransient<ClientAccountClosedIntegrationEventHandler>();
-        services.AddTransient<FbbInventoryPickedUpIntegrationEventHandler>();
+        services.AddTransient<StockIssuedIntegrationEventHandler>();
+        services.AddTransient<StockReceivedIntegrationEventHandler>();
+        services.AddTransient<StockAdjustedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
         eventBus.Subscribe<
-            BasketCheckoutAcceptedIntegrationEvent,
-            BasketCheckoutAcceptedIntegrationEventHandler>();
-        eventBus.Subscribe<
-            ProductFbbInventoryUpdatedIntegrationEvent,
-            ProductFbbInventoryUpdatedIntegrationEventHandler>();
+            OrderPlacedIntegrationEvent,
+            OrderPlacedIntegrationEventHandler>();
         eventBus.Subscribe<
             ProductOrdersStatusReportChangedIntegrationEvent,
             ProductOrdersStatusReportChangedIntegrationEventHandler>();
@@ -153,8 +152,14 @@ public static class EventBusExtensionMethods
             ClientAccountClosedIntegrationEvent,
             ClientAccountClosedIntegrationEventHandler>();
         eventBus.Subscribe<
-            FbbInventoryPickedUpIntegrationEvent,
-            FbbInventoryPickedUpIntegrationEventHandler>();
+            StockIssuedIntegrationEvent,
+            StockIssuedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            StockReceivedIntegrationEvent,
+            StockReceivedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            StockAdjustedIntegrationEvent,
+            StockAdjustedIntegrationEventHandler>();
     }
 }
 

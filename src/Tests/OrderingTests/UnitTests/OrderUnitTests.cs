@@ -37,10 +37,13 @@ public class OrderUnitTests
     {
         var orderItem = new OrderItem(
             _productId, _productName, _validPrice, _validQuantity, default);
+        var orderItem2 = new OrderItem(
+            "PROD-2", "A Dream of Spring", _validPrice, _validQuantity, default);
 
         var order = new Order(_validShippingAddress, _buyerId, new OrderItem[]
         {
-            orderItem
+            orderItem,
+            orderItem2,
         });
 
         return order;
@@ -48,7 +51,7 @@ public class OrderUnitTests
 
     private static void SetStatus(Order order, OrderStatus status)
     {
-        typeof(Order).GetProperty(nameof(order.Status))
+        typeof(Order).GetProperty(nameof(order.Status))!
             .SetValue(order, status);
     }
 
@@ -67,6 +70,7 @@ public class OrderUnitTests
         var orderItem = new OrderItem(
             _productId, _productName, _validPrice, _validQuantity, _orderId);
 
+        Assert.Equal(OrderItemStatus.PendingStock, orderItem.Status);
         Assert.Equal(_validPrice, orderItem.ProductUnitPrice);
         Assert.Equal(_validQuantity, orderItem.Quantity);
     }
@@ -92,6 +96,60 @@ public class OrderUnitTests
             var orderItem = new OrderItem(
                 _productId, _productName, _validPrice, 0, _orderId);
         });
+    }
+
+    [Fact]
+    public void OrderItem_SetStockConfirmed_Succeeds_WhenStatusIsPendingStock()
+    {
+        var item = GetTestOrder().Items.First();
+
+        item.SetStockConfirmed();
+
+        Assert.Equal(OrderItemStatus.StockConfirmed, item.Status);
+    }
+
+    [Theory]
+    [InlineData(OrderItemStatus.StockConfirmed)]
+    [InlineData(OrderItemStatus.StockRejected)]
+    public void OrderItem_SetStockConfirmed_ThrowsInvalidOpException_WhenStatusNotPendingStock(
+        OrderItemStatus status)
+    {
+        var item = GetTestOrder().Items.First();
+        typeof(OrderItem).GetProperty(nameof(item.Status))!
+            .SetValue(item, status);
+
+        Assert.Throws<InvalidOperationException>(item.SetStockConfirmed);
+        if (status != OrderItemStatus.StockConfirmed)
+        {
+            Assert.NotEqual(OrderItemStatus.StockConfirmed, item.Status);
+        }
+    }
+
+    [Fact]
+    public void OrderItem_SetStockRejected_Succeeds_WhenStatusIsPendingStock()
+    {
+        var item = GetTestOrder().Items.First();
+
+        item.SetStockRejected();
+
+        Assert.Equal(OrderItemStatus.StockRejected, item.Status);
+    }
+
+    [Theory]
+    [InlineData(OrderItemStatus.StockConfirmed)]
+    [InlineData(OrderItemStatus.StockRejected)]
+    public void OrderItem_SetStockRejected_ThrowsInvalidOpException_WhenStatusNotPendingStock(
+        OrderItemStatus status)
+    {
+        var item = GetTestOrder().Items.First();
+        typeof(OrderItem).GetProperty(nameof(item.Status))!
+            .SetValue(item, status);
+
+        Assert.Throws<InvalidOperationException>(item.SetStockRejected);
+        if (status != OrderItemStatus.StockConfirmed)
+        {
+            Assert.NotEqual(OrderItemStatus.StockConfirmed, item.Status);
+        }
     }
 
     [Fact]
@@ -198,9 +256,13 @@ public class OrderUnitTests
     }
 
     [Fact]
-    public void StartPayment_Succeeds_WhenCurrentStatusIsAwaitingValidation()
+    public void StartPayment_Succeeds_WhenCurrentStatusIsAwaitingValidationAndAllItemStocksConfirmed()
     {
         var order = GetTestOrder();
+        foreach (var item in order.Items)
+        {
+            item.SetStockConfirmed();
+        }
 
         order.StartPayment();
 
@@ -221,6 +283,21 @@ public class OrderUnitTests
         {
             Assert.NotEqual(OrderStatus.ProcessingPayment, order.Status);
         }
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void StartPayment_ThrowsInvalidOpException_WhenNotAllStocksConfirmed(uint itemsConfirmed)
+    {
+        var order = GetTestOrder();
+        for (var i = 0; i < itemsConfirmed; i++)
+        {
+            order.Items.ElementAt(i).SetStockConfirmed();
+        }
+
+        Assert.Throws<InvalidOperationException>(order.StartPayment);
+        Assert.NotEqual(OrderStatus.ProcessingPayment, order.Status);
     }
 
     [Fact]

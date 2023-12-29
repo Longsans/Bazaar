@@ -15,22 +15,18 @@ public class ProductInventoryUnitTests
     {
         var inventory = new ProductInventory(_validProductId, _validFulfillableUnits, _defectiveUnits,
             _wdmgUnits, _validRestockThres, _validMaxStockThres, _validSellerInvId);
+        var threeDaysAgo = DateTime.Now.Date.AddDays(-3);
+        var twoDaysAgo = DateTime.Now.Date.AddDays(-2);
 
-        var fLots = GetLotsForProductInventory<FulfillableLot>(inventory);
-        var fLot = new FulfillableLot(inventory, 50);
-        var fLot2 = new FulfillableLot(inventory, 75);
-        AddDaysToLotEventDate(fLot, -3);
-        AddDaysToLotEventDate(fLot2, -2);
-        fLots.Add(fLot);
-        fLots.Add(fLot2);
-
-        var uLots = GetLotsForProductInventory<UnfulfillableLot>(inventory);
-        var uLot = new UnfulfillableLot(inventory, 20, UnfulfillableCategory.CustomerDamaged);
-        var uLot2 = new UnfulfillableLot(inventory, 10, UnfulfillableCategory.CustomerDamaged);
-        AddDaysToLotEventDate(uLot, -3);
-        AddDaysToLotEventDate(uLot2, -2);
-        uLots.Add(uLot);
-        uLots.Add(uLot2);
+        var lots = GetLotsForProductInventory(inventory);
+        var fLot = new Lot(inventory, 50, threeDaysAgo);
+        var fLot2 = new Lot(inventory, 75, twoDaysAgo);
+        var uLot = new Lot(inventory, 5, threeDaysAgo, threeDaysAgo, UnfulfillableCategory.CustomerDamaged);
+        var uLot2 = new Lot(inventory, 10, twoDaysAgo, twoDaysAgo, UnfulfillableCategory.CustomerDamaged);
+        lots.Add(fLot);
+        lots.Add(fLot2);
+        lots.Add(uLot);
+        lots.Add(uLot2);
 
         return inventory;
     }
@@ -39,12 +35,13 @@ public class ProductInventoryUnitTests
     {
         var inventory = new ProductInventory(_validProductId, _validFulfillableUnits, _defectiveUnits,
             _wdmgUnits, _validRestockThres, _validMaxStockThres, _validSellerInvId);
+        var lots = GetLotsForProductInventory(inventory);
 
-        var fCurrentDateLot = GetLotsForProductInventory<FulfillableLot>(inventory).Single();
+        var fCurrentDateLot = GetLotsForProductInventory(inventory).Single(x => !x.IsUnitsUnfulfillable);
         AddDaysToLotEventDate(fCurrentDateLot, -3);
 
-        var uCurrentDateLot = GetLotsForProductInventory<UnfulfillableLot>(inventory)
-            .Where(u => u.DateUnfulfillableSince == DateTime.Now.Date)
+        var uCurrentDateLot = GetLotsForProductInventory(inventory)
+            .Where(u => u.DateUnitsBecameUnfulfillable?.Date == DateTime.Now.Date)
             .Select(u =>
             {
                 AddDaysToLotEventDate(u, -3);
@@ -55,29 +52,20 @@ public class ProductInventoryUnitTests
         return inventory;
     }
 
-    private static List<T> GetLotsForProductInventory<T>(ProductInventory inventory)
-        where T : Lot
+    private static List<Lot> GetLotsForProductInventory(ProductInventory inventory)
     {
-        var fieldName = typeof(T) == typeof(FulfillableLot)
-            ? "_fulfillableLots"
-            : "_unfulfillableLots";
-
-        return (List<T>)typeof(ProductInventory)
-            .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
+        return (List<Lot>)typeof(ProductInventory)
+            .GetField("_lots", BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(inventory)!;
     }
 
-    private static void AddDaysToLotEventDate<T>(T lot, int days)
-        where T : Lot
+    private static void AddDaysToLotEventDate(Lot lot, int days)
     {
-        var eventDatePropName = lot switch
-        {
-            FulfillableLot => nameof(FulfillableLot.DateEnteredStorage),
-            UnfulfillableLot => nameof(UnfulfillableLot.DateUnfulfillableSince)
-        };
-
-        typeof(T).GetProperty(eventDatePropName)!
-            .SetValue(lot, DateTime.Now.AddDays(days));
+        var eventTimeProperty = typeof(Lot).GetProperty(
+            lot.DateUnitsBecameUnfulfillable == null
+            ? nameof(lot.DateUnitsEnteredStorage)
+            : nameof(lot.DateUnitsBecameUnfulfillable))!;
+        eventTimeProperty.SetValue(lot, DateTime.Now.AddDays(days));
     }
     #endregion
 
@@ -87,9 +75,19 @@ public class ProductInventoryUnitTests
         var inventory = new ProductInventory(_validProductId, _validFulfillableUnits, _defectiveUnits,
             _wdmgUnits, _validRestockThres, _validMaxStockThres, _validSellerInvId);
 
-        Assert.Equal(_validFulfillableUnits, inventory.FulfillableUnitsInStock);
-        Assert.Equal(_defectiveUnits + _wdmgUnits, inventory.UnfulfillableUnitsInStock);
+        Assert.Equal(_validFulfillableUnits, inventory.FulfillableUnits);
+        Assert.Equal(_defectiveUnits + _wdmgUnits, inventory.UnfulfillableUnits);
         Assert.Equal(_validFulfillableUnits + _defectiveUnits + _wdmgUnits, inventory.TotalUnits);
+    }
+
+    [Fact]
+    public void Constructor_ThrowsArgOutOfRangeException_WhenTotalUnitsIsZero()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            var inventory = new ProductInventory(_validProductId, 0u, 0u, 0u,
+                _validMaxStockThres, _validMaxStockThres, _validSellerInvId);
+        });
     }
 
     [Fact]
@@ -112,134 +110,148 @@ public class ProductInventoryUnitTests
         });
     }
 
-    // FULFILLABLE REDUCTION
     [Theory]
-    [InlineData(25)]
-    [InlineData(75)]
+    [InlineData(50)]
+    [InlineData(100)]
     [InlineData(150)]
-    public void ReduceFulfillableStockFromOldToNew_ReducesStockAndRemovesEmptyLots_WhenAllValid(uint units)
+    [InlineData(200)]
+    [InlineData(225)]
+    public void GetGoodLotsFifoForStockDemand_ReturnsOldestLotsWithEnoughUnits_WhenUnitsFulfillable(uint requiredUnits)
     {
         var inventory = GetTestInventory();
-        var fulfillableUnitsAfterReduction = inventory.FulfillableUnitsInStock - units;
-        var lotsFromOldToNew = inventory.FulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.DateEnteredStorage)
-            .ToList();
 
-        inventory.ReduceFulfillableStockFromOldToNew(units);
+        var lots = inventory.GetGoodLotsFifoForStockDemand(requiredUnits);
 
-        Assert.Equal(fulfillableUnitsAfterReduction, inventory.FulfillableUnitsInStock);
+        var remainingLots = inventory.FulfillableLots.Except(lots);
+        var lotUnits = (uint)lots.Sum(x => x.UnitsInStock);
+        var lastLot = lots.TakeLast(1).Single();
+        var lotUnitsExcludingLast = lotUnits - lastLot.UnitsInStock;
+        Assert.True(lots.All(x => x.IsUnitsFulfillable));
+        Assert.True(remainingLots.All(x => lots.All(
+            l => l.DateUnitsEnteredStorage <= x.DateUnitsEnteredStorage)));
+        Assert.True(lotUnits >= requiredUnits);
+        Assert.True(requiredUnits - lotUnitsExcludingLast > 0);
+    }
 
-        var removedLots = lotsFromOldToNew.Except(inventory.FulfillableLots);
-        Assert.True(!removedLots.Any() || removedLots.All(
-            x => inventory.FulfillableLots.All(f => f.DateEnteredStorage >= x.DateEnteredStorage)));
+    [Theory]
+    [InlineData(50)]
+    [InlineData(100)]
+    [InlineData(150)]
+    [InlineData(200)]
+    [InlineData(225)]
+    public void GetGoodLotsFifoForStockDemand_ReturnsOldestLotsWithEnoughUnits_WhenUnitsStranded(uint requiredUnits)
+    {
+        var inventory = GetTestInventory();
+        inventory.TurnStranded();
+
+        var lots = inventory.GetGoodLotsFifoForStockDemand(requiredUnits);
+
+        var remainingLots = inventory.StrandedLots.Except(lots);
+        var lotUnits = (uint)lots.Sum(x => x.UnitsInStock);
+        var lastLot = lots.TakeLast(1).Single();
+        var lotUnitsExcludingLast = lotUnits - lastLot.UnitsInStock;
+        Assert.True(lots.All(x => x.IsUnitsStranded));
+        Assert.True(remainingLots.All(x => lots.All(
+            l => l.DateUnitsBecameStranded <= x.DateUnitsBecameStranded)));
+        Assert.True(lotUnits >= requiredUnits);
+        Assert.True(requiredUnits - lotUnitsExcludingLast > 0);
     }
 
     [Fact]
-    public void ReduceFulfillableStockFromOldToNew_ThrowsArgOutOfRangeException_WhenUnitsToReduceIsZero()
+    public void GetGoodLotsFifoForStockDemand_ThrowsArgOutOfRangeException_WhenUnitsIsZero()
     {
         var inventory = GetTestInventory();
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            inventory.ReduceFulfillableStockFromOldToNew(0u);
+            var lots = inventory.GetGoodLotsFifoForStockDemand(0u);
         });
     }
 
     [Fact]
-    public void ReduceFulfillableStockFromOldToNew_ThrowsNotEnoughUnitsException_WhenUnitsToReduceIsMoreThanFulfillableUnits()
+    public void GetGoodLotsFifoForStockDemand_ThrowsNotEnoughUnitsException_WhenNotEnoughUnits()
     {
         var inventory = GetTestInventory();
 
         Assert.Throws<NotEnoughUnitsException>(() =>
         {
-            inventory.ReduceFulfillableStockFromOldToNew(inventory.FulfillableUnitsInStock + 1);
+            var lots = inventory.GetGoodLotsFifoForStockDemand(inventory.FulfillableUnits + 1);
         });
     }
 
-    // UNFULFILLABLE REDUCTION
     [Theory]
-    [InlineData(5)]
+    [InlineData(12)]
     [InlineData(15)]
-    [InlineData(35)]
-    public void ReduceUnfulfillableStockFromOldToNew_ReducesStockAndRemovesEmptyLots_WhenAllValid(uint units)
-    {
-        var inventory = GetTestInventory();
-        var unfulfillableUnitsAfterReduction = inventory.UnfulfillableUnitsInStock - units;
-        var lotsFromOldToNew = inventory.UnfulfillableLots
-            .Where(x => x.HasUnitsInStock)
-            .OrderBy(x => x.DateUnfulfillableSince)
-            .ToList();
-
-        inventory.ReduceUnfulfillableStockFromOldToNew(units);
-
-        Assert.Equal(unfulfillableUnitsAfterReduction, inventory.UnfulfillableUnitsInStock);
-
-        var removedLots = lotsFromOldToNew.Except(inventory.UnfulfillableLots);
-        Assert.True(!removedLots.Any() || removedLots.All(
-            x => inventory.UnfulfillableLots.All(f => f.DateUnfulfillableSince >= x.DateUnfulfillableSince)));
-    }
-
-    [Fact]
-    public void ReduceUnfulfillableStockFromOldToNew_ThrowsArgOutOfRangeException_WhenUnitsToReduceIsZero()
+    [InlineData(22)]
+    [InlineData(25)]
+    [InlineData(28)]
+    [InlineData(30)]
+    public void GetUnfulfillabbleLotsFifoForStockDemand_ReturnsOldestLotsWithEnoughUnits(uint requiredUnits)
     {
         var inventory = GetTestInventory();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-        {
-            inventory.ReduceUnfulfillableStockFromOldToNew(0u);
-        });
+        var lots = inventory.GetUnfulfillabbleLotsFifoForStockDemand(requiredUnits);
+
+        var remainingLots = inventory.UnfulfillableLots.Except(lots);
+        var lotUnits = (uint)lots.Sum(x => x.UnitsInStock);
+        var lastLot = lots.TakeLast(1).Single();
+        var lotUnitsExcludingLast = lotUnits - lastLot.UnitsInStock;
+        Assert.True(lots.All(x => x.IsUnitsUnfulfillable));
+        Assert.True(remainingLots.All(x => lots.All(
+            l => l.DateUnitsBecameUnfulfillable <= x.DateUnitsBecameUnfulfillable)));
+        Assert.True(lotUnits >= requiredUnits);
+        Assert.True(requiredUnits - lotUnitsExcludingLast > 0);
     }
 
-    [Fact]
-    public void ReduceUnfulfillableStockFromOldToNew_ThrowsNotEnoughUnitsException_WhenUnitsToReduceIsMoreThanUnfulfillableUnits()
-    {
-        var inventory = GetTestInventory();
-
-        Assert.Throws<NotEnoughUnitsException>(() =>
-        {
-            inventory.ReduceUnfulfillableStockFromOldToNew(inventory.UnfulfillableUnitsInStock + 1);
-        });
-    }
-
-    // FULFILLABLE
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void AddFulfillableStock_AddsStockToExistingLotOrCreateNewLotIfNotExists_WhenAllValid(
-        bool lotExists)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void ReceiveGoodStock_AddsGoodStockToExistingLotOrCreateNewLotIfNotExists_WhenAllValid(
+        bool lotExists, bool isUnitsStranded)
     {
         var inventory = lotExists ? GetTestInventory()
             : GetTestInventoryWithoutLotForCurrentDate();
         uint units = 100;
-        var lotCountAfterAddition = inventory.FulfillableLots.Count + (lotExists ? 0 : 1);
-        var fulfillableUnitsInStockAfterAddition = inventory.FulfillableUnitsInStock + units;
+        var expectedLotCount = inventory.FulfillableLots.Count + (lotExists ? 0 : 1);
+        var expectedUnits = inventory.FulfillableUnits + units;
+        if (isUnitsStranded)
+        {
+            inventory.TurnStranded();
+            expectedLotCount = inventory.StrandedLots.Count + (lotExists ? 0 : 1);
+            expectedUnits = inventory.StrandedUnits + units;
+        }
 
-        inventory.AddFulfillableStock(units);
+        inventory.ReceiveGoodStock(units);
 
-        Assert.Equal(fulfillableUnitsInStockAfterAddition, inventory.FulfillableUnitsInStock);
-        Assert.Equal(lotCountAfterAddition, inventory.FulfillableLots.Count);
+        var actualUnits = isUnitsStranded
+            ? inventory.StrandedUnits : inventory.FulfillableUnits;
+        var actualLotCount = isUnitsStranded
+            ? inventory.StrandedLots.Count : inventory.FulfillableLots.Count;
+        Assert.Equal(expectedUnits, actualUnits);
+        Assert.Equal(expectedLotCount, actualLotCount);
     }
 
     [Fact]
-    public void AddFulfillableStock_ThrowsArgOutOfRangeException_WhenUnitsToReduceIsZero()
+    public void ReceiveGoodStock_ThrowsArgOutOfRangeException_WhenUnitsToReceiveIsZero()
     {
         var inventory = GetTestInventory();
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            inventory.AddFulfillableStock(0u);
+            inventory.ReceiveGoodStock(0u);
         });
     }
 
     [Fact]
-    public void AddFulfillableStock_ThrowsExceedingMaxStockThresholdException_WhenAdditionsResultExceedsMaxStockThreshold()
+    public void ReceiveGoodStock_ThrowsExceedingMaxStockThresholdException_WhenNewStockExceedsMaxStockThreshold()
     {
         var inventory = GetTestInventory();
 
         Assert.Throws<ExceedingMaxStockThresholdException>(() =>
         {
-            inventory.AddFulfillableStock(inventory.RemainingCapacity + 1);
+            inventory.ReceiveGoodStock(inventory.MaxStockThreshold - inventory.TotalUnits + 1);
         });
     }
 
@@ -254,11 +266,12 @@ public class ProductInventoryUnitTests
             : GetTestInventoryWithoutLotForCurrentDate();
         uint units = 100;
         var lotCountAfterAddition = inventory.UnfulfillableLots.Count + (lotExists ? 0 : 1);
-        var unfulfillableUnitsInStockAfterAddition = inventory.UnfulfillableUnitsInStock + units;
+        var unfulfillableUnitsInStockAfterAddition = inventory.UnfulfillableUnits + units;
 
-        inventory.AddUnfulfillableStock(UnfulfillableCategory.Defective, units);
+        inventory.AddUnfulfillableStock(units, DateTime.Now.Date,
+            DateTime.Now.Date, UnfulfillableCategory.Defective);
 
-        Assert.Equal(unfulfillableUnitsInStockAfterAddition, inventory.UnfulfillableUnitsInStock);
+        Assert.Equal(unfulfillableUnitsInStockAfterAddition, inventory.UnfulfillableUnits);
         Assert.Equal(lotCountAfterAddition, inventory.UnfulfillableLots.Count);
     }
 
@@ -269,19 +282,74 @@ public class ProductInventoryUnitTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            inventory.AddUnfulfillableStock(UnfulfillableCategory.Defective, 0u);
+            inventory.AddUnfulfillableStock(0u, DateTime.Now.Date,
+                DateTime.Now.Date, UnfulfillableCategory.Defective);
         });
     }
 
     [Fact]
-    public void AddUnfulfillableStock_ThrowsExceedingMaxStockThresholdException_WhenAdditionsResultExceedsMaxStockThreshold()
+    public void AddUnfulfillableStock_ThrowsExceedingMaxStockThresholdException_WhenNewStockExceedsMaxStockThreshold()
     {
         var inventory = GetTestInventory();
 
         Assert.Throws<ExceedingMaxStockThresholdException>(() =>
         {
-            inventory.AddUnfulfillableStock(UnfulfillableCategory.Defective,
-                inventory.RemainingCapacity + 1);
+            inventory.AddUnfulfillableStock(inventory.MaxStockThreshold - inventory.TotalUnits + 1,
+                DateTime.Now.Date, DateTime.Now.Date, UnfulfillableCategory.Defective);
         });
+    }
+
+    [Fact]
+    public void TurnStranded_TurnsAllLotsStrandedAndSetsIsStrandedTrue()
+    {
+        var inventory = GetTestInventory();
+        var initialFulfillableLots = inventory.FulfillableLots;
+        var initialFulfillableUnits = inventory.FulfillableUnits;
+
+        inventory.TurnStranded();
+
+        Assert.True(inventory.IsStranded);
+        Assert.Equal(initialFulfillableUnits, inventory.StrandedUnits);
+        Assert.Equal(0u, inventory.FulfillableUnits);
+        Assert.DoesNotContain(inventory.StrandedLots, x => !initialFulfillableLots.Contains(x));
+    }
+
+    [Fact]
+    public void ConfirmStrandingResolved_TurnsAllLotsBackToFulfillableAndSetsIsStrandedFalse()
+    {
+        var inventory = GetTestInventory();
+        inventory.TurnStranded();
+        var initialStrandedLots = inventory.StrandedLots;
+        var initialStrandedUnits = inventory.StrandedUnits;
+
+        inventory.ConfirmStrandingResolved();
+
+        Assert.True(!inventory.IsStranded);
+        Assert.Equal(initialStrandedUnits, inventory.FulfillableUnits);
+        Assert.Equal(0u, inventory.StrandedUnits);
+        Assert.DoesNotContain(inventory.FulfillableLots, x => !initialStrandedLots.Contains(x));
+    }
+
+    [Fact]
+    public void RemoveEmptyLots_AlwaysSucceeds()
+    {
+        var inventory = GetTestInventory();
+        var lotsToRemove = new List<Lot>
+        {
+            inventory.Lots.First(x => x.IsUnitsFulfillable),
+            inventory.Lots.First(x => x.IsUnitsUnfulfillable),
+        };
+        foreach (var lot in lotsToRemove)
+        {
+            if (lot.UnitsInStock > 0)
+                lot.AdjustUnits(-(int)lot.UnitsInStock);
+            if (lot.UnitsInRemoval > 0)
+                lot.ConfirmUnitsRemoved(lot.UnitsInRemoval);
+        }
+
+        inventory.RemoveEmptyLots();
+
+        Assert.DoesNotContain(inventory.Lots, lot => lot.TotalUnits == 0);
+        Assert.DoesNotContain(inventory.Lots, lotsToRemove.Contains);
     }
 }

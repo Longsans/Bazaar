@@ -4,20 +4,21 @@
 [ApiController]
 public class DeliveriesController : ControllerBase
 {
-    private readonly IDeliveryRepository _deliveryRepository;
-    private readonly IDeliveryProcessService _deliveryProcessService;
+    private readonly IRepository<Delivery> _deliveryRepository;
+    private readonly DeliveryProcessService _deliveryProcessService;
 
     public DeliveriesController(
-        IDeliveryRepository deliveryRepository, IDeliveryProcessService processService)
+        IRepository<Delivery> deliveryRepository, DeliveryProcessService processService)
     {
         _deliveryRepository = deliveryRepository;
         _deliveryProcessService = processService;
     }
 
     [HttpGet("{id}")]
-    public ActionResult<DeliveryResponse> GetById(int id)
+    public async Task<ActionResult<DeliveryResponse>> GetById(int id)
     {
-        var delivery = _deliveryRepository.GetById(id);
+        var delivery = await _deliveryRepository
+            .SingleOrDefaultAsync(new DeliveryByIdSpec(id));
         if (delivery == null)
         {
             return NotFound();
@@ -26,7 +27,7 @@ public class DeliveriesController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<DeliveryResponse> Schedule(ScheduleDeliveryRequest request)
+    public async Task<ActionResult<DeliveryResponse>> Schedule(ScheduleDeliveryRequest request)
     {
         if (request.PackageItems.Any(x => x.Quantity == 0))
         {
@@ -36,21 +37,21 @@ public class DeliveriesController : ControllerBase
         var packageItems = request.PackageItems
             .Select(x => new DeliveryPackageItem(x.ProductId, x.Quantity));
 
-        return _deliveryProcessService
-            .ScheduleDelivery(request.OrderId, request.DeliveryAddress, packageItems)
+        return (await _deliveryProcessService
+            .ScheduleDelivery(request.OrderId, request.DeliveryAddress, packageItems))
             .Map(x => new DeliveryResponse(x))
             .ToActionResult(this);
     }
 
-    [HttpPut("{id}/status")]
-    public IActionResult UpdateStatus(int id, [FromBody] DeliveryStatus status)
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] DeliveryStatus status)
     {
         var result = status switch
         {
-            DeliveryStatus.Delivering => _deliveryProcessService.StartDelivery(id),
-            DeliveryStatus.Completed => _deliveryProcessService.CompleteDelivery(id),
-            DeliveryStatus.Postponed => _deliveryProcessService.PostponeDelivery(id),
-            DeliveryStatus.Cancelled => _deliveryProcessService.CancelDelivery(id),
+            DeliveryStatus.Delivering => await _deliveryProcessService.StartDelivery(id),
+            DeliveryStatus.Completed => await _deliveryProcessService.CompleteDelivery(id),
+            DeliveryStatus.Postponed => await _deliveryProcessService.PostponeDelivery(id),
+            DeliveryStatus.Cancelled => await _deliveryProcessService.CancelDelivery(id),
             _ => throw new InvalidOperationException("Invalid status for delivery.")
         };
 

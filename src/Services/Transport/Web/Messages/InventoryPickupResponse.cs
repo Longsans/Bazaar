@@ -14,7 +14,7 @@ public class InventoryPickupResponse
     {
         Id = pickup.Id;
         PickupLocation = pickup.PickupLocation;
-        ProductInventories = pickup.ProductInventories
+        ProductInventories = pickup.ProductStocks
             .Select(x => new ProductInventoryResponse(x)).ToList();
         TimeScheduledAt = pickup.TimeScheduledAt;
         EstimatedPickupTime = pickup.EstimatedPickupTime;

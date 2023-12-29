@@ -18,11 +18,11 @@ public class RequestDisposalForLotsUbpdJob : IBackgroundJob
 
     public async Task ExecuteAsync()
     {
-        var requestBody = new LotsUbpdDisposalRequest(true);
+        var requestBody = new UnfulfillableLotsDisposalRequest(true);
         var patchContent = new StringContent(JsonSerializer.Serialize(requestBody),
             System.Text.Encoding.UTF8, "application/json");
         var response = await _httpClient.PatchAsync(
-            RequestDisposalForLotsUbpdEndpoint, patchContent);
+            UnfulfillableLotsDisposalEndpoint, patchContent);
 
         if (response.IsSuccessStatusCode)
         {
@@ -36,6 +36,6 @@ public class RequestDisposalForLotsUbpdJob : IBackgroundJob
         }
     }
 
-    private string RequestDisposalForLotsUbpdEndpoint
-        => $"{_fbbInventoryUri}/api/lots/unf-disposal-requests";
+    private string UnfulfillableLotsDisposalEndpoint
+        => $"{_fbbInventoryUri}/api/lots?unfulfillableBeyondPolicyDuration=true";
 }
