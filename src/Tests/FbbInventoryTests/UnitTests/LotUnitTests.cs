@@ -11,6 +11,15 @@ public class LotUnitTests
     private readonly ProductInventory _inventory = new("PROD-1", _validUnitsInStock,
         _defectiveUnits, _wdmgUnits, 10, _maxStockThreshold, 1);
 
+    public LotUnitTests()
+    {
+        foreach (var (lot, i) in _inventory.Lots.Select((x, i) => (x, i)))
+        {
+            typeof(Lot).GetProperty(nameof(Lot.LotNumber))!
+                .SetValue(lot, $"LOT-{i + 1}");
+        }
+    }
+
     private Lot GetFulfillableTestLot()
         => _inventory.FulfillableLots.First();
 

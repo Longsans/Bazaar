@@ -7,6 +7,10 @@ public class StockInspectionReport
 
     public StockInspectionReport(IEnumerable<StockInspectionItem> items)
     {
+        if (!items.Any())
+        {
+            throw new ArgumentException("Inspection item list cannot be empty.");
+        }
         DateConducted = DateTime.Now.Date;
         Items = items.ToList();
     }
@@ -22,6 +26,10 @@ public class StockInspectionItem
     public StockInspectionItem(string productId, uint goodQuantity,
         uint defectiveQuantity, uint warehouseDamagedQuantity)
     {
+        if (string.IsNullOrWhiteSpace(productId))
+        {
+            throw new ArgumentException("Product ID cannot be empty.");
+        }
         ProductId = productId;
         GoodQuantity = goodQuantity;
         DefectiveQuantity = defectiveQuantity;

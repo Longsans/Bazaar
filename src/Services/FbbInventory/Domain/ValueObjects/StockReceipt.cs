@@ -8,6 +8,11 @@ public class StockReceipt
 
     public StockReceipt(IEnumerable<StockReceiptItem> items)
     {
+        if (!items.Any())
+        {
+            throw new ArgumentException("Receipt item list cannot be empty.");
+        }
+
         DateOfReceipt = DateTime.Now.Date;
         _items = items.ToList();
     }
@@ -23,6 +28,15 @@ public class StockReceiptItem
     public StockReceiptItem(string productId, uint fulfillableQuantity,
         uint defectiveQuantity, uint warehouseDamagedQuantity)
     {
+        if (string.IsNullOrWhiteSpace(productId))
+        {
+            throw new ArgumentException("Product ID cannot be empty.");
+        }
+        if (fulfillableQuantity + defectiveQuantity + warehouseDamagedQuantity == 0)
+        {
+            throw new ArgumentException("Total receipt quantity cannot be 0.");
+        }
+
         ProductId = productId;
         GoodQuantity = fulfillableQuantity;
         DefectiveQuantity = defectiveQuantity;

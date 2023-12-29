@@ -15,6 +15,10 @@ public record StockIssue
 
     public StockIssue(IEnumerable<StockIssueItem> issueItems, StockIssueReason issueReason)
     {
+        if (!issueItems.Any())
+        {
+            throw new ArgumentException("Issue item list cannot be empty.");
+        }
         if (issueItems.GroupBy(x => x.LotNumber).Any(g => g.Count() > 1))
         {
             throw new ArgumentException("Each lot can only appear once in issue items list.");
@@ -73,6 +77,14 @@ public record StockIssueItem
 
     public StockIssueItem(string productId, string lotNumber, uint quantity)
     {
+        if (string.IsNullOrWhiteSpace(productId))
+        {
+            throw new ArgumentException("Product ID cannot be empty.");
+        }
+        if (string.IsNullOrWhiteSpace(lotNumber))
+        {
+            throw new ArgumentException("Lot number cannot be empty.");
+        }
         if (quantity == 0)
         {
             throw new ArgumentOutOfRangeException(nameof(quantity),

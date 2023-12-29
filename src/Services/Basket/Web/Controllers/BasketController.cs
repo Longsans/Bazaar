@@ -6,17 +6,21 @@ public class BasketController : ControllerBase
 {
     private readonly IBasketRepository _basketRepo;
     private readonly IBasketCheckoutService _checkoutService;
+    private readonly IValidator<AddBasketItemRequest> _basketItemReqValidator;
 
-    public BasketController(IBasketRepository basketRepository, IBasketCheckoutService checkoutService)
+    public BasketController(IBasketRepository basketRepository,
+        IBasketCheckoutService checkoutService,
+        IValidator<AddBasketItemRequest> basketItemReqValidator)
     {
         _basketRepo = basketRepository;
         _checkoutService = checkoutService;
+        _basketItemReqValidator = basketItemReqValidator;
     }
 
     [HttpGet("{buyerId}")]
     public ActionResult<BuyerBasketQuery> GetBasketByBuyerId(string buyerId)
     {
-        var basket = GetWithItemsOrCreateBasketIfNotExist(buyerId);
+        var basket = GetBasketOrCreateIfNotExist(buyerId);
         return new BuyerBasketQuery(basket);
     }
 
@@ -26,7 +30,9 @@ public class BasketController : ControllerBase
     {
         var basketItem = _basketRepo.GetBasketItem(buyerId, productId);
         if (basketItem == null)
+        {
             return NotFound(new { buyerId, productId });
+        }
 
         return new BasketItemQuery(basketItem);
     }
@@ -35,25 +41,25 @@ public class BasketController : ControllerBase
     public ActionResult<BuyerBasketQuery> AddItemToBasket(
         [FromRoute] string buyerId, [FromBody] AddBasketItemRequest request)
     {
-        var basket = GetWithItemsOrCreateBasketIfNotExist(buyerId);
-
-        try
+        var validationResult = _basketItemReqValidator.Validate(request);
+        if (!validationResult.IsValid)
         {
-            var basketItem = new BasketItem(
+            return BadRequest(
+                new
+                {
+                    errors = validationResult.Errors.Select(x => x.ErrorMessage)
+                });
+        }
+
+        var basket = GetBasketOrCreateIfNotExist(buyerId);
+        var basketItem = new BasketItem(
                 request.ProductId, request.ProductName, request.UnitPrice,
                 request.Quantity, request.ImageUrl, basket);
 
-            basket.AddItem(basketItem);
-        }
-        catch (ArgumentOutOfRangeException ex)
+        if (!basket.AddItem(basketItem).IsSuccess)
         {
-            return BadRequest(new { error = ex.Message });
+            return Conflict(new { error = "Basket already contains this item." });
         }
-        catch (ProductAlreadyInBasketException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-
         _basketRepo.Update(basket);
         return new BuyerBasketQuery(basket);
     }
@@ -62,15 +68,11 @@ public class BasketController : ControllerBase
     public ActionResult<BuyerBasketQuery> ChangeItemQuantity(
         string buyerId, string productId, [FromBody] uint quantity)
     {
-        var basket = GetWithItemsOrCreateBasketIfNotExist(buyerId);
+        var basket = GetBasketOrCreateIfNotExist(buyerId);
 
-        try
+        if (!basket.ChangeItemQuantity(productId, quantity).IsSuccess)
         {
-            basket.ChangeItemQuantity(productId, quantity);
-        }
-        catch (ProductNotInBasketException ex)
-        {
-            return Conflict(new { error = ex.Message });
+            return Conflict(new { error = "Basket does not contain this product." });
         }
 
         return new BuyerBasketQuery(basket);
@@ -83,7 +85,7 @@ public class BasketController : ControllerBase
         return checkoutResult.ToActionResult(this);
     }
 
-    private BuyerBasket GetWithItemsOrCreateBasketIfNotExist(string buyerId)
+    private BuyerBasket GetBasketOrCreateIfNotExist(string buyerId)
     {
         var basket = _basketRepo.GetWithItemsByBuyerId(buyerId)
             ?? _basketRepo.Create(new BuyerBasket(buyerId));

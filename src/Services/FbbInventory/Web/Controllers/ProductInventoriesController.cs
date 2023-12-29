@@ -34,11 +34,26 @@ public class ProductInventoriesController : ControllerBase
         return (await _stockTxnService.ReceiveStock(receiptQuantities)).ToActionResult(this);
     }
 
-    [HttpPost("/api/issued-stocks")]
-    public async Task<ActionResult<StockIssue>> IssueStock(IssueStockRequest request)
+    [HttpPost("/api/sales")]
+    public async Task<ActionResult<StockIssue>> IssueStocksForSale(
+        IEnumerable<SaleQuantity> saleQuantities)
     {
+        foreach (var saleQuantity in saleQuantities)
+        {
+            if (string.IsNullOrWhiteSpace(saleQuantity.ProductId))
+            {
+                return BadRequest(new { error = "An item in sale request has no product ID." });
+            }
+            if (saleQuantity.Quantity == 0)
+            {
+                return BadRequest(new { error = "An item in sale request has no quantity." });
+            }
+        }
+        var issueQuantities = saleQuantities.Select(x =>
+            new OutboundStockQuantity(x.ProductId, x.Quantity, 0u));
+
         return (await _stockTxnService
-            .IssueStocksFifo(request.IssueQuantities, request.IssueReason))
+            .IssueStocksFifo(issueQuantities, StockIssueReason.Sale))
             .ToActionResult(this);
     }
 }
