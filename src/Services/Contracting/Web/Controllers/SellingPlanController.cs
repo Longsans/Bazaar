@@ -4,9 +4,9 @@
 [ApiController]
 public class SellingPlanController : ControllerBase
 {
-    private readonly Repository<SellingPlan> _planRepo;
+    private readonly IRepository<SellingPlan> _planRepo;
 
-    public SellingPlanController(Repository<SellingPlan> planRepository)
+    public SellingPlanController(IRepository<SellingPlan> planRepository)
     {
         _planRepo = planRepository;
     }

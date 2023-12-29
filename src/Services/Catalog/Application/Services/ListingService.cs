@@ -2,10 +2,10 @@
 
 public class ListingService
 {
-    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly IEventBus _eventBus;
 
-    public ListingService(IRepositoryBase<CatalogItem> catalogRepo, IEventBus eventBus)
+    public ListingService(IRepository<CatalogItem> catalogRepo, IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
         _eventBus = eventBus;

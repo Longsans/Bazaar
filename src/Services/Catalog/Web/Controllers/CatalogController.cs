@@ -4,12 +4,12 @@ namespace Bazaar.Catalog.Web.Controllers;
 [Route("api/[controller]")]
 public class CatalogController : ControllerBase
 {
-    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly DeleteCatalogItemService _deleteService;
     private readonly ListingService _listingService;
 
     public CatalogController(
-        IRepositoryBase<CatalogItem> catalogRepo,
+        IRepository<CatalogItem> catalogRepo,
         DeleteCatalogItemService deleteService,
         ListingService listingService)
     {

@@ -21,7 +21,7 @@ builder.Services.AddScoped<RemovalService>();
 builder.Services.AddScoped<IQualityInspectionService, FixedQualityInspectionService>();
 builder.Services.AddScoped<DeleteProductInventoryService>();
 
-builder.Services.AddScoped(typeof(Repository<>));
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.RegisterEventBus(builder.Configuration);
 

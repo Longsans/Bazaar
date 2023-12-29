@@ -2,9 +2,9 @@
 
 public class UpdateClientEmailAddressService
 {
-    private readonly Repository<Client> _clientRepo;
+    private readonly IRepository<Client> _clientRepo;
 
-    public UpdateClientEmailAddressService(Repository<Client> clientRepo)
+    public UpdateClientEmailAddressService(IRepository<Client> clientRepo)
     {
         _clientRepo = clientRepo;
     }

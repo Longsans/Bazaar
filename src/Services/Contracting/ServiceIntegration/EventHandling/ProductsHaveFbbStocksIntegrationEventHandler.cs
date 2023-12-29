@@ -3,10 +3,10 @@
 public class ProductsHaveFbbStocksIntegrationEventHandler
     : IIntegrationEventHandler<ProductsHaveFbbStocksIntegrationEvent>
 {
-    private readonly Repository<Client> _clientRepo;
+    private readonly IRepository<Client> _clientRepo;
 
     public ProductsHaveFbbStocksIntegrationEventHandler(
-        Repository<Client> clientRepo)
+        IRepository<Client> clientRepo)
     {
         _clientRepo = clientRepo;
     }

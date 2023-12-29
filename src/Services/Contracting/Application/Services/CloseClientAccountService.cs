@@ -2,11 +2,11 @@
 
 public class CloseClientAccountService
 {
-    private readonly Repository<Client> _clientRepo;
+    private readonly IRepository<Client> _clientRepo;
     private readonly IEventBus _eventBus;
 
     public CloseClientAccountService(
-        Repository<Client> clientRepo, IEventBus eventBus)
+        IRepository<Client> clientRepo, IEventBus eventBus)
     {
         _clientRepo = clientRepo;
         _eventBus = eventBus;

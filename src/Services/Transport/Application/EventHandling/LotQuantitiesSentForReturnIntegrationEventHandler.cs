@@ -3,11 +3,11 @@
 public class LotQuantitiesSentForReturnIntegrationEventHandler
     : IIntegrationEventHandler<LotQuantitiesSentForReturnIntegrationEvent>
 {
-    private readonly Repository<InventoryReturn> _returnRepo;
+    private readonly IRepository<InventoryReturn> _returnRepo;
     private readonly IEstimationService _estimationService;
 
     public LotQuantitiesSentForReturnIntegrationEventHandler(
-        Repository<InventoryReturn> returnRepo, IEstimationService estimationService)
+        IRepository<InventoryReturn> returnRepo, IEstimationService estimationService)
     {
         _returnRepo = returnRepo;
         _estimationService = estimationService;

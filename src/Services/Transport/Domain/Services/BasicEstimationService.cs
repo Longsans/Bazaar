@@ -6,14 +6,14 @@ public class BasicEstimationService : IEstimationService
     private readonly TimeSpan _perPickupItemIncrement;
     private readonly TimeSpan _perReturnUnitIncrement;
 
-    private readonly Repository<Delivery> _deliveryRepository;
-    private readonly Repository<InventoryPickup> _pickupRepository;
-    private readonly Repository<InventoryReturn> _returnRepo;
+    private readonly IRepository<Delivery> _deliveryRepository;
+    private readonly IRepository<InventoryPickup> _pickupRepository;
+    private readonly IRepository<InventoryReturn> _returnRepo;
 
     public BasicEstimationService(
-        Repository<Delivery> deliveryRepository,
-        Repository<InventoryPickup> pickupRepository,
-        Repository<InventoryReturn> returnRepository,
+        IRepository<Delivery> deliveryRepository,
+        IRepository<InventoryPickup> pickupRepository,
+        IRepository<InventoryReturn> returnRepository,
         IConfiguration config)
     {
         _deliveryRepository = deliveryRepository;

@@ -4,11 +4,11 @@
 [ApiController]
 public class DeliveriesController : ControllerBase
 {
-    private readonly Repository<Delivery> _deliveryRepository;
+    private readonly IRepository<Delivery> _deliveryRepository;
     private readonly DeliveryProcessService _deliveryProcessService;
 
     public DeliveriesController(
-        Repository<Delivery> deliveryRepository, DeliveryProcessService processService)
+        IRepository<Delivery> deliveryRepository, DeliveryProcessService processService)
     {
         _deliveryRepository = deliveryRepository;
         _deliveryProcessService = processService;

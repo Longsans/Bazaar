@@ -3,10 +3,10 @@
 public class ProductFbbInventoryDeletedIntegrationEventHandler
     : IIntegrationEventHandler<ProductFbbInventoryDeletedIntegrationEvent>
 {
-    private readonly Repository<InventoryPickup> _pickupRepo;
+    private readonly IRepository<InventoryPickup> _pickupRepo;
 
     public ProductFbbInventoryDeletedIntegrationEventHandler(
-        Repository<InventoryPickup> pickupRepo)
+        IRepository<InventoryPickup> pickupRepo)
     {
         _pickupRepo = pickupRepo;
     }

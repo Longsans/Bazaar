@@ -3,10 +3,10 @@
 public class RemovalService
 {
     private readonly StockTransactionService _stockTransactionService;
-    private readonly Repository<Lot> _lotRepo;
+    private readonly IRepository<Lot> _lotRepo;
     private readonly IEventBus _eventBus;
 
-    public RemovalService(Repository<Lot> lotRepo, IEventBus eventBus,
+    public RemovalService(IRepository<Lot> lotRepo, IEventBus eventBus,
         StockTransactionService updateStockService)
     {
         _lotRepo = lotRepo;

@@ -3,11 +3,11 @@
 public class InventoryReturnCompletedIntegrationEventHandler
     : IIntegrationEventHandler<InventoryReturnCompletedIntegrationEvent>
 {
-    private readonly Repository<Lot> _lotRepo;
-    private readonly Repository<ProductInventory> _productInventoryRepo;
+    private readonly IRepository<Lot> _lotRepo;
+    private readonly IRepository<ProductInventory> _productInventoryRepo;
 
     public InventoryReturnCompletedIntegrationEventHandler(
-        Repository<Lot> lotRepo, Repository<ProductInventory> productInventoryRepo)
+        IRepository<Lot> lotRepo, IRepository<ProductInventory> productInventoryRepo)
     {
         _lotRepo = lotRepo;
         _productInventoryRepo = productInventoryRepo;

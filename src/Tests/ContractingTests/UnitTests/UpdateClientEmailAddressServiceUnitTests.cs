@@ -1,38 +1,49 @@
-﻿using Moq;
-
-namespace ContractingTests.UnitTests;
+﻿namespace ContractingTests.UnitTests;
 
 public class UpdateClientEmailAddressServiceUnitTests
 {
-    private readonly Mock<IClientRepository> _mockClientRepo;
+    private readonly UpdateClientEmailAddressService _service;
+    private readonly Mock<IRepository<Client>> _mockClientRepo;
     private readonly Client _testClient;
+
+    private static void SetUpRepoGetById(
+        Mock<IRepository<Client>> repoMock, Client? singleOrDefaultResult)
+    {
+        repoMock.Setup(x => x.SingleOrDefaultAsync(
+                It.IsAny<ClientByExternalIdSpec>(),
+                CancellationToken.None))
+            .Returns(Task.FromResult(singleOrDefaultResult));
+    }
+
+    private static void SetUpRepoGetByEmailAddress(
+        Mock<IRepository<Client>> repoMock, Client? singleOrDefaultResult)
+    {
+        repoMock.Setup(x => x.SingleOrDefaultAsync(
+                It.IsAny<ClientByEmailAddressSpec>(),
+                CancellationToken.None))
+            .Returns(Task.FromResult(singleOrDefaultResult));
+    }
 
     public UpdateClientEmailAddressServiceUnitTests()
     {
-        var mock = new Mock<IClientRepository>();
+        var mock = new Mock<IRepository<Client>>();
         var sellingPlan = new SellingPlan("Individual", 0m, 1.99m, 0.05f);
         _testClient = new("Test", "Test",
             "test@testmail.com", "0901234567",
             new DateTime(1989, 11, 11), Gender.Male, sellingPlan.Id);
-
-        mock.Setup(x => x.GetWithContractsAndPlanByExternalId(It.IsAny<string>()))
-            .Returns(_testClient);
-
         _mockClientRepo = mock;
+        _service = new(_mockClientRepo.Object);
     }
 
     [Fact]
-    public void UpdateClientEmailAddress_Succeeds_WhenEmailAddressNotExistYet()
+    public async Task UpdateClientEmailAddress_Succeeds_WhenEmailAddressNotExistYet()
     {
         // arrange
-        _mockClientRepo.Setup(
-            x => x.GetWithContractsAndPlanByEmailAddress(It.IsAny<string>()))
-            .Returns(() => null);
-
-        var service = new UpdateClientEmailAddressService(_mockClientRepo.Object);
+        SetUpRepoGetById(_mockClientRepo, _testClient);
+        SetUpRepoGetByEmailAddress(_mockClientRepo, null);
 
         // act
-        var result = service.UpdateClientEmailAddress(
+        var result = await _service.UpdateClientEmailAddress(
             _testClient.ExternalId, "newmail@testmail.com");
 
         // assert
@@ -40,17 +51,14 @@ public class UpdateClientEmailAddressServiceUnitTests
     }
 
     [Fact]
-    public void UpdateClientEmailAddress_Succeeds_WhenEmailAddressDoesNotChange()
+    public async Task UpdateClientEmailAddress_Succeeds_WhenEmailAddressDoesNotChange()
     {
         // arrange
-        _mockClientRepo.Setup(
-            x => x.GetWithContractsAndPlanByEmailAddress(_testClient.EmailAddress))
-            .Returns(_testClient);
-
-        var service = new UpdateClientEmailAddressService(_mockClientRepo.Object);
+        SetUpRepoGetById(_mockClientRepo, _testClient);
+        SetUpRepoGetByEmailAddress(_mockClientRepo, _testClient);
 
         // act
-        var result = service.UpdateClientEmailAddress(
+        var result = await _service.UpdateClientEmailAddress(
             _testClient.ExternalId, _testClient.EmailAddress);
 
         // assert
@@ -58,21 +66,13 @@ public class UpdateClientEmailAddressServiceUnitTests
     }
 
     [Fact]
-    public void UpdateClientEmailAddress_ReturnsNotFound_WhenClientNotFound()
+    public async Task UpdateClientEmailAddress_ReturnsNotFound_WhenClientNotFound()
     {
         // arrange
-        _mockClientRepo.Setup(
-            x => x.GetWithContractsAndPlanByExternalId(It.IsAny<string>()))
-            .Returns(() => null);
-
-        _mockClientRepo.Setup(
-            x => x.GetWithContractsAndPlanByEmailAddress(_testClient.EmailAddress))
-            .Returns(_testClient);
-
-        var service = new UpdateClientEmailAddressService(_mockClientRepo.Object);
+        SetUpRepoGetById(_mockClientRepo, null);
 
         // act
-        var result = service.UpdateClientEmailAddress(
+        var result = await _service.UpdateClientEmailAddress(
             _testClient.ExternalId, _testClient.EmailAddress);
 
         // assert
@@ -80,19 +80,15 @@ public class UpdateClientEmailAddressServiceUnitTests
     }
 
     [Fact]
-    public void UpdateClientEmailAddress_ReturnsConflict_WhenEmailAddressAlreadyExists()
+    public async Task UpdateClientEmailAddress_ReturnsConflict_WhenEmailAddressAlreadyExists()
     {
         // arrange
         var emailAddressOwner = _testClient.WithDifferentId(2, "CLNT-2");
-
-        _mockClientRepo.Setup(
-            x => x.GetWithContractsAndPlanByEmailAddress(It.IsAny<string>()))
-            .Returns(emailAddressOwner);
-
-        var service = new UpdateClientEmailAddressService(_mockClientRepo.Object);
+        SetUpRepoGetById(_mockClientRepo, _testClient);
+        SetUpRepoGetByEmailAddress(_mockClientRepo, emailAddressOwner);
 
         // act
-        var result = service.UpdateClientEmailAddress(
+        var result = await _service.UpdateClientEmailAddress(
             _testClient.ExternalId, _testClient.EmailAddress);
 
         // assert

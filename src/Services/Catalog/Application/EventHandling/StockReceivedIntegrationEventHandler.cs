@@ -2,11 +2,11 @@
 
 public class StockReceivedIntegrationEventHandler : IIntegrationEventHandler<StockReceivedIntegrationEvent>
 {
-    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly ILogger<StockReceivedIntegrationEventHandler> _logger;
 
     public StockReceivedIntegrationEventHandler(
-        IRepositoryBase<CatalogItem> catalogRepo,
+        IRepository<CatalogItem> catalogRepo,
         ILogger<StockReceivedIntegrationEventHandler> logger)
     {
         _catalogRepo = catalogRepo;

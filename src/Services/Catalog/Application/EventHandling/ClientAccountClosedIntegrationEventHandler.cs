@@ -3,12 +3,12 @@
 public class ClientAccountClosedIntegrationEventHandler
     : IIntegrationEventHandler<ClientAccountClosedIntegrationEvent>
 {
-    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly DeleteCatalogItemService _deleteCatalogItemService;
     private readonly IEventBus _eventBus;
 
     public ClientAccountClosedIntegrationEventHandler(
-        IRepositoryBase<CatalogItem> catalogRepo,
+        IRepository<CatalogItem> catalogRepo,
         DeleteCatalogItemService deleteCatalogItemService,
         IEventBus eventBus)
     {

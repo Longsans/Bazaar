@@ -2,11 +2,11 @@
 
 public class DeleteCatalogItemService
 {
-    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly IEventBus _eventBus;
 
     public DeleteCatalogItemService(
-        IRepositoryBase<CatalogItem> catalogRepo,
+        IRepository<CatalogItem> catalogRepo,
         IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
@@ -59,8 +59,6 @@ public class DeleteCatalogItemService
         }
 
         AssertCanBeDeleted(item);
-
-        item.ReduceStock(item.AvailableStock);
         item.Delete();
         await _catalogRepo.UpdateAsync(item);
         _eventBus.Publish(

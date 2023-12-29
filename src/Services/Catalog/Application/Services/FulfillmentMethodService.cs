@@ -2,11 +2,11 @@
 
 public class FulfillmentMethodService
 {
-    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly IEventBus _eventBus;
 
     public FulfillmentMethodService(
-        IRepositoryBase<CatalogItem> catalogRepo, IEventBus eventBus)
+        IRepository<CatalogItem> catalogRepo, IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
         _eventBus = eventBus;

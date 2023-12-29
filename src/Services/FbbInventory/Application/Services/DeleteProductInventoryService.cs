@@ -2,11 +2,11 @@
 
 public class DeleteProductInventoryService
 {
-    private readonly Repository<ProductInventory> _productInventoryRepo;
+    private readonly IRepository<ProductInventory> _productInventoryRepo;
     private readonly IEventBus _eventBus;
 
     public DeleteProductInventoryService(
-        Repository<ProductInventory> productInventoryRepo, IEventBus eventBus)
+        IRepository<ProductInventory> productInventoryRepo, IEventBus eventBus)
     {
         _productInventoryRepo = productInventoryRepo;
         _eventBus = eventBus;

@@ -3,10 +3,10 @@
 public class OrderPlacedIntegrationEventHandler
     : IIntegrationEventHandler<OrderPlacedIntegrationEvent>
 {
-    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly IEventBus _eventBus;
 
-    public OrderPlacedIntegrationEventHandler(IRepositoryBase<CatalogItem> catalogRepo, IEventBus eventBus)
+    public OrderPlacedIntegrationEventHandler(IRepository<CatalogItem> catalogRepo, IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
         _eventBus = eventBus;

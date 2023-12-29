@@ -4,11 +4,11 @@
 [ApiController]
 public class InventoryPickupsController : ControllerBase
 {
-    private readonly Repository<InventoryPickup> _pickupRepository;
+    private readonly IRepository<InventoryPickup> _pickupRepository;
     private readonly PickupProcessService _pickupProcessService;
 
     public InventoryPickupsController(
-        Repository<InventoryPickup> pickupRepository,
+        IRepository<InventoryPickup> pickupRepository,
         PickupProcessService pickupProcessService)
     {
         _pickupRepository = pickupRepository;

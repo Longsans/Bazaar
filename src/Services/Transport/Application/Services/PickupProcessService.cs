@@ -2,12 +2,12 @@
 
 public class PickupProcessService
 {
-    private readonly Repository<InventoryPickup> _pickupRepo;
+    private readonly IRepository<InventoryPickup> _pickupRepo;
     private readonly IEstimationService _estimationService;
     private readonly IEventBus _eventBus;
 
     public PickupProcessService(
-        Repository<InventoryPickup> pickupRepo, IEstimationService estimationService, IEventBus eventBus)
+        IRepository<InventoryPickup> pickupRepo, IEstimationService estimationService, IEventBus eventBus)
     {
         _pickupRepo = pickupRepo;
         _estimationService = estimationService;

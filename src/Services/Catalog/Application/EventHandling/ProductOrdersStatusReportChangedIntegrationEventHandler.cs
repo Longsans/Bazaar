@@ -3,10 +3,10 @@
 public class ProductOrdersStatusReportChangedIntegrationEventHandler
     : IIntegrationEventHandler<ProductOrdersStatusReportChangedIntegrationEvent>
 {
-    private readonly IRepositoryBase<CatalogItem> _catalogRepo;
+    private readonly IRepository<CatalogItem> _catalogRepo;
 
     public ProductOrdersStatusReportChangedIntegrationEventHandler(
-        IRepositoryBase<CatalogItem> catalogRepo)
+        IRepository<CatalogItem> catalogRepo)
     {
         _catalogRepo = catalogRepo;
     }

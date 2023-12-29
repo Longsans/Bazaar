@@ -1,4 +1,4 @@
-﻿namespace Bazaar.Ordering.Infrastructure.Repositories;
+﻿namespace Bazaar.Ordering.Infrastructure.Database;
 
 public static class OrderingDbSeeding
 {

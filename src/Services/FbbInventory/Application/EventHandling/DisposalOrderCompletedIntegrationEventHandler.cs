@@ -3,11 +3,11 @@
 public class DisposalOrderCompletedIntegrationEventHandler
     : IIntegrationEventHandler<DisposalOrderCompletedIntegrationEvent>
 {
-    private readonly Repository<ProductInventory> _productInventoryRepo;
-    private readonly Repository<Lot> _lotRepo;
+    private readonly IRepository<ProductInventory> _productInventoryRepo;
+    private readonly IRepository<Lot> _lotRepo;
 
     public DisposalOrderCompletedIntegrationEventHandler(
-        Repository<ProductInventory> productInventoryRepo, Repository<Lot> lotRepo)
+        IRepository<ProductInventory> productInventoryRepo, IRepository<Lot> lotRepo)
     {
         _productInventoryRepo = productInventoryRepo;
         _lotRepo = lotRepo;

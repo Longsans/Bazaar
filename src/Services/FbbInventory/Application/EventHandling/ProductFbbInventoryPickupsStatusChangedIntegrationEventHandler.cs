@@ -3,11 +3,11 @@
 public class ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler
     : IIntegrationEventHandler<ProductFbbInventoryPickupsStatusChangedIntegrationEvent>
 {
-    private readonly Repository<ProductInventory> _productInventoryRepo;
+    private readonly IRepository<ProductInventory> _productInventoryRepo;
     private readonly IEventBus _eventBus;
 
     public ProductFbbInventoryPickupsStatusChangedIntegrationEventHandler(
-        Repository<ProductInventory> productInventoryRepo, IEventBus eventBus)
+        IRepository<ProductInventory> productInventoryRepo, IEventBus eventBus)
     {
         _productInventoryRepo = productInventoryRepo;
         _eventBus = eventBus;

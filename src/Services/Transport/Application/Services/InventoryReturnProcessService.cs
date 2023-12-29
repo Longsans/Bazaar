@@ -2,11 +2,11 @@
 
 public class InventoryReturnProcessService
 {
-    private readonly Repository<InventoryReturn> _returnRepo;
+    private readonly IRepository<InventoryReturn> _returnRepo;
     private readonly IEventBus _eventBus;
 
     public InventoryReturnProcessService(
-        Repository<InventoryReturn> returnRepository, IEventBus eventBus)
+        IRepository<InventoryReturn> returnRepository, IEventBus eventBus)
     {
         _returnRepo = returnRepository;
         _eventBus = eventBus;

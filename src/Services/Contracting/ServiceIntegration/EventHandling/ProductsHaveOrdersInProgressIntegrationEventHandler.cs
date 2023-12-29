@@ -3,10 +3,10 @@
 public class ProductsHaveOrdersInProgressIntegrationEventHandler
     : IIntegrationEventHandler<ProductsHaveOrdersInProgressIntegrationEvent>
 {
-    private readonly Repository<Client> _clientRepo;
+    private readonly IRepository<Client> _clientRepo;
 
     public ProductsHaveOrdersInProgressIntegrationEventHandler(
-        Repository<Client> clientRepo)
+        IRepository<Client> clientRepo)
     {
         _clientRepo = clientRepo;
     }

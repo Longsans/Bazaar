@@ -24,7 +24,7 @@ builder.Services.AddScoped<UpdateClientEmailAddressService>();
 builder.Services.AddScoped<CloseClientAccountService>();
 
 // Data services
-builder.Services.AddScoped(typeof(Repository<>));
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(_ => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 
 // Event bus

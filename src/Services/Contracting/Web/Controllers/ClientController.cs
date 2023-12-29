@@ -4,14 +4,14 @@ namespace Bazaar.Contracting.Web.Controllers;
 [ApiController]
 public class ClientController : ControllerBase
 {
-    private readonly Repository<Client> _clientRepo;
-    private readonly Repository<SellingPlan> _planRepo;
+    private readonly IRepository<Client> _clientRepo;
+    private readonly IRepository<SellingPlan> _planRepo;
     private readonly UpdateClientEmailAddressService _updateEmailAddressService;
     private readonly CloseClientAccountService _closeClientAccountService;
 
     public ClientController(
-        Repository<Client> clientRepo,
-        Repository<SellingPlan> planRepo,
+        IRepository<Client> clientRepo,
+        IRepository<SellingPlan> planRepo,
         UpdateClientEmailAddressService updateEmailAddressService,
         CloseClientAccountService closeClientAccountService)
     {

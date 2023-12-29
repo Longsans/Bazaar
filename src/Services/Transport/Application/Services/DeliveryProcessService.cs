@@ -2,12 +2,12 @@
 
 public class DeliveryProcessService
 {
-    private readonly Repository<Delivery> _deliveryRepo;
+    private readonly IRepository<Delivery> _deliveryRepo;
     private readonly IEstimationService _estimationService;
     private readonly IEventBus _eventBus;
 
     public DeliveryProcessService(
-        Repository<Delivery> deliveryRepo,
+        IRepository<Delivery> deliveryRepo,
         IEstimationService estimationService,
         IEventBus eventBus)
     {

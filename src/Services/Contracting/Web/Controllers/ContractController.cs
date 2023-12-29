@@ -4,9 +4,9 @@
 [ApiController]
 public class ContractController : ControllerBase
 {
-    private readonly Repository<Contract> _contractRepo;
+    private readonly IRepository<Contract> _contractRepo;
 
-    public ContractController(Repository<Contract> contractRepository)
+    public ContractController(IRepository<Contract> contractRepository)
     {
         _contractRepo = contractRepository;
     }

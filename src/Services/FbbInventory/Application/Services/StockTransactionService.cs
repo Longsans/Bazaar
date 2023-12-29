@@ -3,12 +3,12 @@
 public class StockTransactionService
 {
     private readonly IQualityInspectionService _qualityInspectionService;
-    private readonly Repository<ProductInventory> _productInvenRepo;
+    private readonly IRepository<ProductInventory> _productInvenRepo;
     private readonly IEventBus _eventBus;
 
     public StockTransactionService(
         IQualityInspectionService qualityInspectionService,
-        Repository<ProductInventory> productInvenRepo,
+        IRepository<ProductInventory> productInvenRepo,
         IEventBus eventBus)
     {
         _qualityInspectionService = qualityInspectionService;

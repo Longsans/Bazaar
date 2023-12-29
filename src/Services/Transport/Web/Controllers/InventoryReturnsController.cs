@@ -4,10 +4,10 @@
 [ApiController]
 public class InventoryReturnsController : ControllerBase
 {
-    private readonly Repository<InventoryReturn> _returnRepo;
+    private readonly IRepository<InventoryReturn> _returnRepo;
     private readonly InventoryReturnProcessService _returnConclusionService;
 
-    public InventoryReturnsController(Repository<InventoryReturn> returnRepo,
+    public InventoryReturnsController(IRepository<InventoryReturn> returnRepo,
         InventoryReturnProcessService returnConclusionService)
     {
         _returnRepo = returnRepo;

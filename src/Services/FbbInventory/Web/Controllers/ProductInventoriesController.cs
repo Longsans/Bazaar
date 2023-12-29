@@ -4,11 +4,11 @@
 [ApiController]
 public class ProductInventoriesController : ControllerBase
 {
-    private readonly Repository<ProductInventory> _productInventoryRepo;
+    private readonly IRepository<ProductInventory> _productInventoryRepo;
     private readonly StockTransactionService _stockTxnService;
 
     public ProductInventoriesController(
-        Repository<ProductInventory> productInventoryRepo,
+        IRepository<ProductInventory> productInventoryRepo,
         StockTransactionService stockTxnService)
     {
         _productInventoryRepo = productInventoryRepo;

@@ -3,13 +3,13 @@
 public class ProductFulfillmentChangedToMerchantIntegrationEventHandler
     : IIntegrationEventHandler<ProductFulfillmentChangedToMerchantIntegrationEvent>
 {
-    private readonly Repository<ProductInventory> _productInventoryRepo;
+    private readonly IRepository<ProductInventory> _productInventoryRepo;
     private readonly StockAdjustmentService _stockAdjustmentService;
     private readonly ILogger<ProductFulfillmentChangedToMerchantIntegrationEventHandler> _logger;
     private readonly IEventBus _eventBus;
 
     public ProductFulfillmentChangedToMerchantIntegrationEventHandler(
-        Repository<ProductInventory> productInventoryRepo, StockAdjustmentService stockAdjustmentService,
+        IRepository<ProductInventory> productInventoryRepo, StockAdjustmentService stockAdjustmentService,
         IEventBus eventBus, ILogger<ProductFulfillmentChangedToMerchantIntegrationEventHandler> logger)
     {
         _productInventoryRepo = productInventoryRepo;

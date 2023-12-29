@@ -1,4 +1,4 @@
-﻿namespace Bazaar.ShopperInfo.Infrastructure.Repositories;
+﻿namespace Bazaar.ShopperInfo.Infrastructure.Database;
 
 public class ShopperInfoDbContext : DbContext
 {

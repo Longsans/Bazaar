@@ -2,12 +2,12 @@
 
 public class StockAdjustmentService
 {
-    private readonly Repository<Lot> _lotRepo;
-    private readonly Repository<ProductInventory> _productInvenRepo;
+    private readonly IRepository<Lot> _lotRepo;
+    private readonly IRepository<ProductInventory> _productInvenRepo;
     private readonly IEventBus _eventBus;
 
-    public StockAdjustmentService(Repository<Lot> lotRepo,
-        Repository<ProductInventory> productInvenRepo, IEventBus eventBus)
+    public StockAdjustmentService(IRepository<Lot> lotRepo,
+        IRepository<ProductInventory> productInvenRepo, IEventBus eventBus)
     {
         _lotRepo = lotRepo;
         _productInvenRepo = productInvenRepo;

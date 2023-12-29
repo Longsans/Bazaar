@@ -16,6 +16,7 @@ services:
       - basket
       - disposal
       - transport
+      - contracting
       - all
   
   sqldata:
@@ -125,6 +126,7 @@ services:
     depends_on:
       - internallb
       - sqldata
+      - rabbitmq
     profiles:
       - contracting
       - all

@@ -16,7 +16,7 @@ builder.Services.AddScoped<InventoryReturnProcessService>();
 builder.Services.AddScoped<DeliveryProcessService>();
 builder.Services.AddScoped<PickupProcessService>();
 
-builder.Services.AddScoped(typeof(Repository<>));
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddDbContext<TransportDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
