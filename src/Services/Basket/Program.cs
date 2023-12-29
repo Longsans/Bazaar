@@ -1,5 +1,3 @@
-using RabbitMQ.Client;
-
 var builder = WebApplication.CreateBuilder(args);
 var IF_IDENTITY_ELSE = (Action doWithIdentity, Action doWithoutIdentity) =>
 {
@@ -25,6 +23,7 @@ builder.Services.AddDbContext<BasketDbContext>(options =>
 
 builder.Services.AddScoped<IBasketCheckoutService, BasketCheckoutService>();
 
+builder.Services.AddValidatorsFromAssemblyContaining<BasketCheckoutValidator>();
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 

@@ -95,7 +95,7 @@ public class StockTransactionService
             });
         }
 
-        var issue = new StockIssue(issueReason);
+        var issueItems = new List<StockIssueItem>();
         var updatedInventories = new List<ProductInventory>();
         try
         {
@@ -112,13 +112,17 @@ public class StockTransactionService
                 if (issueQuantity.GoodQuantity > 0)
                 {
                     var demandedLots = inventory.GetGoodLotsFifoForStockDemand(issueQuantity.GoodQuantity);
-                    IssueStockFromLots(demandedLots, issueQuantity.GoodQuantity, ref issue);
+                    var lotsIssue = IssueStockFromLots(
+                        demandedLots, issueQuantity.GoodQuantity, issueReason);
+                    issueItems.AddRange(lotsIssue.Items);
                 }
                 if (issueQuantity.UnfulfillableQuantity > 0)
                 {
                     var demandedLots = inventory.GetUnfulfillabbleLotsFifoForStockDemand(
                         issueQuantity.UnfulfillableQuantity);
-                    IssueStockFromLots(demandedLots, issueQuantity.UnfulfillableQuantity, ref issue);
+                    var lotsIssue = IssueStockFromLots(
+                        demandedLots, issueQuantity.UnfulfillableQuantity, issueReason);
+                    issueItems.AddRange(lotsIssue.Items);
                 }
                 inventory.RemoveEmptyLots();
                 updatedInventories.Add(inventory);
@@ -130,23 +134,26 @@ public class StockTransactionService
         }
 
         await _productInvenRepo.UpdateRangeAsync(updatedInventories);
-        var issuedItems = issueQuantities.Select(x =>
+        var issue = new StockIssue(issueItems, issueReason);
+        var issueEventItems = issueQuantities.Select(x =>
             new IssuedStockEventItem(x.ProductId, x.GoodQuantity, x.UnfulfillableQuantity));
         var stockIssuedEvent = new StockIssuedIntegrationEvent(
-            DateTime.Now.Date, issueReason, issuedItems);
+            DateTime.Now.Date, issueReason, issueEventItems);
         _eventBus.Publish(stockIssuedEvent);
         return Result.Success(issue);
     }
 
-    private static void IssueStockFromLots(
-        IEnumerable<Lot> lots, uint quantity, ref StockIssue currentIssue)
+    private static StockIssue IssueStockFromLots(
+        IEnumerable<Lot> lots, uint quantity, StockIssueReason issueReason)
     {
+        StockIssue? issue = null;
         foreach (var lot in lots)
         {
             var issueUnits = Math.Min(quantity, lot.UnitsInStock);
-            var lotIssue = lot.IssueUnits(issueUnits, currentIssue.IssueReason);
-            currentIssue = currentIssue.AddItems(lotIssue.Items);
+            var lotIssue = lot.IssueUnits(issueUnits, issueReason);
+            issue = issue?.AddItems(lotIssue.Items) ?? lotIssue;
             quantity -= issueUnits;
         }
+        return issue!;
     }
 }

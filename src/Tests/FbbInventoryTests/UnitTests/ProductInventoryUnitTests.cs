@@ -342,7 +342,7 @@ public class ProductInventoryUnitTests
         foreach (var lot in lotsToRemove)
         {
             if (lot.UnitsInStock > 0)
-                lot.IssueUnits(lot.UnitsInStock, StockIssueReason.Disposal);
+                lot.AdjustUnits(-(int)lot.UnitsInStock);
             if (lot.UnitsInRemoval > 0)
                 lot.ConfirmUnitsRemoved(lot.UnitsInRemoval);
         }

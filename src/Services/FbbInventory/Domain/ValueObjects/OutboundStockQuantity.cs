@@ -9,8 +9,14 @@ public class OutboundStockQuantity
     public OutboundStockQuantity(string productId,
         uint goodQuantity, uint unfulfillableQuantity)
     {
+        if (string.IsNullOrWhiteSpace(productId))
+        {
+            throw new ArgumentException("Product ID cannot be empty.");
+        }
         if (goodQuantity + unfulfillableQuantity == 0)
+        {
             throw new ArgumentException("Total quantity cannot be 0.");
+        }
 
         ProductId = productId;
         GoodQuantity = goodQuantity;

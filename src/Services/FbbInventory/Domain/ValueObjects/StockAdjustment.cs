@@ -84,6 +84,14 @@ public class StockAdjustmentItem
     public StockAdjustmentItem(string productId, string lotNumber,
         int quantityAdjusted, StockAdjustmentReason adjustmentReason)
     {
+        if (string.IsNullOrWhiteSpace(productId))
+        {
+            throw new ArgumentException("Product ID cannot be empty.");
+        }
+        if (string.IsNullOrWhiteSpace(lotNumber))
+        {
+            throw new ArgumentException("Lot number cannot be empty.");
+        }
         if (quantityAdjusted == 0)
         {
             throw new ArgumentOutOfRangeException(nameof(quantityAdjusted),

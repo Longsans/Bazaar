@@ -6,3 +6,9 @@ public readonly record struct StockRemovalRequest(
 
 public readonly record struct StockRemovalRequestItem(string ProductId,
     uint GoodQuantity, uint UnfulfillableQuantity);
+
+public enum RemovalMethod
+{
+    Return = 1,
+    Disposal = 2,
+}
