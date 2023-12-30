@@ -1,7 +1,7 @@
 ﻿namespace Bazaar.Catalog.Domain.Exceptions;
 
-public class DeleteFbbProductWhenFbbInventoryNotEmptyException : Exception
+public class ProductFbbInventoryNotEmptyException : Exception
 {
-    public DeleteFbbProductWhenFbbInventoryNotEmptyException()
+    public ProductFbbInventoryNotEmptyException()
         : base("Cannot delete a FBB product until its FBB inventory has been emptied.") { }
 }

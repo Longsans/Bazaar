@@ -4,6 +4,7 @@ global using Bazaar.Ordering.Application.Services;
 global using Bazaar.Ordering.Domain.Entites;
 global using Bazaar.Ordering.Domain.Exceptions;
 global using Bazaar.Ordering.Domain.Interfaces;
+global using Bazaar.Ordering.Infrastructure.Database;
 global using Bazaar.Ordering.Infrastructure.Repositories;
 global using Moq;
 global using OrderingTests.Helpers;

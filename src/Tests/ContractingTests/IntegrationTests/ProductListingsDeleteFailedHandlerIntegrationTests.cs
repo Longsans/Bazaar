@@ -1,14 +1,15 @@
 ﻿namespace ContractingTests.IntegrationTests;
 
 [Collection(Constants.INTEGRATION_TESTS_COLLECTION)]
-public class ProductsHaveOrdersHandlerIntegrationTests
+public class ProductListingsDeleteFailedHandlerIntegrationTests
 {
-    private readonly ProductsHaveOrdersInProgressIntegrationEventHandler _handler;
+    private readonly ProductListingsDeleteFailedIntegrationEventHandler _handler;
     private readonly IRepository<Client> _clientRepo;
     private readonly Client _testClient;
 
-    public ProductsHaveOrdersHandlerIntegrationTests(
-        ContractingDbContext dbContext, IRepository<Client> clientRepo)
+    public ProductListingsDeleteFailedHandlerIntegrationTests(
+        ContractingDbContext dbContext, IRepository<Client> clientRepo,
+        ILogger<ProductListingsDeleteFailedIntegrationEventHandler> logger)
     {
         dbContext.Database.EnsureDeleted();
         dbContext.Database.EnsureCreated();
@@ -24,7 +25,7 @@ public class ProductsHaveOrdersHandlerIntegrationTests
         dbContext.SaveChanges();
 
         _clientRepo = clientRepo;
-        _handler = new(_clientRepo);
+        _handler = new(_clientRepo, logger);
     }
 
     [Fact]
@@ -33,8 +34,13 @@ public class ProductsHaveOrdersHandlerIntegrationTests
         // arrange
         _testClient.CloseAccount();
         await _clientRepo.UpdateAsync(_testClient);
-        var @event = new ProductsHaveOrdersInProgressIntegrationEvent(
-            new string[] { "PROD-1", "PROD-2" }, _testClient.ExternalId);
+        var failedListings = new FailedDeleteListing[]
+        {
+            new("PROD-1", ListingDeleteFailureReason.HasOrdersInProgress),
+            new("PROD-2", ListingDeleteFailureReason.HasFbbStock),
+        };
+        var @event = new ProductListingsDeleteFailedIntegrationEvent(
+            failedListings, _testClient.ExternalId);
 
         // act
         await _handler.Handle(@event);

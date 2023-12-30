@@ -1,3 +1,3 @@
-﻿namespace Bazaar.Contracting.ServiceIntegration.IntegrationEvents;
+﻿namespace Bazaar.Contracting.Application.IntegrationEvents;
 
 public record ClientAccountClosedIntegrationEvent(string ClientId) : IntegrationEvent;
