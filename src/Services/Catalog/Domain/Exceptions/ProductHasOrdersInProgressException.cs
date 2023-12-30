@@ -1,7 +1,7 @@
 ﻿namespace Bazaar.Catalog.Domain.Exceptions;
 
-public class DeleteProductWithOrdersInProgressException : Exception
+public class ProductHasOrdersInProgressException : Exception
 {
-    public DeleteProductWithOrdersInProgressException()
+    public ProductHasOrdersInProgressException()
         : base("This product cannot be deleted because it has orders in progress.") { }
 }

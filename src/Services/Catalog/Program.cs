@@ -11,7 +11,6 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
-builder.Services.AddScoped<DeleteCatalogItemService>();
 builder.Services.AddScoped<FulfillmentMethodService>();
 builder.Services.AddScoped<ListingService>();
 

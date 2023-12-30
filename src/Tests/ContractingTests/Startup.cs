@@ -15,5 +15,6 @@ internal class Startup
 
         services.AddTransient<EventBusTestDouble>();
         services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+        services.AddLogging();
     }
 }

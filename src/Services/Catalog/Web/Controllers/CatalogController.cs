@@ -5,16 +5,13 @@ namespace Bazaar.Catalog.Web.Controllers;
 public class CatalogController : ControllerBase
 {
     private readonly IRepository<CatalogItem> _catalogRepo;
-    private readonly DeleteCatalogItemService _deleteService;
     private readonly ListingService _listingService;
 
     public CatalogController(
         IRepository<CatalogItem> catalogRepo,
-        DeleteCatalogItemService deleteService,
         ListingService listingService)
     {
         _catalogRepo = catalogRepo;
-        _deleteService = deleteService;
         _listingService = listingService;
     }
 
@@ -137,7 +134,7 @@ public class CatalogController : ControllerBase
             return NotFound();
         }
 
-        // This bit of business logic unfortunately can only be here
+        // This bit of business logic being here is fine for the moment
         if (catalogItem.IsFbb)
         {
             return Conflict(new
@@ -167,14 +164,15 @@ public class CatalogController : ControllerBase
         return new CatalogItemResponse(catalogItem);
     }
 
-    // Shopper only
+    // Seller only
     [HttpPatch("{productId}/listing")]
     public async Task<IActionResult> ChangeListingStatus(string productId, ChangeListingStatusRequest request)
     {
         var result = request.Status switch
         {
-            ListingCloseStatus.Listed => await _listingService.Relist(productId),
-            ListingCloseStatus.Closed => await _listingService.CloseListing(productId),
+            RequestedListingStatus.Listed => await _listingService.Relist(productId),
+            RequestedListingStatus.Closed => await _listingService.CloseListing(productId),
+            RequestedListingStatus.Deleted => await _listingService.DeleteListing(productId),
             _ => Result.Invalid(new ValidationError
             {
                 Identifier = nameof(request.Status),
@@ -182,23 +180,5 @@ public class CatalogController : ControllerBase
             })
         };
         return result.ToActionResult(this);
-    }
-
-    // Shopper only
-    [HttpDelete("{productId}")]
-    public async Task<IActionResult> SoftDelete(string productId)
-    {
-        try
-        {
-            await _deleteService.SoftDeleteByProductId(productId);
-        }
-        catch (Exception ex) when
-            (ex is DeleteProductWithOrdersInProgressException
-            || ex is DeleteFbbProductWhenFbbInventoryNotEmptyException)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-
-        return NoContent();
     }
 }

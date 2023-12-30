@@ -56,4 +56,33 @@ public class ListingService
         _eventBus.Publish(new ProductRelistedIntegrationEvent(catalogItem.ProductId));
         return Result.Success();
     }
+
+    public async Task<Result> DeleteListing(string productId)
+    {
+        var item = await _catalogRepo.SingleOrDefaultAsync(
+            new CatalogItemByProductIdSpec(productId));
+        if (item == null)
+        {
+            return Result.NotFound("Catalog item not found.");
+        }
+
+        if (item.IsDeleted)
+        {
+            return Result.Success();
+        }
+
+        try
+        {
+            item.DeleteListing();
+        }
+        catch (Exception ex)
+        {
+            return Result.Conflict(ex.Message);
+        }
+        await _catalogRepo.UpdateAsync(item);
+        _eventBus.Publish(
+            new ProductListingDeletedIntegrationEvent(item.ProductId));
+
+        return Result.Success();
+    }
 }

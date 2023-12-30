@@ -19,6 +19,7 @@ public class CatalogItem
     public bool IsOutOfStock => ListingStatus == ListingStatus.InactiveOutOfStock;
     public bool IsListingClosed => ListingStatus == ListingStatus.InactiveClosedListing;
     public bool IsDeleted => ListingStatus == ListingStatus.Deleted;
+    public bool IsDeletable => !HasOrdersInProgress && (!IsFbb || AvailableStock == 0);
 
     // Create constructor
     public CatalogItem(
@@ -121,8 +122,23 @@ public class CatalogItem
             : throw new InvalidOperationException();
     }
 
-    public void Delete()
+    public void DeleteListing()
     {
+        if (IsDeleted)
+        {
+            return;
+        }
+        // All orders must be completed in order to delete product
+        if (HasOrdersInProgress)
+        {
+            throw new ProductHasOrdersInProgressException();
+        }
+
+        // If the product is fulfilled by Bazaar then all FBB stock must be moved out before deleting
+        if (IsFbb && AvailableStock > 0)
+        {
+            throw new ProductFbbInventoryNotEmptyException();
+        }
         ListingStatus = ListingStatus.Deleted;
     }
 

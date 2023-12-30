@@ -1,3 +1,5 @@
+using Bazaar.Contracting.Application.IntegrationEvents;
+
 var builder = WebApplication.CreateBuilder(args);
 var IF_IDENTITY_ELSE = (Action doWithIdentity, Action doWithoutIdentity) =>
 {
@@ -133,18 +135,14 @@ public static class EventBusExtensionMethods
                 subscriptionClientName,
                 retryCount);
         });
-        services.AddTransient<ProductsHaveOrdersInProgressIntegrationEventHandler>();
-        services.AddTransient<ProductsHaveFbbStocksIntegrationEventHandler>();
+        services.AddTransient<ProductListingsDeleteFailedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
         eventBus.Subscribe<
-            ProductsHaveOrdersInProgressIntegrationEvent,
-            ProductsHaveOrdersInProgressIntegrationEventHandler>();
-        eventBus.Subscribe<
-            ProductsHaveFbbStocksIntegrationEvent,
-            ProductsHaveFbbStocksIntegrationEventHandler>();
+            ProductListingsDeleteFailedIntegrationEvent,
+            ProductListingsDeleteFailedIntegrationEventHandler>();
     }
 }

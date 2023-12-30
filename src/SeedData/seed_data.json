@@ -13,7 +13,7 @@
       "ProductName": "A Dream of Spring",
       "ProductDescription": "Last book in ASOIAF",
       "Price": 45.99,
-      "AvailableStock": 1000,
+      "AvailableStock": 100,
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false
@@ -22,7 +22,7 @@
       "ProductName": "The Intelligent Investor",
       "ProductDescription": "The greatest investment advisor of the twentieth century, Benjamin Graham, taught and inspired people worldwide. Graham's philosophy of \"value investing\" -- which shields investors from substantial error and teaches them to develop long-term strategies -- has made The Intelligent Investor the stock market bible ever since its original publication in 1949.",
       "Price": 16.54,
-      "AvailableStock": 1000,
+      "AvailableStock": 100,
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false
@@ -31,7 +31,7 @@
       "ProductName": "Security Analysis",
       "ProductDescription": "First published in 1934, Security Analysis is one of the most influential financial books ever written. With more than million copies sold, it has provided generations of investors with the timeless value investing philosophy and techniques of the legendary Benjamin Graham and David L. Dodd. The successful value investor must constantly be in the process of reinvention, of raising his or her game to navigate the terrain of new eras, novel securities, nascent businesses, emerging industries, shifting standards, and evolving market conditions. With the diverse perspectives of experienced contributors, this new edition of Security Analysis is a rich and varied tapestry of highly informed investment thinking that will be a worthy and long-lived successor to the preceding editions.",
       "Price": 62.47,
-      "AvailableStock": 1000,
+      "AvailableStock": 100,
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false
