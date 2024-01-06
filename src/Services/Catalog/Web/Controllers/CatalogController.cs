@@ -15,12 +15,13 @@ public class CatalogController : ControllerBase
         _listingService = listingService;
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{productId}")]
     //[Authorize(Policy = "HasReadScope")]
-    public async Task<ActionResult<CatalogItemResponse>> GetById(int id, bool includeDeleted = false)
+    public async Task<ActionResult<CatalogItemResponse>> GetByProductId(string productId, bool includeDeleted = false)
     {
-        var item = await _catalogRepo.GetByIdAsync(id);
-        if (item == null || !includeDeleted && item.IsDeleted)
+        var item = await _catalogRepo.SingleOrDefaultAsync(
+            new CatalogItemByProductIdSpec(productId, includeDeleted));
+        if (item == null)
         {
             return NotFound();
         }
@@ -100,7 +101,7 @@ public class CatalogController : ControllerBase
     public async Task<ActionResult<CatalogItemResponse>> Create(CreateCatalogItemRequest command)
     {
         var createdItem = await _catalogRepo.AddAsync(command.ToNewCatalogItem());
-        return CreatedAtAction(nameof(GetById), new { createdItem.Id },
+        return CreatedAtAction(nameof(GetByProductId), new { createdItem.Id },
             new CatalogItemResponse(createdItem));
     }
 

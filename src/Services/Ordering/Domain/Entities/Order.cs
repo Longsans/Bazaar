@@ -14,6 +14,7 @@ public class Order
     public string? CancelReason { get; private set; }
 
     public bool IsAllStocksConfirmed => Items.All(x => x.Status == OrderItemStatus.StockConfirmed);
+    //public bool IsAllItemsSellerConfirmed => Items.All(x => x.Status == OrderItemStatus.SellerConfirmed);
     public bool CanProceedToPayment => Status == OrderStatus.PendingValidation && IsAllStocksConfirmed;
 
     // Create constructor
@@ -92,7 +93,7 @@ public class Order
 
     public void Ship()
     {
-        Status = Status == OrderStatus.PendingSellerConfirmation
+        Status = Status == OrderStatus.PendingSellerConfirmation // && IsAllItemsSellerConfirmed
             ? OrderStatus.Shipping
             : throw new InvalidOperationException(
                 "Can only start shipment if order was previously pending seller's confirmation.");

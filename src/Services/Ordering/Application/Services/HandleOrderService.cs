@@ -120,7 +120,7 @@ public class HandleOrderService
 
     private void PublishProductOrdersStatusReport(string productId)
     {
-        var ordersForProduct = _orderRepository.GetByProductId(productId);
+        var ordersForProduct = _orderRepository.GetContainsProduct(productId);
         if (!ordersForProduct.Any())
             return;
 

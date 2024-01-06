@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Constants } from "../Constants";
+import { ApiEndpoints } from "../constants/ApiEndpoints";
 
 export function Profile() {
   const [profile, setProfile] = useState(null);
@@ -7,7 +7,7 @@ export function Profile() {
 
   useEffect(() => {
     const getProfileAsync = async () => {
-      const response = await fetch(Constants.fetchProfile);
+      const response = await fetch(ApiEndpoints.fetchProfile("SPER-1"));
       const data = await response.json();
       setProfile(data);
     };
