@@ -34,21 +34,36 @@ public class ShoppersController : ControllerBase
     [HttpPost]
     public ActionResult<Shopper> Register(ShopperWriteRequest request)
     {
-        var created = _shopperRepo.Create(request.ToNewShopper());
-        return CreatedAtAction(
-            nameof(GetById), new { id = created.Id }, created);
+        try
+        {
+            var created = _shopperRepo.Create(request.ToNewShopper());
+            return CreatedAtAction(
+                nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPut("{externalId}")]
     public IActionResult UpdatedInfo(string externalId, ShopperWriteRequest request)
     {
-        var update = request.ToExistingShopper(externalId);
-        var existingShopper = _shopperRepo.GetByExternalId(externalId);
-
-        if (existingShopper == null)
+        var shopper = _shopperRepo.GetByExternalId(externalId);
+        if (shopper == null)
             return NotFound(new { externalId });
 
-        _shopperRepo.Update(update);
+        try
+        {
+            shopper.UpdatePersonalInfo(
+                request.FirstName, request.LastName, request.EmailAddress,
+                request.PhoneNumber, request.DateOfBirth, request.Gender);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        _shopperRepo.Update(shopper);
         return NoContent();
     }
 }

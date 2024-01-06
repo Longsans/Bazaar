@@ -5,7 +5,7 @@ public class ShopperQuery
     public string Id { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
-    public string Email { get; set; }
+    public string EmailAddress { get; set; }
     public string PhoneNumber { get; set; }
     public string DateOfBirth { get; set; }
     public string Gender { get; set; }
@@ -15,7 +15,7 @@ public class ShopperQuery
         Id = shopper.ExternalId;
         FirstName = shopper.FirstName;
         LastName = shopper.LastName;
-        Email = shopper.Email;
+        EmailAddress = shopper.EmailAddress;
         PhoneNumber = shopper.PhoneNumber;
         DateOfBirth = shopper.DateOfBirth.ToString("dd/MM/yyyy");
         Gender = shopper.Gender switch
