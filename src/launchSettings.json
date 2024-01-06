@@ -5,8 +5,12 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
+          "basket",
           "catalog",
-          "contracting"
+          "shopper-info",
+          "webshop",
+          "ordering",
+          "fbbinventory"
         ]
       }
     }
