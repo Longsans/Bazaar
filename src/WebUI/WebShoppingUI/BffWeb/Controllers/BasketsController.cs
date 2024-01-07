@@ -56,7 +56,7 @@ public class BasketsController : ControllerBase
         return changeItemResult.ToActionResult();
     }
 
-    [HttpPost("checkouts")]
+    [HttpPost("/api/checkouts")]
     public async Task<IActionResult> Checkout(BasketCheckout checkout)
     {
         var checkoutResult = await _basketMgr.Checkout(checkout);

@@ -9,8 +9,8 @@
           "catalog",
           "shopper-info",
           "webshop",
-          "ordering",
-          "fbbinventory"
+          "id",
+          "ordering"
         ]
       }
     }

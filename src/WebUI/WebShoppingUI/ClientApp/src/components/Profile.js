@@ -21,6 +21,7 @@ export function Profile() {
   return (
     <>
       <h1>Profile</h1>
+      <br />
       {loading ? (
         <p>
           <em>Loading...</em>
@@ -41,7 +42,7 @@ export function Profile() {
               <td>{profile.id}</td>
               <td>{profile.firstName}</td>
               <td>{profile.lastName}</td>
-              <td>{profile.email}</td>
+              <td>{profile.emailAddress}</td>
               <td>{profile.phoneNumber}</td>
               <td>{profile.dateOfBirth}</td>
               <td>{profile.gender}</td>

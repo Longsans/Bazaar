@@ -92,7 +92,7 @@ public static class ConfigExtensions
 
         app.UseIdentityServerBrowserAddresses();
 
-        app.UseCors();
+        app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
         app.UseStaticFiles();
         app.UseRouting();
 
