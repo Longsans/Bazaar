@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import {
   Collapse,
+  NavbarToggler,
   Navbar,
   NavbarBrand,
-  NavbarToggler,
   NavItem,
   NavLink,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { Bff } from "../constants/Bff";
 import "./NavMenu.css";
 
 export function NavMenu() {
@@ -34,7 +35,7 @@ export function NavMenu() {
 
   useEffect(() => {
     const getSession = async () => {
-      var req = new Request("/bff/user", {
+      var req = new Request(Bff.userPath, {
         headers: new Headers({
           "X-CSRF": "1",
         }),
@@ -43,10 +44,10 @@ export function NavMenu() {
       var resp = await fetch(req);
       if (resp.ok) {
         var claims = await resp.json();
-        let logoutPath = "/bff/logout";
+        let logoutPath = Bff.logoutPath;
         if (claims) {
           logoutPath = claims.find(
-            (claim) => claim.type === "bff:logout_url"
+            (claim) => claim.type === Bff.logoutPathClaimName
           ).value;
         }
         setLogoutUrl(getBffUri(logoutPath));
@@ -110,7 +111,7 @@ export function NavMenu() {
                 <NavLink
                   tag={Link}
                   className="text-dark"
-                  to={getBffUri(`/bff/login`)}
+                  to={getBffUri(Bff.loginPath)}
                   onClick={refreshPage}
                 >
                   Login

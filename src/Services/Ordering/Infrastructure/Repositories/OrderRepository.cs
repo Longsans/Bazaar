@@ -23,7 +23,7 @@ public class OrderRepository : IOrderRepository
             .Where(o => o.BuyerId == buyerId);
     }
 
-    public IEnumerable<Order> GetByProductId(string productId)
+    public IEnumerable<Order> GetContainsProduct(string productId)
     {
         return _context.Orders
             .Include(o => o.Items)

@@ -1,6 +1,8 @@
-﻿namespace Bazaar.ShopperInfo.Web.Messages;
+﻿namespace WebShoppingUI.Model;
 
-public class ShopperWriteRequest
+using System.Text.Json.Serialization;
+
+public class ShopperWriteCommand
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
@@ -10,11 +12,4 @@ public class ShopperWriteRequest
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public Gender Gender { get; set; }
-
-    public Shopper ToNewShopper()
-    {
-        return new Shopper(
-            FirstName, LastName, EmailAddress,
-            PhoneNumber, DateOfBirth, Gender);
-    }
 }
