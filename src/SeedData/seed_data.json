@@ -64,6 +64,14 @@
       "PhoneNumber": "0901222333",
       "Gender": "Male",
       "DateOfBirth": "1956-03-07"
+    },
+    {
+      "FirstName": "Sustavo",
+      "LastName": "Fring",
+      "EmailAddress": "sussybaka@gmail.com",
+      "PhoneNumber": "0901234567",
+      "Gender": "Male",
+      "DateOfBirth": "1969-06-09"
     }
   ],
   "orders": [

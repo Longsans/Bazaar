@@ -11,12 +11,10 @@ public class Shopper
     public DateTime DateOfBirth { get; private set; }
     public Gender Gender { get; private set; }
 
-    public Shopper(
-        string firstName, string lastName,
-        string emailAddress, string phoneNumber,
-        DateTime dateOfBirth, Gender gender)
+    public Shopper(string firstName, string lastName, string emailAddress, string phoneNumber, DateTime dateOfBirth, Gender gender)
     {
-        AssertPersonalInfo(firstName, lastName, emailAddress, phoneNumber, dateOfBirth, gender);
+        AssertPersonalInfo(firstName, lastName, phoneNumber, dateOfBirth, gender);
+        AssertEmailAddress(emailAddress);
         FirstName = firstName;
         LastName = lastName;
         EmailAddress = emailAddress;
@@ -25,22 +23,23 @@ public class Shopper
         Gender = gender;
     }
 
-    public void UpdatePersonalInfo(
-        string firstName, string lastName, string emailAddress,
-        string phoneNumber, DateTime dob, Gender gender)
+    public void UpdatePersonalInfo(string firstName, string lastName, string phoneNumber, DateTime dob, Gender gender)
     {
-        AssertPersonalInfo(firstName, lastName, emailAddress, phoneNumber, dob, gender);
+        AssertPersonalInfo(firstName, lastName, phoneNumber, dob, gender);
         FirstName = firstName;
         LastName = lastName;
-        EmailAddress = emailAddress;
         PhoneNumber = phoneNumber;
         DateOfBirth = dob;
         Gender = gender;
     }
 
-    private static void AssertPersonalInfo(
-        string firstName, string lastName, string emailAddress,
-        string phoneNumber, DateTime dob, Gender gender)
+    public void ChangeEmailAddress(string emailAddress)
+    {
+        AssertEmailAddress(emailAddress);
+        EmailAddress = emailAddress;
+    }
+
+    private static void AssertPersonalInfo(string firstName, string lastName, string phoneNumber, DateTime dob, Gender gender)
     {
         if (string.IsNullOrWhiteSpace(firstName))
         {
@@ -49,10 +48,6 @@ public class Shopper
         if (string.IsNullOrWhiteSpace(lastName))
         {
             throw new ArgumentException("Last name cannot be empty.");
-        }
-        if (string.IsNullOrWhiteSpace(emailAddress))
-        {
-            throw new ArgumentException("Email address cannot be empty.");
         }
         if (string.IsNullOrWhiteSpace(phoneNumber))
         {
@@ -65,6 +60,14 @@ public class Shopper
         if (!Enum.IsDefined(gender))
         {
             throw new ArgumentException("Gender value does not exist.");
+        }
+    }
+
+    public void AssertEmailAddress(string emailAddress)
+    {
+        if (string.IsNullOrWhiteSpace(emailAddress))
+        {
+            throw new ArgumentException("Email address cannot be empty.");
         }
     }
 }

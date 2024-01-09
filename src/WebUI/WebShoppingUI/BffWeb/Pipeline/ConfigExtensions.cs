@@ -52,7 +52,7 @@ public static class ConfigExtensions
 
         // HTTP services
         builder.Services.AddHttpContextAccessor();
-        builder.Services.AddSingleton<AddressService>();
+        builder.Services.AddSingleton<ApiEndpointResolver>();
 
         builder.Services.AddTransient<HttpClientAuthorizationHandler>();
 

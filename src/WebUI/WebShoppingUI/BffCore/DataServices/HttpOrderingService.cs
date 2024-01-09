@@ -5,16 +5,16 @@ using OrderResult = ServiceCallResult<Order>;
 
 public class HttpOrderingService : HttpService, IOrderingDataService
 {
-    private readonly AddressService _addressService;
+    private readonly ApiEndpointResolver _apiEndpoints;
 
-    public HttpOrderingService(HttpClient httpClient, AddressService addressService) : base(httpClient)
+    public HttpOrderingService(HttpClient httpClient, ApiEndpointResolver apiEndpoints) : base(httpClient)
     {
-        _addressService = addressService;
+        _apiEndpoints = apiEndpoints;
     }
 
     public async Task<OrderCollectionResult> GetOrdersByBuyerId(string buyerId)
     {
-        var response = await _httpClient.GetAsync(_addressService.OrdersByBuyerId(buyerId));
+        var response = await _httpClient.GetAsync(_apiEndpoints.OrdersByBuyerId(buyerId));
 
         if (response is null)
             return OrderCollectionResult.UntypedError("Get orders by buyer ID response null.");
@@ -33,7 +33,7 @@ public class HttpOrderingService : HttpService, IOrderingDataService
     public async Task<OrderCollectionResult> GetOrdersByBuyerIdContainingProducts(string buyerId, string[] productIds)
     {
         var response = await _httpClient.GetAsync(
-            _addressService.OrdersByBuyerIdAndProductIds(buyerId, productIds));
+            _apiEndpoints.OrdersByBuyerIdAndProductIds(buyerId, productIds));
 
         if (response is null)
             return OrderCollectionResult.UntypedError("Get orders by buyer ID containing products response null.");
@@ -57,7 +57,7 @@ public class HttpOrderingService : HttpService, IOrderingDataService
             "application/json");
 
         var response = await _httpClient.PatchAsync(
-            _addressService.OrderById(orderId), reqContent);
+            _apiEndpoints.OrderById(orderId), reqContent);
 
         if (response is null)
             return OrderResult.UntypedError("Update order status response null.");

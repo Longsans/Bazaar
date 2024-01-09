@@ -26,26 +26,24 @@ public class ShoppersController : ControllerBase
             };
     }
 
-    [HttpPut("{shopperId}")]
-    public async Task<IActionResult> UpdateInfo(
-        string shopperId, ShopperWriteCommand updateCommand)
+    [HttpPatch("{shopperId}/personal-info")]
+    public async Task<IActionResult> UpdateInfo(string shopperId, ShopperPersonalInfo request)
     {
-        var updateResult = await _shopperService.UpdateInfo(shopperId, updateCommand);
+        var updateResult = await _shopperService.UpdateInfo(shopperId, request);
+        return updateResult.ToActionResult();
+    }
 
-        return updateResult.IsSuccess
-            ? NoContent()
-            : updateResult.ErrorType switch
-            {
-                ServiceCallError.Unauthorized => Unauthorized(),
-                ServiceCallError.NotFound => NotFound(),
-                _ => StatusCode(500, updateResult.ErrorDetail)
-            };
+    [HttpPatch("{shopperId}/email-address")]
+    public async Task<IActionResult> ChangeEmailAddress(string shopperId, [FromBody] string emailAddress)
+    {
+        var updateResult = await _shopperService.ChangeEmailAddress(shopperId, emailAddress);
+        return updateResult.ToActionResult();
     }
 
     [HttpPost]
-    public async Task<ActionResult<Shopper>> Register(ShopperWriteCommand shopperInfo)
+    public async Task<ActionResult<Shopper>> Register(ShopperRegistration registration)
     {
-        var registeredShopper = await _shopperService.Register(shopperInfo);
+        var registeredShopper = await _shopperService.Register(registration);
         return registeredShopper.ToActionResult();
     }
 }

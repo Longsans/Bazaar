@@ -1,13 +1,13 @@
 ﻿namespace WebShoppingUI.DataServices;
 
-public class AddressService
+public class ApiEndpointResolver
 {
     private readonly string CATALOG_API;
     private readonly string ORDERING_API;
     private readonly string SHOPPER_INFO_API;
     private readonly string BASKET_API;
 
-    public AddressService(IConfiguration config)
+    public ApiEndpointResolver(IConfiguration config)
     {
         CATALOG_API = config["CatalogApi"]!;
         ORDERING_API = config["OrderingApi"]!;
@@ -42,11 +42,12 @@ public class AddressService
     public string BasketCheckouts => $"{BASKET_API}/api/checkouts";
 
     // Shopper info
-    public string ShopperByExternalIdQuery(string externalId)
-        => $"{SHOPPER_INFO_API}/api/shoppers?externalId={externalId}";
-
-    public string ShopperByExternalId(string externalId)
-        => $"{SHOPPER_INFO_API}/api/shoppers/{externalId}";
     public string Shoppers
         => $"{SHOPPER_INFO_API}/api/shoppers";
+    public string ShopperByExternalIdQuery(string externalId)
+        => $"{SHOPPER_INFO_API}/api/shoppers?externalId={externalId}";
+    public string ShopperPersonalInfo(string externalId)
+        => $"{SHOPPER_INFO_API}/api/shoppers/{externalId}/personal-info";
+    public string ShopperEmailAddress(string externalId)
+        => $"{SHOPPER_INFO_API}/api/shoppers/{externalId}/email-address";
 }

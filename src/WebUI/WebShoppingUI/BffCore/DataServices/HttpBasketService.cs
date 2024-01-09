@@ -2,18 +2,18 @@
 
 public class HttpBasketService : HttpService, IBasketDataService
 {
-    private readonly AddressService _addressService;
+    private readonly ApiEndpointResolver _apiEndpoints;
 
-    public HttpBasketService(HttpClient httpClient, AddressService addressService) : base(httpClient)
+    public HttpBasketService(HttpClient httpClient, ApiEndpointResolver apiEndpoints) : base(httpClient)
     {
-        _addressService = addressService;
+        _apiEndpoints = apiEndpoints;
     }
 
     public async Task<ServiceCallResult<Basket>> GetBasketByBuyerId(string buyerId)
     {
         try
         {
-            var response = await _httpClient.GetAsync(_addressService.BasketByBuyerId(buyerId)) ??
+            var response = await _httpClient.GetAsync(_apiEndpoints.BasketByBuyerId(buyerId)) ??
                 throw new Exception("Get basket by buyer ID response null.");
             if (!response.IsSuccessStatusCode)
             {
@@ -40,7 +40,7 @@ public class HttpBasketService : HttpService, IBasketDataService
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await _httpClient.PostAsync(_addressService.BasketItemsByBuyerId(buyerId), reqContent);
+            var response = await _httpClient.PostAsync(_apiEndpoints.BasketItemsByBuyerId(buyerId), reqContent);
             if (!response.IsSuccessStatusCode)
             {
                 return response.StatusCode switch
@@ -67,7 +67,7 @@ public class HttpBasketService : HttpService, IBasketDataService
             "application/json");
 
         var response = await _httpClient.PatchAsync(
-            _addressService.BasketItemByBuyerAndProductId(buyerId, productId),
+            _apiEndpoints.BasketItemByBuyerAndProductId(buyerId, productId),
             reqContent);
 
         if (response is null)
@@ -96,7 +96,7 @@ public class HttpBasketService : HttpService, IBasketDataService
             var reqContent = new StringContent(
                 JsonConvert.SerializeObject(checkout), Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync(_addressService.BasketCheckouts, reqContent) ??
+            var response = await _httpClient.PostAsync(_apiEndpoints.BasketCheckouts, reqContent) ??
                 throw new Exception("Basket checkout response null.");
             if (!response.IsSuccessStatusCode)
             {

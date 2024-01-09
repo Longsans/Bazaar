@@ -68,7 +68,7 @@ export function NavMenu() {
         light
       >
         <NavbarBrand tag={Link} to="/">
-          WebSellerUI
+          Bazaar
         </NavbarBrand>
         <NavbarToggler onClick={toggleNavbar} className="mr-2" />
         <Collapse

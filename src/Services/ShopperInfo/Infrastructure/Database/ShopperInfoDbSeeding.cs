@@ -6,12 +6,8 @@ public static class ShopperInfoDbSeeding
 
     public static async Task Seed(this ShopperInfoDbContext context, IServiceProvider sp)
     {
+        await context.Database.EnsureDeletedAsync();
         await context.Database.MigrateAsync();
-
-        if (context.Shoppers.Any())
-        {
-            return;
-        }
 
         var adapter = sp.GetRequiredService<JsonDataAdapter>();
         context.Shoppers.AddRange(adapter.ReadToObjects<Shopper>(SHOPPERS_SECTION));

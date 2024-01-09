@@ -5,10 +5,12 @@
 public class ShoppersController : ControllerBase
 {
     private readonly IShopperRepository _shopperRepo;
+    private readonly ShopperEmailAddressService _emailAddressService;
 
-    public ShoppersController(IShopperRepository shopperRepo)
+    public ShoppersController(IShopperRepository shopperRepo, ShopperEmailAddressService emailAddressService)
     {
         _shopperRepo = shopperRepo;
+        _emailAddressService = emailAddressService;
     }
 
     [HttpGet("{id}")]
@@ -32,11 +34,11 @@ public class ShoppersController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<Shopper> Register(ShopperWriteRequest request)
+    public ActionResult<Shopper> Register(ShopperRegistration registration)
     {
         try
         {
-            var created = _shopperRepo.Create(request.ToNewShopper());
+            var created = _shopperRepo.Create(registration.ToNewShopper());
             return CreatedAtAction(
                 nameof(GetById), new { id = created.Id }, created);
         }
@@ -46,8 +48,8 @@ public class ShoppersController : ControllerBase
         }
     }
 
-    [HttpPut("{externalId}")]
-    public IActionResult UpdatedInfo(string externalId, ShopperWriteRequest request)
+    [HttpPatch("{externalId}/personal-info")]
+    public IActionResult UpdatePersonalInfo(string externalId, ShopperPersonalInfo request)
     {
         var shopper = _shopperRepo.GetByExternalId(externalId);
         if (shopper == null)
@@ -55,8 +57,7 @@ public class ShoppersController : ControllerBase
 
         try
         {
-            shopper.UpdatePersonalInfo(
-                request.FirstName, request.LastName, request.EmailAddress,
+            shopper.UpdatePersonalInfo(request.FirstName, request.LastName,
                 request.PhoneNumber, request.DateOfBirth, request.Gender);
         }
         catch (Exception ex)
@@ -65,5 +66,23 @@ public class ShoppersController : ControllerBase
         }
         _shopperRepo.Update(shopper);
         return NoContent();
+    }
+
+    [HttpPatch("{externalId}/email-address")]
+    public IActionResult ChangeEmailAddress(string externalId, [FromBody] string emailAddress)
+    {
+        try
+        {
+            _emailAddressService.ChangeEmailAddress(externalId, emailAddress);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (DuplicateEmailAddressException)
+        {
+            return Conflict(new { error = "Email address has already been taken." });
+        }
+        return Ok();
     }
 }

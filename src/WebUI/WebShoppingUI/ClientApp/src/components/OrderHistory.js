@@ -4,17 +4,20 @@ import Order from "./Order";
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchOrders = async () => {
+    setLoading(true);
     var response = await fetch(ApiEndpoints.orders("SPER-1"));
     if (response.ok) {
       setOrders(await response.json());
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchOrders();
-  });
+  }, []);
 
   return (
     <>
@@ -30,7 +33,11 @@ export default function OrderHistory() {
           <th>Cancel reason</th>
         </thead>
         <tbody>
-          {!orders.length ? (
+          {loading ? (
+            <tr>
+              <td colSpan={6}>Loading...</td>
+            </tr>
+          ) : !orders.length ? (
             <tr>
               <td colSpan={6}>No orders placed.</td>
             </tr>
