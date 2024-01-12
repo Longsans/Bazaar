@@ -1,5 +1,5 @@
 import React from "react";
-import { ApiEndpoints } from "../constants/ApiEndpoints";
+import { ApiEndpoints } from "../backend/ApiEndpoints";
 
 export default function Order({
   orderId,

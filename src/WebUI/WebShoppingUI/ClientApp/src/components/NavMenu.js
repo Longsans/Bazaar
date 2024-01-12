@@ -8,7 +8,6 @@ import {
   NavLink,
 } from "reactstrap";
 import { Link } from "react-router-dom";
-import { Bff } from "../constants/Bff";
 import "./NavMenu.css";
 
 export function NavMenu() {

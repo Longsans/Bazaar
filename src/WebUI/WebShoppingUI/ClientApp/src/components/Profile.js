@@ -1,74 +1,97 @@
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { ApiEndpoints } from "../backend/ApiEndpoints";
 import http from "../utils/Http";
 
 export function Profile() {
-  const [profile, setProfile] = useState(null);
   const [originalProfile, setOriginalProfile] = useState(null);
+  const {
+    register,
+    reset: resetForm,
+    handleSubmit,
+  } = useForm({ defaultValues: originalProfile });
   const [loading, setLoading] = useState(true);
   const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
 
-  const updatePersonalInfo = async () => {
-    await http.patchAsync(
-      ApiEndpoints.userPersonalInfo(profile.id),
-      {
-        emailAddress: profile.emailAddress,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        phoneNumber: profile.phoneNumber,
-        dateOfBirth: profile.dateOfBirth,
-        gender: profile.gender,
-      },
-      () => {
-        alert("Personal info updated.");
-        exitEdit(true);
-      },
-      async (r) => {
-        var respBody = await r.json();
-        alert(respBody.error);
-        exitEdit(false);
-      }
-    );
+  const onSubmit = async (data) => {
+    if (isEditingInfo) {
+      await http.patchAsync(
+        ApiEndpoints.userPersonalInfo(data.id),
+        {
+          emailAddress: data.emailAddress,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phoneNumber: data.phoneNumber,
+          dateOfBirth: data.dateOfBirth,
+          gender: data.gender,
+        },
+        () => {
+          alert("Personal info updated.");
+          exitEdit(data);
+        },
+        async (r) => {
+          var respBody = await r.json();
+          alert(respBody.error);
+          exitEdit();
+        }
+      );
+    } else if (isEditingEmail) {
+      await http.patchAsync(
+        ApiEndpoints.userEmailAddress(data.id),
+        data.emailAddress,
+        () => {
+          alert("Email address changed.");
+          exitEdit(data);
+        },
+        async (r) => {
+          var respBody = await r.json();
+          alert(respBody.error);
+          exitEdit();
+        }
+      );
+    }
   };
 
-  const updateEmailAddress = async () => {
-    await http.patchAsync(
-      ApiEndpoints.userEmailAddress(profile.id),
-      profile.emailAddress,
-      () => {
-        alert("Email address changed.");
-        exitEdit(true);
-      },
-      async (r) => {
-        var respBody = await r.json();
-        alert(respBody.error);
-        exitEdit(false);
-      }
-    );
-  };
-
-  const startEditInfo = () => {
-    setIsEditingInfo(true);
-    setOriginalProfile(profile);
-  };
-
-  const startEditEmail = () => {
-    setIsEditingEmail(true);
-    setOriginalProfile(profile);
-  };
-
-  const exitEdit = (saveEdit) => {
+  const exitEdit = (newFormData) => {
     setIsEditingInfo(false);
     setIsEditingEmail(false);
-    if (!saveEdit) setProfile(originalProfile);
+    if (newFormData) setOriginalProfile(newFormData);
+    else resetForm(originalProfile);
   };
 
-  const patchSetProfile = (key, value) => {
-    setProfile({
-      ...profile,
-      [key]: value,
-    });
+  const RegisteredInput = ({ name, type = "text", register, disabled }) => {
+    return (
+      <input
+        type={type}
+        {...register(name, { required: true })}
+        disabled={disabled}
+        style={{
+          display: "block",
+          margin: "0.5rem 0px",
+          padding: "0 0 0 0.25rem",
+          borderRadius: "3px",
+        }}
+      />
+    );
+  };
+
+  const RegisteredSelect = ({ name, register, disabled }) => {
+    return (
+      <select
+        {...register(name)}
+        disabled={disabled}
+        style={{
+          display: "block",
+          margin: "0.5rem 0px",
+          backgroundColor: "white",
+          borderRadius: "3px",
+        }}
+      >
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+    );
   };
 
   useEffect(() => {
@@ -76,11 +99,15 @@ export function Profile() {
       setLoading(true);
       const response = await fetch(ApiEndpoints.fetchProfile("SPER-1"));
       const data = await response.json();
-      setProfile(data);
+      setOriginalProfile(data);
       setLoading(false);
     };
     getProfileAsync();
   }, []);
+
+  useEffect(() => {
+    resetForm(originalProfile);
+  }, [originalProfile]);
 
   return (
     <>
@@ -91,117 +118,80 @@ export function Profile() {
           <em>Loading...</em>
         </p>
       ) : (
-        <>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div style={{ display: "flex" }}>
             <div>
               <b>Customer ID</b>
-              <input
-                type="text"
-                value={profile.id}
-                disabled
-                style={{
-                  display: "block",
-                  margin: "0.5rem 0px",
-                  padding: "0 0 0 0.25rem",
-                }}
-              />
+              <RegisteredInput name="id" register={register} disabled={true} />
             </div>
             <div style={{ margin: "0 0 0 1.5rem" }}>
               <b>Email address</b>
-              <input
-                type="text"
-                value={profile.emailAddress}
-                onInput={(e) => patchSetProfile("emailAddress", e.target.value)}
+              <RegisteredInput
+                name="emailAddress"
+                register={register}
                 disabled={!isEditingEmail}
-                style={{
-                  display: "block",
-                  margin: "0.5rem 0px",
-                  padding: "0 0 0 0.25rem",
-                }}
               />
             </div>
           </div>
           <div style={{ display: "flex" }}>
             <div style={{ float: "left", margin: "0 1.5rem 0 0" }}>
               <b>First name</b>
-              <input
-                type="text"
-                value={profile.firstName}
-                onInput={(e) => patchSetProfile("firstName", e.target.value)}
+              <RegisteredInput
+                name="firstName"
+                register={register}
                 disabled={!isEditingInfo}
-                style={{
-                  display: "block",
-                  margin: "0.5rem 0px",
-                  padding: "0 0 0 0.25rem",
-                }}
-              ></input>
+              />
             </div>
             <div style={{ float: "left", margin: "0 1.5rem 0 0" }}>
               <b>Last name</b>
-              <input
-                type="text"
-                value={profile.lastName}
-                onInput={(e) => patchSetProfile("lastName", e.target.value)}
+              <RegisteredInput
+                name="lastName"
+                register={register}
                 disabled={!isEditingInfo}
-                style={{
-                  display: "block",
-                  margin: "0.5rem 0px",
-                  padding: "0 0 0 0.25rem",
-                }}
-              ></input>
+              />
             </div>
             <div style={{ float: "left", margin: "0 1.5rem 0 0" }}>
               <b>Date of birth</b>
-              <input
+              <RegisteredInput
+                name="dateOfBirth"
                 type="date"
-                value={profile.dateOfBirth}
-                onInput={(e) => patchSetProfile("dateOfBirth", e.target.value)}
+                register={register}
                 disabled={!isEditingInfo}
-                style={{ display: "block", margin: "0.5rem 0px" }}
-              ></input>
+              />
             </div>
             <div style={{ float: "left", margin: "0 1.5rem 0 0" }}>
               <b>Gender</b>
-              <input
-                type="text"
-                value={profile.gender}
-                onInput={(e) => patchSetProfile("gender", e.target.value)}
+              <RegisteredSelect
+                name="gender"
+                register={register}
                 disabled={!isEditingInfo}
-                style={{ display: "block", margin: "0.5rem 0px" }}
-              ></input>
+              />
             </div>
           </div>
           <div>
             <div>
               <b>Phone number</b>
-              <input
-                type="text"
-                value={profile.phoneNumber}
-                onInput={(e) => patchSetProfile("phoneNumber", e.target.value)}
+              <RegisteredInput
+                name="phoneNumber"
+                register={register}
                 disabled={!isEditingInfo}
-                style={{
-                  display: "block",
-                  margin: "0.5rem 0px",
-                  padding: "0 0 0 0.25rem",
-                }}
-              ></input>
+              />
             </div>
             <br />
             {isEditingInfo || isEditingEmail ? (
               <>
                 <button
-                  onClick={async () => {
-                    isEditingInfo
-                      ? await updatePersonalInfo()
-                      : await updateEmailAddress();
-                  }}
+                  key="submit"
+                  type="submit"
                   style={{ margin: "0 1rem 0 0" }}
                 >
                   Update
                 </button>
                 <button
+                  key="cancel"
+                  type="button"
                   onClick={() => {
-                    exitEdit(false);
+                    exitEdit();
                   }}
                 >
                   Cancel
@@ -210,13 +200,17 @@ export function Profile() {
             ) : (
               <>
                 <button
-                  onClick={startEditInfo}
+                  key="edit-info"
+                  type="button"
+                  onClick={() => setIsEditingInfo(true)}
                   style={{ margin: "0 1.5rem 0 0" }}
                 >
                   Edit personal info
                 </button>
                 <button
-                  onClick={startEditEmail}
+                  key="edit-email"
+                  type="button"
+                  onClick={() => setIsEditingEmail(true)}
                   style={{ margin: "0 1.5rem 0 0" }}
                 >
                   Change email address
@@ -224,7 +218,7 @@ export function Profile() {
               </>
             )}
           </div>
-        </>
+        </form>
       )}
     </>
   );

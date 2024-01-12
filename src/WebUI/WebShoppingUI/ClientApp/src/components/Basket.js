@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ApiEndpoints } from "../constants/ApiEndpoints";
+import { ApiEndpoints } from "../backend/ApiEndpoints";
 
 export default function Basket() {
   const [basket, setBasket] = useState(null);
