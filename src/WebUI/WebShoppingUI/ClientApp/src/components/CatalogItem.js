@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ApiEndpoints } from "../backend/ApiEndpoints";
+import BasketApi from "../api/BasketApi";
 
 export default function CatalogItem({
   productId,
@@ -12,20 +12,11 @@ export default function CatalogItem({
   const [buyQuantity, setBuyQuantity] = useState(1);
 
   async function addProductToBasket(productId, quantity) {
-    var request = new Request(ApiEndpoints.basketItems("SPER-1"), {
-      method: "POST",
-      body: JSON.stringify({
-        productId: productId,
-        quantity: quantity,
-      }),
-      headers: new Headers({
-        "Content-Type": "application/json",
-      }),
-    });
-    var response = await fetch(request);
-    if (!response.ok) {
-      var respBody = await response.json();
-      alert(respBody.error);
+    try {
+      await BasketApi.addItemToBasket("SPER-1", productId, quantity);
+      alert("Product added to basket.");
+    } catch (error) {
+      alert(error.error);
     }
   }
 

@@ -1,5 +1,6 @@
 import Basket from "./components/Basket";
 import Catalog from "./components/Catalog";
+import Checkout from "./components/Checkout";
 import { Home } from "./components/Home";
 import { Login } from "./components/Login";
 import { Logout } from "./components/Logout";
@@ -34,6 +35,10 @@ const AppRoutes = [
   {
     path: "/orders",
     element: <OrderHistory />,
+  },
+  {
+    path: "/checkout",
+    element: <Checkout />,
   },
 ];
 

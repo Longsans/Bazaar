@@ -1,4 +1,4 @@
-export class Bff {
+export class AuthEndpoints {
   static loginPath = "/bff/login";
   static logoutPath = "/bff/logout";
   static userPath = "/bff/user";

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ApiEndpoints } from "../backend/ApiEndpoints";
+import { ApiEndpoints } from "../api/ApiEndpoints";
 import Order from "./Order";
 
 export default function OrderHistory() {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ApiEndpoints } from "../backend/ApiEndpoints";
+import { ApiEndpoints } from "../api/ApiEndpoints";
+import { Link } from "react-router-dom";
 
 export default function Basket() {
   const [basket, setBasket] = useState(null);
@@ -9,36 +10,6 @@ export default function Basket() {
     const endpoint = ApiEndpoints.basket(waltuh);
     const response = await fetch(endpoint);
     setBasket(await response.json());
-  };
-
-  const checkout = async () => {
-    var request = new Request(ApiEndpoints.checkouts, {
-      method: "POST",
-      body: JSON.stringify({
-        BuyerId: waltuh,
-        City: "Albuquerque, New Mexico",
-        Country: "U.S.A",
-        ZipCode: "73000",
-        ShippingAddress: "308 Negra Arroyo Lane",
-        CardNumber: "123456",
-        CardHolderName: "Walter White",
-        CardExpiration: "2026-11-12",
-        CardSecurityNumber: "456789",
-      }),
-      headers: new Headers({
-        "Content-Type": "application/json",
-      }),
-    });
-    var response = await fetch(request);
-    if (response.ok) {
-      getBasket();
-      alert(
-        "Checkout accepted, newly placed order can be seen in your orders list."
-      );
-    } else {
-      var respBody = await response.json();
-      alert(respBody.error);
-    }
   };
 
   useEffect(() => {
@@ -78,9 +49,9 @@ export default function Basket() {
       <h5 style={{ fontWeight: "bold" }}>
         Total: ${basket ? basket.total : 0}
       </h5>
-      <button disabled={!basket?.items.length} onClick={checkout}>
-        Checkout
-      </button>
+      <Link to="/checkout">
+        <button disabled={!basket?.items.length}>Proceed to checkout</button>
+      </Link>
     </>
   );
 }
