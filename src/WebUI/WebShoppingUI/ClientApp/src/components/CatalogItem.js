@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import BasketApi from "../api/BasketApi";
+import { useBasket } from "../hooks/useBasket";
 
 export default function CatalogItem({
   productId,
@@ -10,10 +10,11 @@ export default function CatalogItem({
   sellerId,
 }) {
   const [buyQuantity, setBuyQuantity] = useState(1);
+  const { addItemToBasket } = useBasket();
 
   async function addProductToBasket(productId, quantity) {
     try {
-      await BasketApi.addItemToBasket("SPER-1", productId, quantity);
+      await addItemToBasket(productId, quantity);
       alert("Product added to basket.");
     } catch (error) {
       alert(error.error);
@@ -37,7 +38,9 @@ export default function CatalogItem({
       <td>{availStock}</td>
       <td>{sellerId}</td>
       <div>
-        <button onClick={() => addProductToBasket(productId, buyQuantity)}>
+        <button
+          onClick={async () => await addProductToBasket(productId, buyQuantity)}
+        >
           Add to basket
         </button>
         <div style={{ display: "inline-block" }}>

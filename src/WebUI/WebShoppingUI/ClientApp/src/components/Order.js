@@ -1,5 +1,7 @@
 import React from "react";
 import { ApiEndpoints } from "../api/ApiEndpoints";
+import { OrderStatusFormatting } from "../constants/OrderStatus.ts";
+import { OrderStatus } from "../constants/OrderStatus.ts";
 
 export default function Order({
   orderId,
@@ -10,6 +12,11 @@ export default function Order({
   cancelReason,
   fnRefreshOrders,
 }) {
+  const cancellableStatuses = [
+    OrderStatus.PendingSellerConfirmation,
+    OrderStatus.Postponed,
+  ];
+
   const cancelOrder = async () => {
     var url = ApiEndpoints.orderById(orderId);
     var request = new Request(url, {
@@ -44,9 +51,9 @@ export default function Order({
         </td>
         <td>${total}</td>
         <td>{shippingAddress}</td>
-        <td>{status}</td>
+        <td>{OrderStatusFormatting[status]}</td>
         <td>{cancelReason ? cancelReason : "-"}</td>
-        {status !== "Cancelled" && (
+        {cancellableStatuses.includes(status) && (
           <button onClick={cancelOrder}>Cancel</button>
         )}
       </tr>

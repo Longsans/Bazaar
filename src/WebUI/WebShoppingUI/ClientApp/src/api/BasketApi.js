@@ -8,7 +8,7 @@ export default class BasketApi {
   }
 
   static async addItemToBasket(userId, productId, quantity) {
-    var response = await http.postAsync(ApiEndpoints.basketItems(userId), {
+    var response = await http.postAsync(ApiEndpoints.allBasketItems(userId), {
       productId: productId,
       quantity: quantity,
     });

@@ -1,10 +1,11 @@
 import React from "react";
 import { RegisteredInput, RegisteredNumberField } from "./FormElements";
 import { useForm } from "react-hook-form";
-import BasketApi from "../api/BasketApi";
+import { useBasket } from "../hooks/useBasket";
 
 export default function Checkout() {
   const { register, handleSubmit } = useForm();
+  const { basket, checkout } = useBasket();
   const textFields = {
     city: "City",
     country: "Country",
@@ -14,7 +15,7 @@ export default function Checkout() {
 
   const onSubmit = async (data) => {
     try {
-      await BasketApi.checkout({
+      await checkout({
         buyerId: "SPER-1",
         ...data,
       });

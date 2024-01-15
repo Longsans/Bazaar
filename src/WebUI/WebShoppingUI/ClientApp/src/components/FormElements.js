@@ -1,3 +1,6 @@
+import React, { Children, useEffect } from "react";
+import { useForm } from "react-hook-form";
+
 const RegisteredInput = ({
   name,
   labelText,
@@ -40,9 +43,14 @@ const RegisteredSelect = ({ name, labelText, register, disabled }) => (
   </div>
 );
 
-const RegisteredNumberField = ({ name, labelText, register, disabled }) => (
+const RegisteredNumberField = ({
+  name,
+  labelText = null,
+  register,
+  disabled,
+}) => (
   <div style={{ float: "left", margin: "0 1.5rem 0 0" }}>
-    <b>{labelText}</b>
+    {labelText && <b>{labelText}</b>}
     <input
       type="text"
       {...register(name, { required: true, pattern: "/^[0-9]*$/" })}
@@ -57,4 +65,16 @@ const RegisteredNumberField = ({ name, labelText, register, disabled }) => (
   </div>
 );
 
-export { RegisteredInput, RegisteredSelect, RegisteredNumberField };
+// children here is a function that takes in the register function and renders all components in the form
+function RegisteredForm({ children, onSubmit, defaultValues = null }) {
+  const { register, handleSubmit, reset } = useForm({ defaultValues });
+
+  return <form onSubmit={handleSubmit(onSubmit)}>{children(register)}</form>;
+}
+
+export {
+  RegisteredInput,
+  RegisteredSelect,
+  RegisteredNumberField,
+  RegisteredForm,
+};

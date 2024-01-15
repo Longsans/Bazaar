@@ -94,7 +94,7 @@ export function NavMenu() {
               </NavItem>
               <NavItem>
                 <NavLink tag={Link} className="text-dark" to="/orders">
-                  Orders
+                  Order history
                 </NavLink>
               </NavItem>
               <NavItem>

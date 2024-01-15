@@ -1,20 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { ApiEndpoints } from "../api/ApiEndpoints";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useBasket } from "../hooks/useBasket";
+import BasketItem from "./BasketItem";
 
 export default function Basket() {
-  const [basket, setBasket] = useState(null);
-  const waltuh = "SPER-1";
-
-  const getBasket = async () => {
-    const endpoint = ApiEndpoints.basket(waltuh);
-    const response = await fetch(endpoint);
-    setBasket(await response.json());
-  };
-
-  useEffect(() => {
-    getBasket();
-  }, []);
+  const { basket, changeItemQuantity } = useBasket();
+  const [updating, setUpdating] = useState(false);
 
   return (
     <>
@@ -31,13 +22,12 @@ export default function Basket() {
         <tbody>
           {basket && basket.items.length ? (
             basket.items.map((x) => (
-              <tr key={x.productId}>
-                <td>{x.productId}</td>
-                <td>{x.productName}</td>
-                <td>${x.unitPrice}</td>
-                <td>{x.quantity}</td>
-                <td>{x.imageUrl}</td>
-              </tr>
+              <BasketItem
+                item={x}
+                basketUpdating={updating}
+                setBasketUpdating={setUpdating}
+                changeItemQuantity={changeItemQuantity}
+              />
             ))
           ) : (
             <tr>

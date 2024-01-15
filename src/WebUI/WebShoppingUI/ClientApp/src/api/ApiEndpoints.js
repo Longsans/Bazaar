@@ -16,8 +16,11 @@ export class ApiEndpoints {
   static basket(userId) {
     return `api/baskets/${userId}`;
   }
-  static basketItems(userId) {
+  static allBasketItems(userId) {
     return `api/baskets/${userId}/items`;
+  }
+  static basketItem(userId, productId) {
+    return `api/baskets/${userId}/items/${productId}`;
   }
   static checkouts = "api/checkouts";
 
