@@ -6,6 +6,7 @@ export default function CatalogItem({
   productName,
   productDesc,
   price,
+  imageUrl,
   availStock,
   sellerId,
 }) {
@@ -31,12 +32,11 @@ export default function CatalogItem({
 
   return (
     <tr key={productId}>
-      <td>{productId}</td>
+      <td>
+        <img src={imageUrl} />
+      </td>
       <td>{productName}</td>
-      <td style={{ width: 750 }}>{productDesc}</td>
       <td>${price}</td>
-      <td>{availStock}</td>
-      <td>{sellerId}</td>
       <div>
         <button
           onClick={async () => await addProductToBasket(productId, buyQuantity)}

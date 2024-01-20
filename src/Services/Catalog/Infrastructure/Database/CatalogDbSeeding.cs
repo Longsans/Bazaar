@@ -9,11 +9,6 @@ public static class CatalogDbSeeding
         await context.Database.EnsureDeletedAsync();
         await context.Database.MigrateAsync();
 
-        if (context.CatalogItems.Any())
-        {
-            return;
-        }
-
         var adapter = sp.GetRequiredService<JsonDataAdapter>();
         context.CatalogItems.AddRange(
                 adapter.ReadToObjects<CatalogItem>(CATALOG_SECTION).ToList());

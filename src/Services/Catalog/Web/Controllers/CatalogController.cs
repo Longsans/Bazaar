@@ -6,13 +6,19 @@ public class CatalogController : ControllerBase
 {
     private readonly IRepository<CatalogItem> _catalogRepo;
     private readonly ListingService _listingService;
+    private readonly IImageService _imgService;
+    private readonly IEventBus _eventBus;
 
     public CatalogController(
         IRepository<CatalogItem> catalogRepo,
-        ListingService listingService)
+        ListingService listingService,
+        IImageService imgService,
+        IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
         _listingService = listingService;
+        _imgService = imgService;
+        _eventBus = eventBus;
     }
 
     [HttpGet("{productId}")]
@@ -26,7 +32,7 @@ public class CatalogController : ControllerBase
             return NotFound();
         }
 
-        return new CatalogItemResponse(item);
+        return new CatalogItemResponse(item, _imgService.ImageHostLocation);
     }
 
     [HttpGet]
@@ -92,24 +98,47 @@ public class CatalogController : ControllerBase
             }
             items.AddRange(await _catalogRepo.ListAsync(spec!));
         }
-        return items.Select(x => new CatalogItemResponse(x)).ToList();
+        return items.Select(x => new CatalogItemResponse(x, _imgService.ImageHostLocation)).ToList();
     }
 
-    // Shopper only
+    // Seller only
     [HttpPost]
-    [Authorize(Policy = "HasModifyScope")]
-    public async Task<ActionResult<CatalogItemResponse>> Create(CreateCatalogItemRequest command)
+    //[Authorize(Policy = "HasModifyScope")]
+    public async Task<ActionResult<CatalogItemResponse>> Create([FromForm] CreateCatalogItemRequest request)
     {
-        var createdItem = await _catalogRepo.AddAsync(command.ToNewCatalogItem());
-        return CreatedAtAction(nameof(GetByProductId), new { createdItem.Id },
-            new CatalogItemResponse(createdItem));
+        Image? image;
+        try
+        {
+            image = await Image.LoadAsync(request.Image.OpenReadStream());
+        }
+        catch (UnknownImageFormatException)
+        {
+            return BadRequest("Product image is not valid format.");
+        }
+        catch (InvalidImageContentException)
+        {
+            return BadRequest("Product image content is invalid.");
+        }
+        var catalogItem = new CatalogItem(
+            request.Name, request.Description, request.Price,
+            request.AvailableStock, request.SellerId, request.FulfillmentMethod);
+        await _catalogRepo.AddAsync(catalogItem);
+
+        var imageUri = await _imgService.SaveImageForProduct(catalogItem.ProductId, image);
+        if (imageUri is not null)
+        {
+            catalogItem.ChangeProductDetails(imageFilename: imageUri);
+            await _catalogRepo.UpdateAsync(catalogItem);
+        }
+        return CreatedAtAction(nameof(GetByProductId), new { productId = catalogItem.ProductId },
+            new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation));
     }
 
-    // Shopper only
+    // Seller only
     [HttpPatch("{productId}")]
     [Authorize(Policy = "HasModifyScope")]
-    public async Task<ActionResult<CatalogItemResponse>> UpdateProductDetails(string productId,
-        UpdateProductDetailsRequest request)
+    public async Task<ActionResult<CatalogItemResponse>> UpdateProductDetails(
+        string productId, UpdateProductDetailsRequest request)
     {
         var spec = new CatalogItemByProductIdSpec(productId);
         var catalogItem = await _catalogRepo.FirstOrDefaultAsync(spec);
@@ -118,10 +147,9 @@ public class CatalogController : ControllerBase
             return NotFound();
         }
 
-        catalogItem.ChangeProductDetails(
-            request.Name, request.Description, request.Price);
+        catalogItem.ChangeProductDetails(request.Name, request.Description, request.Price, request.ImageUrl);
         await _catalogRepo.UpdateAsync(catalogItem);
-        return new CatalogItemResponse(catalogItem);
+        return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
     }
 
     // Shopper only
@@ -162,7 +190,7 @@ public class CatalogController : ControllerBase
         }
 
         await _catalogRepo.UpdateAsync(catalogItem);
-        return new CatalogItemResponse(catalogItem);
+        return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
     }
 
     // Seller only

@@ -59,6 +59,7 @@ export default function Catalog() {
                 productId={x.productId}
                 productName={x.productName}
                 productDesc={x.productDescription}
+                imageUrl={x.imageUrl}
                 price={x.price}
                 availStock={x.availableStock}
                 sellerId={x.sellerId}

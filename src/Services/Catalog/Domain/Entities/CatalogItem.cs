@@ -7,6 +7,7 @@ public class CatalogItem
     public string ProductName { get; private set; }
     public string ProductDescription { get; private set; }
     public decimal Price { get; private set; }
+    public string? ImageFilename { get; private set; }
     public uint AvailableStock { get; private set; }
     public string SellerId { get; private set; }
     public ListingStatus ListingStatus { get; private set; }
@@ -45,13 +46,14 @@ public class CatalogItem
 
     [Newtonsoft.Json.JsonConstructor]
     private CatalogItem(
-        string productName,
-        string productDescription, decimal price, uint availableStock,
+        string productName, string productDescription,
+        decimal price, string imageUri, uint availableStock,
         string sellerId, FulfillmentMethod fulfillmentMethod, bool hasOrdersInProgress)
     {
         ProductName = productName;
         ProductDescription = productDescription;
         Price = price;
+        ImageFilename = imageUri;
         AvailableStock = availableStock;
         SellerId = sellerId;
         FulfillmentMethod = fulfillmentMethod;
@@ -63,7 +65,9 @@ public class CatalogItem
     // EF read constructor
     private CatalogItem() { }
 
-    public void ChangeProductDetails(string productName, string productDescription, decimal price)
+    public void ChangeProductDetails(
+        string? productName = null, string? productDescription = null,
+        decimal? price = null, string? imageFilename = null)
     {
         if (IsDeleted)
             throw new InvalidOperationException("Item deleted.");
@@ -72,9 +76,10 @@ public class CatalogItem
             throw new ArgumentOutOfRangeException(
                 nameof(price), "Product price cannot be 0 or negative.");
 
-        ProductName = productName;
-        ProductDescription = productDescription;
-        Price = price;
+        ProductName = productName ?? ProductName;
+        ProductDescription = productDescription ?? ProductDescription;
+        Price = price ?? Price;
+        ImageFilename = imageFilename ?? ImageFilename;
     }
 
     public void ReduceStock(uint units)
