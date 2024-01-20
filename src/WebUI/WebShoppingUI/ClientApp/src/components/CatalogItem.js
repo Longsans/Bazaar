@@ -1,59 +1,81 @@
-import React, { useState } from "react";
+import React from "react";
 import { useBasket } from "../hooks/useBasket";
 
 export default function CatalogItem({
   productId,
   productName,
-  productDesc,
   price,
   imageUrl,
-  availStock,
-  sellerId,
 }) {
-  const [buyQuantity, setBuyQuantity] = useState(1);
-  const { addItemToBasket } = useBasket();
+  const { basket, addItemToBasket, changeItemQuantity } = useBasket();
+  const itemInBasket = basket.items.filter((x) => x.productId === productId)[0];
 
-  async function addProductToBasket(productId, quantity) {
+  const addProductToBasket = async (productId) => {
+    const basketChange = !itemInBasket
+      ? async () => await addItemToBasket(productId, 1)
+      : async () =>
+          await changeItemQuantity(productId, itemInBasket.quantity + 1);
     try {
-      await addItemToBasket(productId, quantity);
-      alert("Product added to basket.");
+      await basketChange();
     } catch (error) {
       alert(error.error);
     }
-  }
+  };
 
-  function increaseQuantity() {
-    if (buyQuantity < 100) setBuyQuantity(buyQuantity + 1);
-  }
-
-  function decreaseQuantity() {
-    if (buyQuantity > 1) setBuyQuantity(buyQuantity - 1);
-  }
+  const getQuantityIndicator = () => {
+    if (!itemInBasket) {
+      console.log(`item ${productId} not in basket.`);
+      return <></>;
+    }
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <small>{`${itemInBasket.quantity} in basket - `}</small>
+        <button
+          onClick={async () => await changeItemQuantity(productId, 0)}
+          style={{
+            border: "none",
+            background: "none",
+          }}
+        >
+          <small>Remove</small>
+        </button>
+      </div>
+    );
+  };
 
   return (
-    <tr key={productId}>
-      <td>
-        <img src={imageUrl} />
-      </td>
-      <td>{productName}</td>
-      <td>${price}</td>
-      <div>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        margin: "16px",
+      }}
+    >
+      <img src={imageUrl} style={{ maxWidth: "230px", height: "350px" }} />
+      <h5 style={{ margin: "0", padding: "4px" }}>{productName}</h5>
+      <h5 style={{ margin: "0", padding: "4px", fontWeight: "bold" }}>
+        ${price}
+      </h5>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <button
-          onClick={async () => await addProductToBasket(productId, buyQuantity)}
+          onClick={async () => await addProductToBasket(productId)}
+          style={{ margin: "5px 0 0 0", width: "120px" }}
         >
           Add to basket
         </button>
-        <div style={{ display: "inline-block" }}>
-          <button onClick={decreaseQuantity}>-</button>
-          <input
-            type="text"
-            value={buyQuantity}
-            readOnly
-            style={{ display: "inline", flexDirection: "row", width: "40px" }}
-          />
-          <button onClick={increaseQuantity}>+</button>
-        </div>
+        {getQuantityIndicator()}
       </div>
-    </tr>
+    </div>
   );
 }

@@ -32,7 +32,7 @@ public class BasketManager
 
         basketItem.ProductName = catalogItem.ProductName;
         basketItem.UnitPrice = catalogItem.Price;
-        basketItem.ImageUrl = $"https://imgserver.com/{catalogItem.ProductId}";
+        basketItem.ImageUrl = catalogItem.ImageUrl;
         var basketItemResult = await _basketService.AddItemToBasket(buyerId, basketItem);
         return basketItemResult;
     }

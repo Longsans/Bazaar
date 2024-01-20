@@ -23,6 +23,7 @@ export default function Basket() {
           {basket && basket.items.length ? (
             basket.items.map((x) => (
               <BasketItem
+                key={x.productId}
                 item={x}
                 basketUpdating={updating}
                 setBasketUpdating={setUpdating}

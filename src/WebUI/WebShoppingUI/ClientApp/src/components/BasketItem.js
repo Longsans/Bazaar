@@ -17,9 +17,9 @@ export default function BasketItem({
       alert("Quantity updated");
     } catch (error) {
       alert(error);
-      reset(item);
     }
     setBasketUpdating(false);
+    reset(item);
   };
 
   return (

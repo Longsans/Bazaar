@@ -22,7 +22,7 @@ export default function Catalog() {
 
   return (
     <>
-      <h1>Product catalog</h1>
+      <h2 style={{ fontWeight: "bold" }}>Product catalog</h2>
       <br />
       <form onSubmit={fetchCatalog}>
         <input
@@ -37,37 +37,26 @@ export default function Catalog() {
         </button>
       </form>
       <br />
-      <table className="table table-striped">
-        <thead>
-          <th>Product ID</th>
-          <th>Product name</th>
-          <th>Product description</th>
-          <th>Price</th>
-          <th>Available stock</th>
-          <th>Seller ID</th>
-        </thead>
-        <tbody>
-          {loading ? (
-            <em>Loading catalog...</em>
-          ) : !catalog.length ? (
-            <tr>
-              <td colSpan={6}>No result.</td>
-            </tr>
-          ) : (
-            catalog.map((x) => (
-              <CatalogItem
-                productId={x.productId}
-                productName={x.productName}
-                productDesc={x.productDescription}
-                imageUrl={x.imageUrl}
-                price={x.price}
-                availStock={x.availableStock}
-                sellerId={x.sellerId}
-              />
-            ))
-          )}
-        </tbody>
-      </table>
+      <h4 style={{ fontWeight: "bold" }}>Results</h4>
+      {loading ? (
+        <em>Loading catalog...</em>
+      ) : !catalog.length ? (
+        <h5>No result.</h5>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          {catalog.map((x) => (
+            <CatalogItem
+              productId={x.productId}
+              productName={x.productName}
+              productDesc={x.productDescription}
+              imageUrl={x.imageUrl}
+              price={x.price}
+              availStock={x.availableStock}
+              sellerId={x.sellerId}
+            />
+          ))}
+        </div>
+      )}
     </>
   );
 }
