@@ -205,6 +205,7 @@ services:
       - OrderingApi=http://ordering-api
       - ShopperInfoApi=http://shopper-info-api
       - BasketApi=http://basket-api
+      - ContractingApi=http://contracting-api
       - DisableIdentity=true
     ports:
       - "5002:80"

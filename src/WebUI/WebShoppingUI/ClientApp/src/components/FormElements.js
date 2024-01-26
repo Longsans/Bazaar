@@ -4,65 +4,84 @@ import { useForm } from "react-hook-form";
 const RegisteredInput = ({
   name,
   labelText,
-  type = "text",
   register,
-  disabled,
-}) => (
-  <div style={{ float: "left", margin: "0 1.5rem 0 0" }}>
-    <b>{labelText}</b>
-    <input
-      type={type}
-      {...register(name, { required: true })}
-      disabled={disabled}
-      style={{
-        display: "block",
-        margin: "0.5rem 0px",
-        padding: "0 0 0 0.25rem",
-        borderRadius: "3px",
-      }}
-    />
-  </div>
-);
+  type,
+  options = {},
+  disabled = false,
+}) => {
+  return (
+    <div className="me-4">
+      <span className="form-label semi-bold">{labelText}</span>
+      <input
+        type={type}
+        {...register(name, { required: true, ...options })}
+        className="form-control mt-2"
+        disabled={disabled}
+      />
+    </div>
+  );
+};
 
-const RegisteredSelect = ({ name, labelText, register, disabled }) => (
-  <div style={{ float: "left", margin: "0 1.5rem 0 0" }}>
-    <b>{labelText}</b>
-    <select
-      {...register(name)}
-      disabled={disabled}
-      style={{
-        display: "block",
-        margin: "0.5rem 0px",
-        backgroundColor: "white",
-        borderRadius: "3px",
-      }}
-    >
-      <option value="Male">Male</option>
-      <option value="Female">Female</option>
-    </select>
-  </div>
+const RegisteredTextField = ({
+  name,
+  labelText,
+  register,
+  disabled = false,
+}) => (
+  <RegisteredInput
+    name={name}
+    labelText={labelText}
+    register={register}
+    type="text"
+    disabled={disabled}
+  />
 );
 
 const RegisteredNumberField = ({
   name,
-  labelText = null,
+  labelText,
   register,
-  disabled,
+  disabled = false,
 }) => (
-  <div style={{ float: "left", margin: "0 1.5rem 0 0" }}>
-    {labelText && <b>{labelText}</b>}
-    <input
-      type="text"
-      {...register(name, { required: true, pattern: "/^[0-9]*$/" })}
-      disabled={disabled}
-      style={{
-        display: "block",
-        margin: "0.5rem 0px",
-        padding: "0 0 0 0.25rem",
-        borderRadius: "3px",
-      }}
-    />
-  </div>
+  <RegisteredInput
+    name={name}
+    labelText={labelText}
+    register={register}
+    type="number"
+    options={{ valueAsNumber: true, validate: (value) => value > 0 }}
+    disabled={disabled}
+  />
+);
+
+const RegisteredDateField = ({
+  name,
+  labelText,
+  register,
+  disabled = false,
+}) => (
+  <RegisteredInput
+    name={name}
+    labelText={labelText}
+    register={register}
+    type="date"
+    options={{ valueAsDate: true }}
+    disabled={disabled}
+  />
+);
+
+const RegisteredEmailField = ({
+  name,
+  labelText,
+  register,
+  disabled = false,
+}) => (
+  <RegisteredInput
+    name={name}
+    labelText={labelText}
+    register={register}
+    type="email"
+    disabled={disabled}
+  />
 );
 
 // children here is a function that takes in the register function and renders all components in the form
@@ -73,8 +92,10 @@ function RegisteredForm({ children, onSubmit, defaultValues = null }) {
 }
 
 export {
-  RegisteredInput,
-  RegisteredSelect,
+  RegisteredTextField,
   RegisteredNumberField,
+  RegisteredDateField,
+  RegisteredEmailField,
   RegisteredForm,
+  RegisteredInput,
 };

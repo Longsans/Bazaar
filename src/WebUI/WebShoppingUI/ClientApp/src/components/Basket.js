@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useBasket } from "../hooks/useBasket";
 import BasketItem from "./BasketItem";
+import "../site.scss";
 
 export default function Basket() {
   const { basket, changeItemQuantity } = useBasket();
@@ -40,9 +41,11 @@ export default function Basket() {
       <h5 style={{ fontWeight: "bold" }}>
         Total: ${basket ? basket.total : 0}
       </h5>
-      <Link to="/checkout">
-        <button disabled={!basket?.items.length}>Proceed to checkout</button>
-      </Link>
+      {!!basket?.items.length && (
+        <Link to="/checkout">
+          <button className="btn baz-btn-primary">Proceed to checkout</button>
+        </Link>
+      )}
     </>
   );
 }

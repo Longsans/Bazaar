@@ -10,7 +10,8 @@
           "shopper-info",
           "webshop",
           "id",
-          "ordering"
+          "ordering",
+          "contracting"
         ]
       }
     }

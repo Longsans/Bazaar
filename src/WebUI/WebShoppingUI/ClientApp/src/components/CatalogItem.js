@@ -1,11 +1,13 @@
 import React from "react";
 import { useBasket } from "../hooks/useBasket";
+import "../site.scss";
 
 export default function CatalogItem({
   productId,
   productName,
   price,
   imageUrl,
+  onItemClick,
 }) {
   const { basket, addItemToBasket, changeItemQuantity } = useBasket();
   const itemInBasket = basket.items.filter((x) => x.productId === productId)[0];
@@ -24,58 +26,52 @@ export default function CatalogItem({
 
   const getQuantityIndicator = () => {
     if (!itemInBasket) {
-      console.log(`item ${productId} not in basket.`);
       return <></>;
     }
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
+      <div className="d-flex flex-row align-items-center">
         <small>{`${itemInBasket.quantity} in basket - `}</small>
-        <button
-          onClick={async () => await changeItemQuantity(productId, 0)}
-          style={{
-            border: "none",
-            background: "none",
+
+        <small
+          onClick={async (event) => {
+            event.stopPropagation();
+            await changeItemQuantity(productId, 0);
           }}
+          className="btn btn-link d-inline p-0 ms-1 baz-link"
         >
-          <small>Remove</small>
-        </button>
+          Remove
+        </small>
       </div>
     );
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        margin: "16px",
-      }}
-    >
-      <img src={imageUrl} style={{ maxWidth: "230px", height: "350px" }} />
-      <h5 style={{ margin: "0", padding: "4px" }}>{productName}</h5>
-      <h5 style={{ margin: "0", padding: "4px", fontWeight: "bold" }}>
-        ${price}
-      </h5>
+    <div className="d-flex flex-column align-items-start m-2 p-2 border border-1 border-light-subtle">
       <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-        }}
+        className="bg-secondary bg-opacity-10 d-flex flex-row align-items-center"
+        style={{ width: "250px", height: "250px", cursor: "pointer" }}
+        onClick={onItemClick}
       >
-        <button
-          onClick={async () => await addProductToBasket(productId)}
-          style={{ margin: "5px 0 0 0", width: "120px" }}
-        >
-          Add to basket
-        </button>
-        {getQuantityIndicator()}
+        <img
+          src={imageUrl}
+          style={{ maxWidth: "80%", maxHeight: "80%" }}
+          className="d-block m-auto"
+        />
       </div>
+      <h5 className="m-1 baz-a" onClick={onItemClick}>
+        {productName}
+      </h5>
+      <h5 className="mx-1 mb-2 fw-bold">${price}</h5>
+      <button
+        onClick={async (event) => {
+          event.stopPropagation();
+          await addProductToBasket(productId);
+        }}
+        className="btn baz-btn-primary"
+      >
+        Add to basket
+      </button>
+      {getQuantityIndicator()}
     </div>
   );
 }

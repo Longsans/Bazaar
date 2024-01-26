@@ -6,6 +6,7 @@ import { Login } from "./components/Login";
 import { Logout } from "./components/Logout";
 import OrderHistory from "./components/OrderHistory";
 import { Profile } from "./components/Profile";
+import { ProductDetails } from "./components/ProductDetails";
 
 const AppRoutes = [
   {
@@ -39,6 +40,10 @@ const AppRoutes = [
   {
     path: "/checkout",
     element: <Checkout />,
+  },
+  {
+    path: "/pd/:productId",
+    element: <ProductDetails />,
   },
 ];
 

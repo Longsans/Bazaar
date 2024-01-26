@@ -58,15 +58,13 @@ export default function OrderHistory() {
     <>
       <h1>Order history</h1>
       <br />
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          margin: "0 0 0.5rem 0",
-        }}
-      >
-        <h5 style={{ margin: "0" }}>Filter by</h5>
-        <select style={{ margin: "0 0.5rem" }} onChange={onSelectionChange}>
+      <div className="d-flex mb-3 align-items-center">
+        <h5 className="my-0 me-1">Filter by</h5>
+        <select
+          className="form-select ms-2"
+          onChange={onSelectionChange}
+          style={{ width: "15%" }}
+        >
           <option value={inProgressSelection}>Orders in progress</option>
           <option value={completedSelection}>Orders completed</option>
           <option value={cancelledSelection}>Orders cancelled</option>

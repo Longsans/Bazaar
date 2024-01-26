@@ -1,16 +1,23 @@
 export class ApiEndpoints {
-  static fetchProfile(userId) {
+  static profile(userId) {
     return `api/shoppers/${userId}`;
   }
-  static fetchCatalog = "api/catalog";
+  static catalog = "api/catalog";
   static basket(userId) {
     return `api/basket/${userId}`;
   }
-  static fetchOrders(userId) {
+  static orders(userId) {
     return `api/orders?buyerId=${userId}`;
   }
-  static fetchCatalogByNameSubstring(nameSubstring) {
+
+  static productsByNameSubstring(nameSubstring) {
     return `api/catalog?nameSubstring=${nameSubstring}`;
+  }
+  static product(productId) {
+    return `api/catalog/${productId}`;
+  }
+  static seller(sellerId) {
+    return `api/sellers/${sellerId}`;
   }
 
   static basket(userId) {

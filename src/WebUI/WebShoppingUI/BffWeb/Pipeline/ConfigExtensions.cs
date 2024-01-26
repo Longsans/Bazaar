@@ -68,6 +68,9 @@ public static class ConfigExtensions
         builder.Services.AddHttpClient<IOrderingDataService, HttpOrderingService>()
             .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
 
+        builder.Services.AddHttpClient<IContractingService, HttpContractingService>()
+            .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
+
         // Business logic services
         builder.Services.AddTransient<BasketManager>()
             .AddTransient<OrderManager>();
