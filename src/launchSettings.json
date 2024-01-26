@@ -9,8 +9,9 @@
           "catalog",
           "shopper-info",
           "webshop",
+          "id",
           "ordering",
-          "fbbinventory"
+          "contracting"
         ]
       }
     }

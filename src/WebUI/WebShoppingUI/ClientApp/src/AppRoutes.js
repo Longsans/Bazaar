@@ -1,7 +1,12 @@
+import Basket from "./components/Basket";
+import Catalog from "./components/Catalog";
+import Checkout from "./components/Checkout";
 import { Home } from "./components/Home";
 import { Login } from "./components/Login";
 import { Logout } from "./components/Logout";
+import OrderHistory from "./components/OrderHistory";
 import { Profile } from "./components/Profile";
+import { ProductDetails } from "./components/ProductDetails";
 
 const AppRoutes = [
   {
@@ -19,6 +24,26 @@ const AppRoutes = [
   {
     path: "/profile",
     element: <Profile />,
+  },
+  {
+    path: "/catalog",
+    element: <Catalog />,
+  },
+  {
+    path: "/basket",
+    element: <Basket />,
+  },
+  {
+    path: "/orders",
+    element: <OrderHistory />,
+  },
+  {
+    path: "/checkout",
+    element: <Checkout />,
+  },
+  {
+    path: "/pd/:productId",
+    element: <ProductDetails />,
   },
 ];
 

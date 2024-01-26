@@ -24,9 +24,9 @@ static_resources:
                       domains:
                         - "*"
                       routes:
-                        - name: "cat-short"
+                        - name: "pc-short"
                           match:
-                            prefix: "/ca/"
+                            prefix: "/pc/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
@@ -38,6 +38,20 @@ static_resources:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: fbbinventory
+                        - name: "tr-short"
+                          match:
+                            prefix: "/tr/"
+                          route:
+                            auto_host_rewrite: true
+                            prefix_rewrite: "/"
+                            cluster: transport
+                        - name: "d-short"
+                          match:
+                            prefix: "/d/"
+                          route:
+                            auto_host_rewrite: true
+                            prefix_rewrite: "/"
+                            cluster: disposal
                         - name: "o-short"
                           match:
                             prefix: "/o/"
@@ -59,20 +73,13 @@ static_resources:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: shopper-info
-                        - name: "ct-short"
+                        - name: "sc-short"
                           match:
-                            prefix: "/ct/"
+                            prefix: "/sc/"
                           route:
                             auto_host_rewrite: true
                             prefix_rewrite: "/"
                             cluster: contracting
-                        - name: "bff-short"
-                          match:
-                            prefix: "/bff/"
-                          route:
-                            auto_host_rewrite: true
-                            prefix_rewrite: "/"
-                            cluster: webbff
                 http_filters:
                   - name: envoy.filters.http.router
                     typed_config:
@@ -97,18 +104,6 @@ static_resources:
                           upstream_cluster: "%UPSTREAM_CLUSTER%"
                           upstream_local_address: "%UPSTREAM_LOCAL_ADDRESS%"
   clusters:
-    - name: webbff
-      connect_timeout: 0.25s
-      type: LOGICAL_DNS
-      load_assignment:
-        cluster_name: webbff
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: webbff
-                      port_value: 80
     - name: shopper-info
       connect_timeout: 0.25s
       type: LOGICAL_DNS
@@ -144,6 +139,30 @@ static_resources:
                   address:
                     socket_address:
                       address: fbbinventory-api
+                      port_value: 80
+    - name: transport
+      connect_timeout: 0.25s
+      type: LOGICAL_DNS
+      load_assignment:
+        cluster_name: transport
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: transport-api
+                      port_value: 80
+    - name: disposal
+      connect_timeout: 0.25s
+      type: LOGICAL_DNS
+      load_assignment:
+        cluster_name: disposal
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: disposal-api
                       port_value: 80
     - name: basket
       connect_timeout: 0.25s

@@ -4,18 +4,18 @@ using CatalogResult = ServiceCallResult<IEnumerable<CatalogItem>>;
 
 public class HttpCatalogService : HttpService, ICatalogDataService
 {
-    private readonly AddressService _addressService;
+    private readonly ApiEndpointResolver _apiEndpoints;
 
     public HttpCatalogService(
-        HttpClient httpClient, AddressService addressService)
+        HttpClient httpClient, ApiEndpointResolver apiEndpoints)
         : base(httpClient)
     {
-        _addressService = addressService;
+        _apiEndpoints = apiEndpoints;
     }
 
     public async Task<CatalogResult> GetByNameSubstring(string nameSubstring)
     {
-        var response = await _httpClient.GetAsync(_addressService.CatalogByNameSubstring(nameSubstring)) ??
+        var response = await _httpClient.GetAsync(_apiEndpoints.CatalogByNameSubstring(nameSubstring)) ??
             throw new Exception("Get catalog by name substring response null.");
         if (!response.IsSuccessStatusCode)
         {
@@ -35,7 +35,7 @@ public class HttpCatalogService : HttpService, ICatalogDataService
     {
         try
         {
-            var response = await _httpClient.GetAsync(_addressService.CatalogItemByProductId(productId))
+            var response = await _httpClient.GetAsync(_apiEndpoints.CatalogItemByProductId(productId))
                 ?? throw new Exception("Get by product ID response null.");
             if (!response.IsSuccessStatusCode)
             {

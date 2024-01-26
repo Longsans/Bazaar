@@ -40,6 +40,19 @@ public record ServiceCallResult
     protected const string UnauthorizedMessage = "Request unauthorized";
     protected const string InternalErrorMessage = "Internal service error";
 
+    public virtual ActionResult ToActionResult()
+    {
+        return ErrorType switch
+        {
+            null => new OkResult(),
+            ServiceCallError.BadRequest => new BadRequestObjectResult(ErrorDetail),
+            ServiceCallError.NotFound => new NotFoundObjectResult(ErrorDetail),
+            ServiceCallError.Unauthorized => new UnauthorizedObjectResult(ErrorDetail),
+            ServiceCallError.Conflict => new ConflictObjectResult(ErrorDetail),
+            ServiceCallError.InternalError => new ObjectResult(ErrorDetail) { StatusCode = 500 },
+        };
+    }
+
     // conversions
     public ServiceCallResult<T> WithValue<T>(T? value = null) where T : class
         => new(ErrorType, ErrorDetail, value);
@@ -84,6 +97,16 @@ public record ServiceCallResult<T> : ServiceCallResult
         => new(ServiceCallError.InternalError, InternalErrorMessage);
 
     public static new ServiceCallResult<T> UntypedError(string errorMsg) => new(null, errorMsg);
+
+    public override ActionResult ToActionResult()
+    {
+        return IsSuccess ? new OkObjectResult(_value) : base.ToActionResult();
+    }
+
+    public ServiceCallResult<TMap> Map<TMap>(Func<T?, TMap> transform) where TMap : class
+    {
+        return new ServiceCallResult<TMap>(ErrorType, ErrorDetail, transform(_value));
+    }
 
     // conversions
     public static implicit operator ServiceCallResult<T>(T result) => Success(result);

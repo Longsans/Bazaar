@@ -52,7 +52,7 @@ public static class ConfigExtensions
 
         // HTTP services
         builder.Services.AddHttpContextAccessor();
-        builder.Services.AddSingleton<AddressService>();
+        builder.Services.AddSingleton<ApiEndpointResolver>();
 
         builder.Services.AddTransient<HttpClientAuthorizationHandler>();
 
@@ -66,6 +66,9 @@ public static class ConfigExtensions
             .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
 
         builder.Services.AddHttpClient<IOrderingDataService, HttpOrderingService>()
+            .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
+
+        builder.Services.AddHttpClient<IContractingService, HttpContractingService>()
             .AddHttpMessageHandler<HttpClientAuthorizationHandler>();
 
         // Business logic services
@@ -92,7 +95,7 @@ public static class ConfigExtensions
 
         app.UseIdentityServerBrowserAddresses();
 
-        app.UseCors();
+        app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
         app.UseStaticFiles();
         app.UseRouting();
 

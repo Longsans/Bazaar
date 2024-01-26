@@ -8,11 +8,10 @@ import {
   NavLink,
 } from "reactstrap";
 import { Link } from "react-router-dom";
-import { Bff } from "../constants/Bff";
 import "./NavMenu.css";
 
 export function NavMenu() {
-  const [logoutUrl, setLogoutUrl] = useState();
+  // const [logoutUrl, setLogoutUrl] = useState();
   const [navbarCollapsed, setNavbarCollapsed] = useState(true);
 
   function toggleNavbar() {
@@ -33,32 +32,32 @@ export function NavMenu() {
     }, 500);
   }
 
-  useEffect(() => {
-    const getSession = async () => {
-      var req = new Request(Bff.userPath, {
-        headers: new Headers({
-          "X-CSRF": "1",
-        }),
-      });
+  // useEffect(() => {
+  //   const getSession = async () => {
+  //     var req = new Request(Bff.userPath, {
+  //       headers: new Headers({
+  //         "X-CSRF": "1",
+  //       }),
+  //     });
 
-      var resp = await fetch(req);
-      if (resp.ok) {
-        var claims = await resp.json();
-        let logoutPath = Bff.logoutPath;
-        if (claims) {
-          logoutPath = claims.find(
-            (claim) => claim.type === Bff.logoutPathClaimName
-          ).value;
-        }
-        setLogoutUrl(getBffUri(logoutPath));
-      } else {
-        throw Error(
-          `Session responded with error: ${resp.status} ${resp.statusText}`
-        );
-      }
-    };
-    getSession();
-  }, []);
+  //     var resp = await fetch(req);
+  //     if (resp.ok) {
+  //       var claims = await resp.json();
+  //       let logoutPath = Bff.logoutPath;
+  //       if (claims) {
+  //         logoutPath = claims.find(
+  //           (claim) => claim.type === Bff.logoutPathClaimName
+  //         ).value;
+  //       }
+  //       setLogoutUrl(getBffUri(logoutPath));
+  //     } else {
+  //       throw Error(
+  //         `Session responded with error: ${resp.status} ${resp.statusText}`
+  //       );
+  //     }
+  //   };
+  //   getSession();
+  // }, []);
 
   return (
     <header>
@@ -68,7 +67,7 @@ export function NavMenu() {
         light
       >
         <NavbarBrand tag={Link} to="/">
-          WebSellerUI
+          Bazaar
         </NavbarBrand>
         <NavbarToggler onClick={toggleNavbar} className="mr-2" />
         <Collapse
@@ -82,31 +81,29 @@ export function NavMenu() {
                 Home
               </NavLink>
             </NavItem>
-            {logoutUrl && (
-              <>
-                {/* <NavItem>
-                  <NavLink tag={Link} className="text-dark" to="/catalog">
-                    Catalog
-                  </NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink tag={Link} className="text-dark" to="/basket">
-                    Basket
-                  </NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink tag={Link} className="text-dark" to="/orders">
-                    Orders
-                  </NavLink>
-                </NavItem> */}
-                <NavItem>
-                  <NavLink tag={Link} className="text-dark" to="/profile">
-                    Profile
-                  </NavLink>
-                </NavItem>
-              </>
-            )}
-            {!logoutUrl && (
+            <>
+              <NavItem>
+                <NavLink tag={Link} className="text-dark" to="/catalog">
+                  Catalog
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink tag={Link} className="text-dark" to="/basket">
+                  Basket
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink tag={Link} className="text-dark" to="/orders">
+                  Order history
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink tag={Link} className="text-dark" to="/profile">
+                  Profile
+                </NavLink>
+              </NavItem>
+            </>
+            {/* {!logoutUrl && (
               <NavItem>
                 <NavLink
                   tag={Link}
@@ -117,8 +114,8 @@ export function NavMenu() {
                   Login
                 </NavLink>
               </NavItem>
-            )}
-            {logoutUrl && (
+            )} */}
+            {/* {logoutUrl && (
               <NavItem>
                 <NavLink
                   tag={Link}
@@ -129,7 +126,7 @@ export function NavMenu() {
                   Logout
                 </NavLink>
               </NavItem>
-            )}
+            )} */}
           </ul>
         </Collapse>
       </Navbar>

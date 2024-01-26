@@ -45,6 +45,12 @@ services:
       - id
       - all
 
+  media-server:
+    image: ${DOCKER_REGISTRY}media-server
+    build:
+      context: .
+      dockerfile: Services/MediaServer/Dockerfile
+
   task-scheduler:
     image: ${DOCKER_REGISTRY-}task-scheduler
     build:

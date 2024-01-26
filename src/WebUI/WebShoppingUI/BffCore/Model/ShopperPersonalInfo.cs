@@ -2,7 +2,7 @@
 
 using System.Text.Json.Serialization;
 
-public class ShopperWriteCommand
+public record ShopperPersonalInfo
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }

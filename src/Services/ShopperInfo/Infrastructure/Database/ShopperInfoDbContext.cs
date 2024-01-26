@@ -8,10 +8,15 @@ public class ShopperInfoDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Shopper>()
-            .Property(s => s.ExternalId)
+        modelBuilder.Entity<Shopper>(s =>
+        {
+            s.Property(x => x.ExternalId)
             .HasComputedColumnSql("CONCAT('SPER-', [Id])", stored: true)
             .HasColumnName("ExternalId");
+
+            s.HasIndex(x => x.EmailAddress)
+            .IsUnique();
+        });
     }
 
     public DbSet<Shopper> Shoppers { get; set; }

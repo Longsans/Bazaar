@@ -1,0 +1,104 @@
+$semi-bold-fw: 600;
+$link-color: #007185;
+$primary-hover-color: #c7511f;
+$focus-ring-color: #008296;
+$btn-search-bg-color: #febd69;
+$primary-color: #ffd814;
+$primary-outline-color: #fcd200;
+$secondary-color: #ffa41c;
+$secondary-outline-color: #ff8f00;
+
+.semi-bold {
+  font-weight: $semi-bold-fw;
+}
+
+.baz-a {
+  cursor: pointer;
+}
+
+.baz-a:hover {
+  color: $primary-hover-color;
+}
+
+.baz-link {
+  text-decoration: none;
+  color: $link-color;
+  font-size: 0.875rem;
+}
+
+.baz-link:hover {
+  color: $primary-hover-color;
+}
+
+.baz-btn-primary {
+  background-color: $primary-color;
+  border-color: $primary-outline-color;
+}
+
+.baz-btn-primary:hover {
+  background-color: #f7ca00;
+}
+
+.baz-btn-primary:active {
+  background-color: #ddb608 !important;
+  border-color: #ddb608 !important;
+}
+
+.baz-btn-secondary {
+  background-color: $secondary-color;
+  border-color: $secondary-outline-color;
+}
+
+.baz-btn-secondary:hover {
+  background-color: #fa8900;
+}
+
+.baz-btn-secondary:active {
+  background-color: $secondary-color;
+}
+
+.baz-btn-search {
+  background-color: $btn-search-bg-color;
+  position: relative;
+}
+
+.baz-btn-search:hover {
+  background-color: #f3a847;
+}
+
+.baz-btn-search:active {
+  background-color: #f3a847 !important;
+  border-color: rgb(255, 153, 0, 0.5) !important;
+  z-index: 3000;
+}
+
+.baz-btn-search:focus {
+  background-color: $btn-search-bg-color;
+  z-index: 3000;
+}
+
+.border-radius-nor {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.border-radius-nol {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.search-input {
+  position: relative;
+}
+
+.search-input:focus {
+  z-index: 3000;
+}
+
+.search-input:active {
+  z-index: 3000;
+}
+
+.mw-25 {
+  max-width: 25%;
+}

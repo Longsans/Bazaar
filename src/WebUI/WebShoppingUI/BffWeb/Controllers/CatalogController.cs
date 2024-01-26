@@ -25,4 +25,18 @@ public class CatalogController : ControllerBase
         }
         return callResult.Value!.ToList();
     }
+
+    [HttpGet("{productId}")]
+    public async Task<ActionResult<CatalogItem>> GetByProductId(string productId)
+    {
+        var callResult = await _catalogService.GetByProductId(productId);
+        return callResult.IsSuccess
+            ? callResult.Value! : callResult.ErrorType switch
+            {
+                ServiceCallError.Unauthorized => Unauthorized(),
+                ServiceCallError.NotFound => NotFound(),
+                ServiceCallError.BadRequest => BadRequest(),
+                _ => StatusCode(500, new { error = callResult.ErrorDetail })
+            };
+    }
 }

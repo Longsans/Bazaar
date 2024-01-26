@@ -13,6 +13,7 @@ var IF_IDENTITY_ELSE = (Action doWithIdentity, Action doWithoutIdentity) =>
 
 // Add services to the container.
 #region Register app service
+builder.Services.AddScoped<ShopperEmailAddressService>();
 builder.Services
     .AddDbContext<ShopperInfoDbContext>(options =>
     {

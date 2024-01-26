@@ -43,7 +43,18 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     ports:
-      - 5555:80
+      - ${IDENTITY_PORT}:80
+
+  media-server:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ExternalHttpPort=${MEDIA_SERVER_HTTP_PORT}
+      - ExternalHttpsPort=${MEDIA_SERVER_HTTPS_PORT}
+      - EventBusConnection=rabbitmq
+    ports:
+      - ${MEDIA_SERVER_HTTP_PORT}:80
+      - ${MEDIA_SERVER_HTTPS_PORT}:443
 
 # Task scheduler
   task-scheduler:
@@ -66,6 +77,7 @@ services:
       - ConnectionString=Server=sqldata;Database=BazaarCatalog;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - OrderingApi=http://internallb/o
       - IdentityApi=http://identity-api
+      - MediaServerUrl=https://localhost:${MEDIA_SERVER_HTTPS_PORT}
       - DisableIdentity=true
     volumes:
       - ./SeedData:/root/SeedData
@@ -193,6 +205,7 @@ services:
       - OrderingApi=http://ordering-api
       - ShopperInfoApi=http://shopper-info-api
       - BasketApi=http://basket-api
+      - ContractingApi=http://contracting-api
       - DisableIdentity=true
     ports:
       - "5002:80"

@@ -17,7 +17,7 @@ public class ShopperQuery
         LastName = shopper.LastName;
         EmailAddress = shopper.EmailAddress;
         PhoneNumber = shopper.PhoneNumber;
-        DateOfBirth = shopper.DateOfBirth.ToString("dd/MM/yyyy");
+        DateOfBirth = shopper.DateOfBirth.ToString("yyyy-MM-dd");
         Gender = shopper.Gender switch
         {
             Model.Gender.NonBinary => "Non-binary",
