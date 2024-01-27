@@ -29,26 +29,26 @@ export default function CatalogItem({
       return <></>;
     }
     return (
-      <div className="d-flex flex-row align-items-center">
-        <small>{`${itemInBasket.quantity} in basket - `}</small>
+      <div className="d-flex flex-row align-items-center mt-1">
+        <span className="small-text baz-text-secondary fw-bold">{`${itemInBasket.quantity} in basket - `}</span>
 
-        <small
+        <span
           onClick={async (event) => {
             event.stopPropagation();
             await changeItemQuantity(productId, 0);
           }}
-          className="btn btn-link d-inline p-0 ms-1 baz-link"
+          className="btn btn-link d-inline p-0 ms-1 baz-link small-text"
         >
           Remove
-        </small>
+        </span>
       </div>
     );
   };
 
   return (
-    <div className="d-flex flex-column align-items-start m-2 p-2 border border-1 border-light-subtle">
+    <div className="d-flex flex-column align-items-start m-2 p-2 border border-1 border-light-subtle pb-3 rounded-1">
       <div
-        className="bg-secondary bg-opacity-10 d-flex flex-row align-items-center"
+        className="bg-secondary bg-opacity-10 d-flex flex-row align-items-center rounded-1"
         style={{ width: "250px", height: "250px", cursor: "pointer" }}
         onClick={onItemClick}
       >
@@ -61,13 +61,13 @@ export default function CatalogItem({
       <h5 className="m-1 baz-a" onClick={onItemClick}>
         {productName}
       </h5>
-      <h5 className="mx-1 mb-2 fw-bold">${price}</h5>
+      <h5 className="mx-1 fw-bold">${price}</h5>
       <button
         onClick={async (event) => {
           event.stopPropagation();
           await addProductToBasket(productId);
         }}
-        className="btn baz-btn-primary"
+        className="btn baz-btn-primary mt-2 rounded-3 semi-bold small-text"
       >
         Add to basket
       </button>

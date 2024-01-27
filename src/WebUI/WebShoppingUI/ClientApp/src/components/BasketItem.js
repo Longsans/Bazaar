@@ -15,7 +15,8 @@ export default function BasketItem({
     setBasketUpdating(true);
     try {
       await changeItemQuantity(item.productId, qty);
-      alert("Quantity updated");
+      if (qty > 0) alert("Quantity updated");
+      else alert("Item removed");
     } catch (error) {
       alert(JSON.stringify(error));
     }
@@ -56,13 +57,13 @@ export default function BasketItem({
                     setQuantityInput(event.target.value.replace(/\D/, ""));
                   }}
                   maxLength={3}
-                  className="form-control w-25 d-inline me-2"
+                  className="form-control w-25 d-inline me-3"
                 />
                 {!!quantityInput && (
                   <button
                     type="submit"
                     disabled={basketUpdating}
-                    className="btn baz-btn-primary"
+                    className="btn baz-btn-primary slightly-small-text rounded-3 fw-semibold"
                   >
                     Update
                   </button>
@@ -76,6 +77,7 @@ export default function BasketItem({
                 className="form-select w-25"
                 style={{ minWidth: "75px" }}
               >
+                <option value={0}>0 (Remove)</option>
                 <option value={1}>1</option>
                 <option value={2}>2</option>
                 <option value={3}>3</option>
@@ -88,6 +90,12 @@ export default function BasketItem({
                 <option value={10}>10+</option>
               </select>
             )}
+            <span
+              className="baz-link mx-3 slightly-small-text"
+              onClick={async () => await updateQuantity(0)}
+            >
+              Remove
+            </span>
           </div>
         </form>
       </td>
