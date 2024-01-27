@@ -43,7 +43,9 @@ export default function Basket() {
       </h5>
       {!!basket?.items.length && (
         <Link to="/checkout">
-          <button className="btn baz-btn-primary">Proceed to checkout</button>
+          <button className="btn baz-btn-primary fw-semibold mt-2">
+            Proceed to checkout
+          </button>
         </Link>
       )}
     </>

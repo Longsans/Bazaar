@@ -19,6 +19,7 @@ export function Profile() {
   const [loading, setLoading] = useState(true);
   const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const waltuhWhite = "SPER-1";
 
   const onSubmit = async (data) => {
     if (isEditingInfo) {
@@ -67,7 +68,7 @@ export function Profile() {
   useEffect(() => {
     const getProfileAsync = async () => {
       setLoading(true);
-      const response = await fetch(ApiEndpoints.profile("SPER-1"));
+      const response = await fetch(ApiEndpoints.profile(waltuhWhite));
       const data = await response.json();
       setOriginalProfile(data);
       setLoading(false);

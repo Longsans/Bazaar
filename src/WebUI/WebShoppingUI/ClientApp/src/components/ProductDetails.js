@@ -104,7 +104,7 @@ export function ProductDetails() {
             className="btn baz-btn-primary p-2 w-25"
             onClick={handleAddToBasket}
           >
-            <h5 className="m-0">Add to basket</h5>
+            <h5 className="m-0 fw-semibold">Add to basket</h5>
           </button>
           <table className="mt-3">
             {sideInfoItem("Ships from", distributor)}

@@ -1,8 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useBasket } from "../hooks/useBasket";
 import { useNavigate } from "react-router-dom";
 import "../site.scss";
+import {
+  RegisteredTextField,
+  RegisteredNumberField,
+  RegisteredDateField,
+} from "../components/FormElements";
 
 export default function Checkout() {
   const { register, handleSubmit } = useForm();
@@ -34,45 +39,9 @@ export default function Checkout() {
     }
   };
 
-  const registeredTextField = (name, labelText, register) => (
-    <div className="me-4">
-      <span className="form-label semi-bold">{labelText}</span>
-      <input
-        type={"text"}
-        {...register(name, { required: true })}
-        className="form-control mt-2"
-      />
-    </div>
-  );
-
-  const registeredNumberField = (name, labelText, register) => (
-    <div className="me-4">
-      <span className="form-label semi-bold">{labelText}</span>
-      <input
-        type={"number"}
-        {...register(name, {
-          required: true,
-          valueAsNumber: true,
-          validate: (value) => value > 0,
-        })}
-        className="form-control mt-2"
-      />
-    </div>
-  );
-
-  const registeredDateField = (name, labelText, register) => (
-    <div className="me-4">
-      <span className="form-label semi-bold">{labelText}</span>
-      <input
-        type="date"
-        {...register(name, {
-          required: true,
-          valueAsDate: true,
-        })}
-        className="form-control mt-2"
-      />
-    </div>
-  );
+  useEffect(() => {
+    if (basket && !basket.items.length) navigate("/catalog");
+  }, [basket]);
 
   return (
     <>
@@ -81,37 +50,47 @@ export default function Checkout() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <h5 className="semi-bold">Shipping information</h5>
         <hr />
-        <div style={{ display: "flex", margin: "0 0 2.5rem 0" }}>
-          {Object.entries(textFields).map(([name, labelText]) =>
-            registeredTextField(name, labelText, register)
-          )}
+        <div className="d-flex mb-5">
+          {Object.entries(textFields).map(([name, labelText]) => (
+            <RegisteredTextField {...{ name, labelText, register }} />
+          ))}
         </div>
         <h5 className="semi-bold">Payment information</h5>
         <hr />
-        <div style={{ display: "flex" }}>
-          {registeredNumberField("cardNumber", "Card number", register)}
-          {registeredTextField("cardHolderName", "Card holder name", register)}
-          {registeredNumberField(
-            "cardSecurityNumber",
-            "Card security number",
-            register
-          )}
-          {registeredDateField(
-            "cardExpirationDate",
-            "Card expiration date",
-            register
-          )}
+        <div className="d-flex mb-5">
+          <RegisteredNumberField
+            name="cardNumber"
+            labelText="Card number"
+            register={register}
+          />
+          <RegisteredTextField
+            name="cardHolderName"
+            labelText="Card holder name"
+            register={register}
+          />
+
+          <RegisteredNumberField
+            name="cardSecNumber"
+            labelText="Card security number"
+            register={register}
+          />
+          <RegisteredDateField
+            name="cardExp"
+            labelText="Card expiration date"
+            register={register}
+          />
         </div>
-        <br />
-        <button type="submit" className="btn baz-btn-primary">
-          Checkout
-        </button>
-        <span
-          className="btn btn-secondary ms-3"
-          onClick={() => navigate("/basket")}
-        >
-          Back to basket
-        </span>
+        <div>
+          <button type="submit" className="btn baz-btn-primary">
+            Checkout
+          </button>
+          <span
+            className="btn btn-secondary ms-3"
+            onClick={() => navigate("/basket")}
+          >
+            Back to basket
+          </span>
+        </div>
       </form>
     </>
   );

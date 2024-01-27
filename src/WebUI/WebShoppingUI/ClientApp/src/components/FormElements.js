@@ -64,7 +64,6 @@ const RegisteredDateField = ({
     labelText={labelText}
     register={register}
     type="date"
-    options={{ valueAsDate: true }}
     disabled={disabled}
   />
 );

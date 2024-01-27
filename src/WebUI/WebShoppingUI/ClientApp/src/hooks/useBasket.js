@@ -28,8 +28,6 @@ const useProvideBasket = () => {
   };
 
   const changeItemQuantity = async (productId, quantity) => {
-    console.log(productId);
-    console.log(quantity);
     var response = await http.patchAsync(
       ApiEndpoints.basketItem(waltuh, productId),
       quantity
