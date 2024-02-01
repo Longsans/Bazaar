@@ -4,7 +4,9 @@ public class CatalogItemsByNameSubstringSpec : Specification<CatalogItem>
 {
     public CatalogItemsByNameSubstringSpec(string nameSubstring, bool includeDeleted)
     {
-        Query.Where(x => x.ProductName.Contains(nameSubstring));
+        Query.Include(x => x.MainDepartment)
+            .Include(x => x.Subcategory)
+            .Where(x => x.ProductName.Contains(nameSubstring));
 
         if (!includeDeleted)
             Query.Where(x => x.ListingStatus != ListingStatus.Deleted);

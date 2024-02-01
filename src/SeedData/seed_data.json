@@ -6,6 +6,8 @@
       "Price": 34.99,
       "ImageUri": "prod_1.jpg",
       "AvailableStock": 100,
+      "MainDepartmentId": 1,
+      "SubcategoryId": 2,
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 1,
       "HasOrdersInProgress": false
@@ -16,6 +18,8 @@
       "Price": 45.99,
       "ImageUri": "prod_2.jpg",
       "AvailableStock": 100,
+      "MainDepartmentId": 1,
+      "SubcategoryId": 2,
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false
@@ -26,6 +30,8 @@
       "Price": 16.54,
       "ImageUri": "prod_3.jpg",
       "AvailableStock": 100,
+      "MainDepartmentId": 1,
+      "SubcategoryId": 3,
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false
@@ -36,6 +42,8 @@
       "Price": 62.47,
       "ImageUri": "prod_4.jpg",
       "AvailableStock": 100,
+      "MainDepartmentId": 1,
+      "SubcategoryId": 3,
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false

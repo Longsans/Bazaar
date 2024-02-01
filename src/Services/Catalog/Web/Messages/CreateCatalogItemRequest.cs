@@ -7,6 +7,7 @@ public class CreateCatalogItemRequest
     public decimal Price { get; set; }
     public IFormFile Image { get; set; }
     public uint AvailableStock { get; set; }
+    public int CategoryId { get; set; }
     public string SellerId { get; set; }
     public FulfillmentMethod FulfillmentMethod { get; set; }
 }

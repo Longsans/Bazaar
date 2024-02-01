@@ -9,6 +9,11 @@ public class CatalogItem
     public decimal Price { get; private set; }
     public string? ImageFilename { get; private set; }
     public uint AvailableStock { get; private set; }
+    public ProductCategory MainDepartment { get; private set; }
+    public ProductCategory Subcategory { get; private set; }
+    public int MainDepartmentId { get; private set; }
+    public int SubcategoryId { get; private set; }
+
     public string SellerId { get; private set; }
     public ListingStatus ListingStatus { get; private set; }
     public FulfillmentMethod FulfillmentMethod { get; private set; }
@@ -25,7 +30,8 @@ public class CatalogItem
     // Create constructor
     public CatalogItem(
         string productName, string productDescription,
-        decimal price, uint availableStock, string sellerId, FulfillmentMethod fulfillmentMethod)
+        decimal price, uint availableStock, ProductCategory subcategory,
+        string sellerId, FulfillmentMethod fulfillmentMethod)
     {
         if (price <= 0m)
             throw new ArgumentOutOfRangeException(
@@ -33,11 +39,20 @@ public class CatalogItem
 
         if (availableStock > 0 && fulfillmentMethod == FulfillmentMethod.Fbb)
             throw new ManualInsertOfFbbStockNotSupportedException();
+        if (subcategory is null)
+            throw new ArgumentNullException(nameof(subcategory));
 
         ProductName = productName;
         ProductDescription = productDescription;
         Price = price;
         AvailableStock = availableStock;
+        Subcategory = subcategory;
+        while (!subcategory.IsMainDepartment)
+        {
+            subcategory = subcategory.ParentCategory!;
+        }
+        MainDepartment = subcategory;
+
         SellerId = sellerId;
         FulfillmentMethod = fulfillmentMethod;
         ListingStatus = availableStock > 0
@@ -48,6 +63,7 @@ public class CatalogItem
     private CatalogItem(
         string productName, string productDescription,
         decimal price, string imageUri, uint availableStock,
+        int mainDepartmentId, int subcategoryId,
         string sellerId, FulfillmentMethod fulfillmentMethod, bool hasOrdersInProgress)
     {
         ProductName = productName;
@@ -55,6 +71,8 @@ public class CatalogItem
         Price = price;
         ImageFilename = imageUri;
         AvailableStock = availableStock;
+        MainDepartmentId = mainDepartmentId;
+        SubcategoryId = subcategoryId;
         SellerId = sellerId;
         FulfillmentMethod = fulfillmentMethod;
         ListingStatus = availableStock > 0
@@ -178,5 +196,11 @@ public class CatalogItem
     public void UpdateHasOrdersInProgress(bool hasOrdersInProgress)
     {
         HasOrdersInProgress = hasOrdersInProgress;
+    }
+
+    public void ChangeSubcategory(ProductCategory category)
+    {
+        Subcategory = category;
+        MainDepartment = Subcategory.MainDepartment;
     }
 }

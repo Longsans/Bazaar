@@ -5,13 +5,7 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "basket",
-          "catalog",
-          "shopper-info",
-          "webshop",
-          "id",
-          "ordering",
-          "contracting"
+          "catalog"
         ]
       }
     }
