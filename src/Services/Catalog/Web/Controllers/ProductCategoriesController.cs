@@ -27,7 +27,7 @@ public class ProductCategoriesController : ControllerBase
     public async Task<ActionResult<IEnumerable<ProductCategoryResponse>>> GetByCriteria(string? nameSubstring = null)
     {
         var queryAction = async () => !string.IsNullOrWhiteSpace(nameSubstring)
-            ? await _categoryRepo.ListAsync(new ProductCategoryByNameSubstringSpec(nameSubstring, false))
+            ? await _categoryRepo.ListAsync(new ProductCategoriesByNameSpec(nameSubstring, false))
             : await _categoryRepo.ListAsync(new MainDepartmentCategoriesSpec());
 
         var categories = await queryAction();

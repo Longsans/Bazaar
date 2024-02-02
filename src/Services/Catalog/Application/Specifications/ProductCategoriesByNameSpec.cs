@@ -1,12 +1,12 @@
 ﻿namespace Bazaar.Catalog.Application.Specifications;
 
-public class ProductCategoryByIdSpec : SingleResultSpecification<ProductCategory>
+public class ProductCategoriesByNameSpec : Specification<ProductCategory>
 {
-    public ProductCategoryByIdSpec(int id, bool includeProducts = false)
+    public ProductCategoriesByNameSpec(string name, bool includeProducts = false)
     {
         Query.Include(x => x.ParentCategory)
             .Include(x => x.ChildCategories)
             .IncludeProducts(includeProducts)
-            .Where(x => x.Id == id);
+            .Where(x => x.Name.Contains(name));
     }
 }

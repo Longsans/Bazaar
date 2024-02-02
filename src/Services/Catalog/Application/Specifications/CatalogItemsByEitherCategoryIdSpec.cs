@@ -1,8 +1,8 @@
 ﻿namespace Bazaar.Catalog.Application.Specifications;
 
-public class CatalogItemsByCategory : Specification<CatalogItem>
+public class CatalogItemsByEitherCategoryIdSpec : Specification<CatalogItem>
 {
-    public CatalogItemsByCategory(int categoryId, bool includeDeleted)
+    public CatalogItemsByEitherCategoryIdSpec(int categoryId, bool includeDeleted)
     {
         Query.Include(x => x.MainDepartment)
             .Include(x => x.Subcategory)

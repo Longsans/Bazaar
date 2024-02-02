@@ -9,8 +9,8 @@ public record CatalogItemResponse
     public decimal Price { get; private set; }
     public string? ImageUrl { get; private set; }
     public uint AvailableStock { get; private set; }
-    public string MainDepartment { get; private set; }
-    public string Subcategory { get; private set; }
+    public CatalogItemCategoryResponse MainDepartment { get; private set; }
+    public CatalogItemCategoryResponse Subcategory { get; private set; }
     public string SellerId { get; private set; }
     public ListingStatus ListingStatus { get; private set; }
     public FulfillmentMethod FulfillmentMethod { get; private set; }
@@ -26,11 +26,13 @@ public record CatalogItemResponse
         ImageUrl = item.ImageFilename is not null
             ? Url.Combine(imageHostLocation, item.ImageFilename) : item.ImageFilename;
         AvailableStock = item.AvailableStock;
-        MainDepartment = item.MainDepartment.Name;
-        Subcategory = item.Subcategory.Name;
+        MainDepartment = new(item.MainDepartmentId, item.MainDepartment.Name);
+        Subcategory = new(item.SubcategoryId, item.Subcategory.Name);
         SellerId = item.SellerId;
         ListingStatus = item.ListingStatus;
         FulfillmentMethod = item.FulfillmentMethod;
         HasOrdersInProgress = item.HasOrdersInProgress;
     }
+
+    public record CatalogItemCategoryResponse(int CategoryId, string Name);
 }

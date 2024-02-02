@@ -47,11 +47,9 @@ public class CatalogItem
         Price = price;
         AvailableStock = availableStock;
         Subcategory = subcategory;
-        while (!subcategory.IsMainDepartment)
-        {
-            subcategory = subcategory.ParentCategory!;
-        }
-        MainDepartment = subcategory;
+        MainDepartment = Subcategory.MainDepartment;
+        SubcategoryId = Subcategory.Id;
+        MainDepartmentId = MainDepartment.Id;
 
         SellerId = sellerId;
         FulfillmentMethod = fulfillmentMethod;
@@ -202,5 +200,7 @@ public class CatalogItem
     {
         Subcategory = category;
         MainDepartment = Subcategory.MainDepartment;
+        SubcategoryId = Subcategory.Id;
+        MainDepartmentId = MainDepartment.Id;
     }
 }
