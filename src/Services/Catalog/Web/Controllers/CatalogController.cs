@@ -95,8 +95,8 @@ public class CatalogController : ControllerBase
         {
             return BadRequest("Product image content is invalid.");
         }
-        var catalogItem = new CatalogItem(request.Name, request.Description, request.Price,
-            request.AvailableStock, category, request.SellerId, request.FulfillmentMethod);
+        var catalogItem = new CatalogItem(request.Name, request.Description, request.Price, request.AvailableStock, category,
+            request.Dimensions.Length, request.Dimensions.Width, request.Dimensions.Height, request.SellerId, request.FulfillmentMethod);
         await _catalogRepo.AddAsync(catalogItem);
 
         var imageUri = await _imgService.SaveImageForProduct(catalogItem.ProductId, image);
@@ -105,6 +105,7 @@ public class CatalogController : ControllerBase
             catalogItem.ChangeProductDetails(imageFilename: imageUri);
             await _catalogRepo.UpdateAsync(catalogItem);
         }
+        _eventBus.Publish(new CatalogItemCreatedIntegrationEvent(catalogItem));
         return CreatedAtAction(nameof(GetByProductId), new { productId = catalogItem.ProductId },
             new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation));
     }
@@ -112,7 +113,7 @@ public class CatalogController : ControllerBase
     // Seller only
     [HttpPatch("{productId}")]
     [Authorize(Policy = "HasModifyScope")]
-    public async Task<ActionResult<CatalogItemResponse>> UpdateProductDetails(string productId, UpdateProductDetailsRequest request)
+    public async Task<ActionResult<CatalogItemResponse>> UpdateProductInfo(string productId, UpdateProductInfoRequest request)
     {
         var spec = new CatalogItemByProductIdSpec(productId);
         var catalogItem = await _catalogRepo.FirstOrDefaultAsync(spec);
@@ -122,6 +123,10 @@ public class CatalogController : ControllerBase
         }
 
         catalogItem.ChangeProductDetails(request.Name, request.Description, request.Price, request.ImageUrl);
+        if (request.Dimensions is not null)
+        {
+            catalogItem.ChangeProductDimensions(request.Dimensions.Length, request.Dimensions.Width, request.Dimensions.Height);
+        }
         await _catalogRepo.UpdateAsync(catalogItem);
         return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
     }

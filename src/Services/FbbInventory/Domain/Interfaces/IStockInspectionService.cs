@@ -1,7 +1,7 @@
 ﻿namespace Bazaar.FbbInventory.Domain.Interfaces;
 
-public interface IQualityInspectionService
+public interface IStockInspectionService
 {
-    StockInspectionReport ConductInspection(
+    Task<StockInspectionReport> ConductInspection(
         IEnumerable<InboundStockQuantity> inspectQuantities);
 }

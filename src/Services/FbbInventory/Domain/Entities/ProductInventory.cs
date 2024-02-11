@@ -4,6 +4,12 @@ public class ProductInventory
 {
     public int Id { get; private set; }
     public string ProductId { get; private set; }
+    public decimal StorageLengthPerUnitCm { get; private set; } // Length is the measured longest edge of the item 
+    public decimal StorageWidthPerUnitCm { get; private set; }  // Width is the second longest edge
+    public decimal StorageHeightPerUnitCm { get; private set; } // Height is the shortest edge
+    public decimal StorageSpacePerUnitCm3 => StorageWidthPerUnitCm * StorageLengthPerUnitCm * StorageHeightPerUnitCm;
+    public decimal TotalStorageSpaceCm3 => TotalUnits * StorageSpacePerUnitCm3; // Temporary, this should be written by a trigger and persisted in DB
+    public decimal TotalStorageSpaceM3 => TotalStorageSpaceCm3 / 1000m;
 
     private readonly List<Lot> _lots;
     public IReadOnlyCollection<Lot> Lots => _lots.AsReadOnly();
@@ -30,16 +36,9 @@ public class ProductInventory
     public bool HasPickupsInProgress { get; private set; }
 
     public ProductInventory(
-        string productId, uint fulfillableUnits,
-        uint defectiveUnits, uint warehouseDamagedUnits,
-        uint restockThreshold, uint maxStockThreshold, int sellerInventoryId)
+        string productId, uint fulfillableUnits, uint defectiveUnits, uint warehouseDamagedUnits,
+        uint restockThreshold, uint maxStockThreshold, decimal storageLengthPerUnitCm, decimal storageWidthPerUnitCm, decimal storageHeightPerUnitCm, int sellerInventoryId)
     {
-        var totalUnits = fulfillableUnits + defectiveUnits + warehouseDamagedUnits;
-        if (totalUnits == 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                "The total number of units in product inventory cannot be 0.", null as Exception);
-        }
         if (restockThreshold > maxStockThreshold
             || fulfillableUnits + defectiveUnits + warehouseDamagedUnits > maxStockThreshold)
         {
@@ -50,6 +49,13 @@ public class ProductInventory
         RestockThreshold = restockThreshold;
         MaxStockThreshold = maxStockThreshold;
         SellerInventoryId = sellerInventoryId;
+        StorageWidthPerUnitCm = storageWidthPerUnitCm;
+        StorageLengthPerUnitCm = storageLengthPerUnitCm;
+        StorageHeightPerUnitCm = storageHeightPerUnitCm;
+        if (StorageSpacePerUnitCm3 <= 0m)
+        {
+            throw new ArgumentOutOfRangeException("Storage space per unit must be a positive number.", null as Exception);
+        }
 
         _lots = new();
         if (fulfillableUnits != 0)

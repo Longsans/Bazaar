@@ -2,12 +2,12 @@
 
 public class StockTransactionService
 {
-    private readonly IQualityInspectionService _qualityInspectionService;
+    private readonly IStockInspectionService _qualityInspectionService;
     private readonly IRepository<ProductInventory> _productInvenRepo;
     private readonly IEventBus _eventBus;
 
     public StockTransactionService(
-        IQualityInspectionService qualityInspectionService,
+        IStockInspectionService qualityInspectionService,
         IRepository<ProductInventory> productInvenRepo,
         IEventBus eventBus)
     {
@@ -28,7 +28,7 @@ public class StockTransactionService
             });
         }
 
-        var inspectionReport = _qualityInspectionService.ConductInspection(receiptQuantities);
+        var inspectionReport = await _qualityInspectionService.ConductInspection(receiptQuantities);
         var receiptItems = inspectionReport.Items.Select(x => new StockReceiptItem(
             x.ProductId, x.GoodQuantity, x.DefectiveQuantity, x.WarehouseDamagedQuantity));
         var receipt = new StockReceipt(receiptItems);

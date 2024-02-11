@@ -8,6 +8,9 @@ public class CatalogItem
     public string ProductDescription { get; private set; }
     public decimal Price { get; private set; }
     public string? ImageFilename { get; private set; }
+    public decimal ProductLengthCm { get; private set; }
+    public decimal ProductWidthCm { get; private set; }
+    public decimal ProductHeightCm { get; private set; }
     public uint AvailableStock { get; private set; }
     public ProductCategory MainDepartment { get; private set; }
     public ProductCategory Subcategory { get; private set; }
@@ -31,6 +34,7 @@ public class CatalogItem
     public CatalogItem(
         string productName, string productDescription,
         decimal price, uint availableStock, ProductCategory subcategory,
+        decimal productLengthCm, decimal productWidthCm, decimal productHeightCm,
         string sellerId, FulfillmentMethod fulfillmentMethod)
     {
         if (price <= 0m)
@@ -42,6 +46,14 @@ public class CatalogItem
         if (subcategory is null)
             throw new ArgumentNullException(nameof(subcategory));
 
+        var invalidArgName = productLengthCm <= 0m ? nameof(productLengthCm)
+            : productWidthCm <= 0m ? nameof(productWidthCm)
+            : productHeightCm <= 0m ? nameof(productHeightCm) : null;
+        if (invalidArgName is not null)
+        {
+            throw new ArgumentOutOfRangeException(invalidArgName);
+        }
+
         ProductName = productName;
         ProductDescription = productDescription;
         Price = price;
@@ -50,10 +62,13 @@ public class CatalogItem
         MainDepartment = Subcategory.MainDepartment;
         SubcategoryId = Subcategory.Id;
         MainDepartmentId = MainDepartment.Id;
+        ProductLengthCm = productLengthCm;
+        ProductWidthCm = productWidthCm;
+        ProductHeightCm = productHeightCm;
 
         SellerId = sellerId;
         FulfillmentMethod = fulfillmentMethod;
-        ListingStatus = availableStock > 0
+        ListingStatus = availableStock > 0 && fulfillmentMethod == FulfillmentMethod.Merchant
             ? ListingStatus.Active : ListingStatus.InactiveOutOfStock;
     }
 
@@ -62,6 +77,7 @@ public class CatalogItem
         string productName, string productDescription,
         decimal price, string imageUri, uint availableStock,
         int mainDepartmentId, int subcategoryId,
+        decimal productLengthCm, decimal productWidthCm, decimal productHeightCm,
         string sellerId, FulfillmentMethod fulfillmentMethod, bool hasOrdersInProgress)
     {
         ProductName = productName;
@@ -71,6 +87,9 @@ public class CatalogItem
         AvailableStock = availableStock;
         MainDepartmentId = mainDepartmentId;
         SubcategoryId = subcategoryId;
+        ProductLengthCm = productLengthCm;
+        ProductWidthCm = productWidthCm;
+        ProductHeightCm = productHeightCm;
         SellerId = sellerId;
         FulfillmentMethod = fulfillmentMethod;
         ListingStatus = availableStock > 0
@@ -96,6 +115,20 @@ public class CatalogItem
         ProductDescription = productDescription ?? ProductDescription;
         Price = price ?? Price;
         ImageFilename = imageFilename ?? ImageFilename;
+    }
+
+    public void ChangeProductDimensions(decimal length, decimal width, decimal height)
+    {
+        var invalidArgName = length <= 0m ? nameof(length)
+            : width <= 0m ? nameof(width)
+            : height <= 0m ? nameof(height) : null;
+        if (invalidArgName is not null)
+        {
+            throw new ArgumentOutOfRangeException(invalidArgName);
+        }
+        ProductLengthCm = length;
+        ProductWidthCm = width;
+        ProductHeightCm = height;
     }
 
     public void ReduceStock(uint units)

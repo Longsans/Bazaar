@@ -5,7 +5,7 @@ namespace FbbInventoryTests.UnitTests;
 
 public class FixedQaServiceUnitTests
 {
-    private readonly FixedQualityInspectionService _service;
+    private readonly FixedStockInspectionService _service;
     private const uint _defectiveUnitsPerItem = 5;
     private const uint _wdamagedUnitsPerItem = 6;
 

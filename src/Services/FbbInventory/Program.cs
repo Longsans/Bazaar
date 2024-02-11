@@ -18,7 +18,7 @@ builder.Services.AddDbContext<FbbInventoryDbContext>(options =>
 builder.Services.AddScoped<StockTransactionService>();
 builder.Services.AddScoped<StockAdjustmentService>();
 builder.Services.AddScoped<RemovalService>();
-builder.Services.AddScoped<IQualityInspectionService, FixedQualityInspectionService>();
+builder.Services.AddScoped<IStockInspectionService, FixedStockInspectionService>();
 builder.Services.AddScoped<DeleteProductInventoryService>();
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
