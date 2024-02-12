@@ -115,6 +115,7 @@ public static class EventBusExtensionMethods
         services.AddTransient<ProductListingClosedIntegrationEventHandler>();
         services.AddTransient<ProductRelistedIntegrationEventHandler>();
         services.AddTransient<FbbProductsOrderedIntegrationEventHandler>();
+        services.AddTransient<CatalogItemCreatedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -152,5 +153,9 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             FbbProductsOrderedIntegrationEvent,
             FbbProductsOrderedIntegrationEventHandler>();
+
+        eventBus.Subscribe<
+            CatalogItemCreatedIntegrationEvent,
+            CatalogItemCreatedIntegrationEventHandler>();
     }
 }

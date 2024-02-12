@@ -96,7 +96,7 @@ public class CatalogController : ControllerBase
             return BadRequest("Product image content is invalid.");
         }
         var catalogItem = new CatalogItem(request.Name, request.Description, request.Price, request.AvailableStock, category,
-            request.Dimensions.Length, request.Dimensions.Width, request.Dimensions.Height, request.SellerId, request.FulfillmentMethod);
+            request.ProductLength, request.ProductWidth, request.ProductHeight, request.SellerId, request.FulfillmentMethod);
         await _catalogRepo.AddAsync(catalogItem);
 
         var imageUri = await _imgService.SaveImageForProduct(catalogItem.ProductId, image);
@@ -112,7 +112,6 @@ public class CatalogController : ControllerBase
 
     // Seller only
     [HttpPatch("{productId}")]
-    [Authorize(Policy = "HasModifyScope")]
     public async Task<ActionResult<CatalogItemResponse>> UpdateProductInfo(string productId, UpdateProductInfoRequest request)
     {
         var spec = new CatalogItemByProductIdSpec(productId);
@@ -125,7 +124,7 @@ public class CatalogController : ControllerBase
         catalogItem.ChangeProductDetails(request.Name, request.Description, request.Price, request.ImageUrl);
         if (request.Dimensions is not null)
         {
-            catalogItem.ChangeProductDimensions(request.Dimensions.Length, request.Dimensions.Width, request.Dimensions.Height);
+            catalogItem.ChangeProductDimensions(request.Dimensions.LengthInCm, request.Dimensions.WidthInCm, request.Dimensions.HeightInCm);
         }
         await _catalogRepo.UpdateAsync(catalogItem);
         return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);

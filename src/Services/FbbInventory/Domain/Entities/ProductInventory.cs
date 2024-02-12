@@ -4,14 +4,18 @@ public class ProductInventory
 {
     public int Id { get; private set; }
     public string ProductId { get; private set; }
-    public decimal StorageLengthPerUnitCm { get; private set; } // Length is the measured longest edge of the item 
-    public decimal StorageWidthPerUnitCm { get; private set; }  // Width is the second longest edge
-    public decimal StorageHeightPerUnitCm { get; private set; } // Height is the shortest edge
-    public decimal StorageSpacePerUnitCm3 => StorageWidthPerUnitCm * StorageLengthPerUnitCm * StorageHeightPerUnitCm;
-    public decimal TotalStorageSpaceCm3 => TotalUnits * StorageSpacePerUnitCm3; // Temporary, this should be written by a trigger and persisted in DB
-    public decimal TotalStorageSpaceM3 => TotalStorageSpaceCm3 / 1000m;
+    public float StorageLengthPerUnitCm { get; private set; } // Length is the measured longest edge of the item 
+    public float StorageWidthPerUnitCm { get; private set; }  // Width is the second longest edge
+    public float StorageHeightPerUnitCm { get; private set; } // Height is the shortest edge
+    public float StorageSpacePerUnitCm3 => StorageWidthPerUnitCm * StorageLengthPerUnitCm * StorageHeightPerUnitCm;
+    public float TotalStorageSpaceCm3
+    {
+        get => TotalUnits * StorageSpacePerUnitCm3;
+        private set { } // private set for EF mapping to store in DB
+    }
+    public float TotalStorageSpaceM3 => ConvertUnits.FromCm3ToM3(TotalStorageSpaceCm3);
 
-    private readonly List<Lot> _lots;
+    private readonly List<Lot> _lots = new();
     public IReadOnlyCollection<Lot> Lots => _lots.AsReadOnly();
     public IReadOnlyCollection<Lot> FulfillableLots
         => _lots.Where(x => x.IsUnitsFulfillable).ToList().AsReadOnly();
@@ -36,8 +40,8 @@ public class ProductInventory
     public bool HasPickupsInProgress { get; private set; }
 
     public ProductInventory(
-        string productId, uint fulfillableUnits, uint defectiveUnits, uint warehouseDamagedUnits,
-        uint restockThreshold, uint maxStockThreshold, decimal storageLengthPerUnitCm, decimal storageWidthPerUnitCm, decimal storageHeightPerUnitCm, int sellerInventoryId)
+        string productId, uint fulfillableUnits, uint defectiveUnits, uint warehouseDamagedUnits, uint restockThreshold, uint maxStockThreshold,
+        float storageLengthPerUnitCm, float storageWidthPerUnitCm, float storageHeightPerUnitCm, int sellerInventoryId)
     {
         if (restockThreshold > maxStockThreshold
             || fulfillableUnits + defectiveUnits + warehouseDamagedUnits > maxStockThreshold)
@@ -52,12 +56,11 @@ public class ProductInventory
         StorageWidthPerUnitCm = storageWidthPerUnitCm;
         StorageLengthPerUnitCm = storageLengthPerUnitCm;
         StorageHeightPerUnitCm = storageHeightPerUnitCm;
-        if (StorageSpacePerUnitCm3 <= 0m)
+        if (StorageSpacePerUnitCm3 <= 0f)
         {
             throw new ArgumentOutOfRangeException("Storage space per unit must be a positive number.", null as Exception);
         }
 
-        _lots = new();
         if (fulfillableUnits != 0)
         {
             _lots.Add(new(this, fulfillableUnits));

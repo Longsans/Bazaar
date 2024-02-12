@@ -2,7 +2,7 @@
 
 public record CatalogItemCreatedIntegrationEvent(
     string ProductId, string ProductName, string ProductDescription, decimal Price, string? ImageFilename,
-    decimal ProductLengthCm, decimal ProductWidthCm, decimal ProductHeightCm, uint AvailableStock,
+    float ProductLengthCm, float ProductWidthCm, float ProductHeightCm, uint AvailableStock,
     int MainDepartmentId, int SubcategoryId, string SellerId, ListingStatus ListingStatus, FulfillmentMethod FulfillmentMethod) : IntegrationEvent
 {
     public CatalogItemCreatedIntegrationEvent(CatalogItem item)

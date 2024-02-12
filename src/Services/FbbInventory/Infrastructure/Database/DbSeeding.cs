@@ -11,9 +11,9 @@ public static class DbSeeding
         context.SellerInventories.Add(sellerInventory);
         await context.SaveChangesAsync();
 
-        var prodWidthCm = 16m;
-        var prodLengthCm = 24m;
-        var prodHeightCm = 5m;
+        var prodWidthCm = 16f;
+        var prodLengthCm = 24f;
+        var prodHeightCm = 5f;
         var productInventory = new ProductInventory(
             "PROD-1", 100, 30, 20,
             10, 2000, prodLengthCm, prodWidthCm, prodHeightCm, sellerInventory.Id);
