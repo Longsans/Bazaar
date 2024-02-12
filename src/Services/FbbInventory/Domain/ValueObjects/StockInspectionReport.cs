@@ -2,8 +2,8 @@
 
 public class StockInspectionReport
 {
-    public DateTime DateConducted { get; set; }
-    public List<StockInspectionItem> Items { get; set; }
+    public DateTime DateConducted { get; private set; }
+    public List<StockInspectionItem> Items { get; private set; }
 
     public StockInspectionReport(IEnumerable<StockInspectionItem> items)
     {
@@ -13,6 +13,7 @@ public class StockInspectionReport
         }
         DateConducted = DateTime.Now.Date;
         Items = items.ToList();
+
     }
 }
 
@@ -22,9 +23,11 @@ public class StockInspectionItem
     public uint GoodQuantity { get; }
     public uint DefectiveQuantity { get; }
     public uint WarehouseDamagedQuantity { get; }
+    public decimal StorageSpacePerUnitDm3 { get; }
+    public decimal AllInspectedItemsStorageSpaceDm3 => StorageSpacePerUnitDm3 * (GoodQuantity + DefectiveQuantity + WarehouseDamagedQuantity);
 
     public StockInspectionItem(string productId, uint goodQuantity,
-        uint defectiveQuantity, uint warehouseDamagedQuantity)
+        uint defectiveQuantity, uint warehouseDamagedQuantity, decimal storageSpacePerUnitDm3)
     {
         if (string.IsNullOrWhiteSpace(productId))
         {
@@ -34,5 +37,6 @@ public class StockInspectionItem
         GoodQuantity = goodQuantity;
         DefectiveQuantity = defectiveQuantity;
         WarehouseDamagedQuantity = warehouseDamagedQuantity;
+        StorageSpacePerUnitDm3 = storageSpacePerUnitDm3;
     }
 }

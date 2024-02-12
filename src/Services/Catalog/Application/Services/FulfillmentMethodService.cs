@@ -30,8 +30,8 @@ public class FulfillmentMethodService
             return Result.Conflict(ex.Message);
         }
         await _catalogRepo.UpdateAsync(catalogItem);
-        _eventBus.Publish(
-            new ProductFulfillmentMethodChangedToFbbIntegrationEvent(productId));
+        _eventBus.Publish(new ProductFulfillmentMethodChangedToFbbIntegrationEvent(
+                productId, catalogItem.ProductLengthCm, catalogItem.ProductWidthCm, catalogItem.ProductHeightCm, catalogItem.SellerId));
         return Result.Success();
     }
 

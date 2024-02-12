@@ -1,12 +1,12 @@
 ﻿namespace Bazaar.Catalog.Application.Specifications;
 
-public class CatalogItemsBySellerIdSpec : Specification<CatalogItem>
+public class CatalogItemsByNameSpec : Specification<CatalogItem>
 {
-    public CatalogItemsBySellerIdSpec(string sellerId, bool includeDeleted = false)
+    public CatalogItemsByNameSpec(string nameSubstring, bool includeDeleted)
     {
         Query.Include(x => x.MainDepartment)
             .Include(x => x.Subcategory)
-            .Where(x => x.SellerId == sellerId);
+            .Where(x => x.ProductName.Contains(nameSubstring));
 
         if (!includeDeleted)
             Query.Where(x => x.ListingStatus != ListingStatus.Deleted);

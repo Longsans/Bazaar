@@ -18,7 +18,7 @@ builder.Services.AddDbContext<FbbInventoryDbContext>(options =>
 builder.Services.AddScoped<StockTransactionService>();
 builder.Services.AddScoped<StockAdjustmentService>();
 builder.Services.AddScoped<RemovalService>();
-builder.Services.AddScoped<IQualityInspectionService, FixedQualityInspectionService>();
+builder.Services.AddScoped<IStockInspectionService, FixedStockInspectionService>();
 builder.Services.AddScoped<DeleteProductInventoryService>();
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -115,6 +115,7 @@ public static class EventBusExtensionMethods
         services.AddTransient<ProductListingClosedIntegrationEventHandler>();
         services.AddTransient<ProductRelistedIntegrationEventHandler>();
         services.AddTransient<FbbProductsOrderedIntegrationEventHandler>();
+        services.AddTransient<CatalogItemCreatedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -152,5 +153,9 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             FbbProductsOrderedIntegrationEvent,
             FbbProductsOrderedIntegrationEventHandler>();
+
+        eventBus.Subscribe<
+            CatalogItemCreatedIntegrationEvent,
+            CatalogItemCreatedIntegrationEventHandler>();
     }
 }

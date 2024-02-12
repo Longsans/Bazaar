@@ -8,7 +8,15 @@ public class CatalogItem
     public string ProductDescription { get; private set; }
     public decimal Price { get; private set; }
     public string? ImageFilename { get; private set; }
+    public float ProductLengthCm { get; private set; }
+    public float ProductWidthCm { get; private set; }
+    public float ProductHeightCm { get; private set; }
     public uint AvailableStock { get; private set; }
+    public ProductCategory MainDepartment { get; private set; }
+    public ProductCategory Subcategory { get; private set; }
+    public int MainDepartmentId { get; private set; }
+    public int SubcategoryId { get; private set; }
+
     public string SellerId { get; private set; }
     public ListingStatus ListingStatus { get; private set; }
     public FulfillmentMethod FulfillmentMethod { get; private set; }
@@ -25,7 +33,9 @@ public class CatalogItem
     // Create constructor
     public CatalogItem(
         string productName, string productDescription,
-        decimal price, uint availableStock, string sellerId, FulfillmentMethod fulfillmentMethod)
+        decimal price, uint availableStock, ProductCategory subcategory,
+        float productLengthCm, float productWidthCm, float productHeightCm,
+        string sellerId, FulfillmentMethod fulfillmentMethod)
     {
         if (price <= 0m)
             throw new ArgumentOutOfRangeException(
@@ -33,14 +43,32 @@ public class CatalogItem
 
         if (availableStock > 0 && fulfillmentMethod == FulfillmentMethod.Fbb)
             throw new ManualInsertOfFbbStockNotSupportedException();
+        if (subcategory is null)
+            throw new ArgumentNullException(nameof(subcategory));
+
+        var invalidArgName = productLengthCm <= 0f ? nameof(productLengthCm)
+            : productWidthCm <= 0f ? nameof(productWidthCm)
+            : productHeightCm <= 0f ? nameof(productHeightCm) : null;
+        if (invalidArgName is not null)
+        {
+            throw new ArgumentOutOfRangeException(invalidArgName);
+        }
 
         ProductName = productName;
         ProductDescription = productDescription;
         Price = price;
         AvailableStock = availableStock;
+        Subcategory = subcategory;
+        MainDepartment = Subcategory.MainDepartment;
+        SubcategoryId = Subcategory.Id;
+        MainDepartmentId = MainDepartment.Id;
+        ProductLengthCm = productLengthCm;
+        ProductWidthCm = productWidthCm;
+        ProductHeightCm = productHeightCm;
+
         SellerId = sellerId;
         FulfillmentMethod = fulfillmentMethod;
-        ListingStatus = availableStock > 0
+        ListingStatus = availableStock > 0 && fulfillmentMethod == FulfillmentMethod.Merchant
             ? ListingStatus.Active : ListingStatus.InactiveOutOfStock;
     }
 
@@ -48,6 +76,8 @@ public class CatalogItem
     private CatalogItem(
         string productName, string productDescription,
         decimal price, string imageUri, uint availableStock,
+        int mainDepartmentId, int subcategoryId,
+        float productLengthCm, float productWidthCm, float productHeightCm,
         string sellerId, FulfillmentMethod fulfillmentMethod, bool hasOrdersInProgress)
     {
         ProductName = productName;
@@ -55,6 +85,11 @@ public class CatalogItem
         Price = price;
         ImageFilename = imageUri;
         AvailableStock = availableStock;
+        MainDepartmentId = mainDepartmentId;
+        SubcategoryId = subcategoryId;
+        ProductLengthCm = productLengthCm;
+        ProductWidthCm = productWidthCm;
+        ProductHeightCm = productHeightCm;
         SellerId = sellerId;
         FulfillmentMethod = fulfillmentMethod;
         ListingStatus = availableStock > 0
@@ -80,6 +115,20 @@ public class CatalogItem
         ProductDescription = productDescription ?? ProductDescription;
         Price = price ?? Price;
         ImageFilename = imageFilename ?? ImageFilename;
+    }
+
+    public void ChangeProductDimensions(float length, float width, float height)
+    {
+        var invalidArgName = length <= 0f ? nameof(length)
+            : width <= 0f ? nameof(width)
+            : height <= 0f ? nameof(height) : null;
+        if (invalidArgName is not null)
+        {
+            throw new ArgumentOutOfRangeException(invalidArgName);
+        }
+        ProductLengthCm = length;
+        ProductWidthCm = width;
+        ProductHeightCm = height;
     }
 
     public void ReduceStock(uint units)
@@ -178,5 +227,13 @@ public class CatalogItem
     public void UpdateHasOrdersInProgress(bool hasOrdersInProgress)
     {
         HasOrdersInProgress = hasOrdersInProgress;
+    }
+
+    public void ChangeSubcategory(ProductCategory category)
+    {
+        Subcategory = category;
+        MainDepartment = Subcategory.MainDepartment;
+        SubcategoryId = Subcategory.Id;
+        MainDepartmentId = MainDepartment.Id;
     }
 }
