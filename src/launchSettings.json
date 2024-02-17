@@ -6,7 +6,9 @@
       "composeProfile": {
         "includes": [
           "catalog",
-          "fbbinventory"
+          "fbbinventory",
+          "ordering",
+          "basket"
         ]
       }
     }

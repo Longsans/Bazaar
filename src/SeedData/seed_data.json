@@ -11,9 +11,9 @@
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 1,
       "HasOrdersInProgress": false,
-      "ProductLengthInCm": 24,
-      "ProductWidthInCm": 16,
-      "ProductHeightInCm": 4.6
+      "ProductLengthCm": 24,
+      "ProductWidthCm": 16,
+      "ProductHeightCm": 4.6
     },
     {
       "ProductName": "A Dream of Spring",
@@ -26,9 +26,9 @@
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false,
-      "ProductLengthInCm": 24,
-      "ProductWidthInCm": 16,
-      "ProductHeightInCm": 5
+      "ProductLengthCm": 24,
+      "ProductWidthCm": 16,
+      "ProductHeightCm": 5
     },
     {
       "ProductName": "The Intelligent Investor",
@@ -41,9 +41,9 @@
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false,
-      "ProductLengthInCm": 24,
-      "ProductWidthInCm": 16,
-      "ProductHeightInCm": 2.5
+      "ProductLengthCm": 24,
+      "ProductWidthCm": 16,
+      "ProductHeightCm": 2.5
     },
     {
       "ProductName": "Security Analysis",
@@ -56,9 +56,9 @@
       "SellerId": "CLNT-1",
       "FulfillmentMethod": 0,
       "HasOrdersInProgress": false,
-      "ProductLengthInCm": 24,
-      "ProductWidthInCm": 16,
-      "ProductHeightInCm": 5.8
+      "ProductLengthCm": 24,
+      "ProductWidthCm": 16,
+      "ProductHeightCm": 5.8
     }
   ],
   "sellingPlans": [

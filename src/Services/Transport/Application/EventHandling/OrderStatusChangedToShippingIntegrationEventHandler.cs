@@ -3,14 +3,14 @@
 public class OrderStatusChangedToShippingIntegrationEventHandler
     : IIntegrationEventHandler<OrderStatusChangedToShippingIntegrationEvent>
 {
-    private readonly DeliveryProcessService _deliveryProcessService;
+    private readonly DeliveryProcessService _deliveryProcessor;
     private readonly ILogger<OrderStatusChangedToShippingIntegrationEventHandler> _logger;
 
     public OrderStatusChangedToShippingIntegrationEventHandler(
-        DeliveryProcessService deliveryProcessService,
+        DeliveryProcessService deliveryProcessor,
         ILogger<OrderStatusChangedToShippingIntegrationEventHandler> logger)
     {
-        _deliveryProcessService = deliveryProcessService;
+        _deliveryProcessor = deliveryProcessor;
         _logger = logger;
     }
 
@@ -18,7 +18,7 @@ public class OrderStatusChangedToShippingIntegrationEventHandler
     {
         var packageItems = @event.OrderItems.Select(x =>
             new DeliveryPackageItem(x.ProductId, x.Quantity));
-        var result = await _deliveryProcessService.ScheduleDelivery(
+        var result = await _deliveryProcessor.ScheduleDelivery(
             @event.OrderId, @event.ShippingAddress, packageItems);
 
         if (result.IsSuccess)
