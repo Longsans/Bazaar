@@ -5,125 +5,129 @@ namespace Bazaar.Catalog.Web.Controllers;
 public class CatalogController : ControllerBase
 {
     private readonly IRepository<CatalogItem> _catalogRepo;
-    private readonly DeleteCatalogItemService _deleteService;
+    private readonly IRepository<ProductCategory> _categoryRepo;
     private readonly ListingService _listingService;
+    private readonly IImageService _imgService;
+    private readonly IEventBus _eventBus;
 
     public CatalogController(
         IRepository<CatalogItem> catalogRepo,
-        DeleteCatalogItemService deleteService,
-        ListingService listingService)
+        IRepository<ProductCategory> categoryRepo,
+        ListingService listingService,
+        IImageService imgService,
+        IEventBus eventBus)
     {
         _catalogRepo = catalogRepo;
-        _deleteService = deleteService;
+        _categoryRepo = categoryRepo;
         _listingService = listingService;
+        _imgService = imgService;
+        _eventBus = eventBus;
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{productId}")]
     //[Authorize(Policy = "HasReadScope")]
-    public async Task<ActionResult<CatalogItemResponse>> GetById(int id, bool includeDeleted = false)
+    public async Task<ActionResult<CatalogItemResponse>> GetByProductId(string productId, bool includeDeleted = false)
     {
-        var item = await _catalogRepo.GetByIdAsync(id);
-        if (item == null || !includeDeleted && item.IsDeleted)
+        var item = await _catalogRepo.SingleOrDefaultAsync(
+            new CatalogItemByProductIdSpec(productId, includeDeleted));
+        if (item == null)
         {
             return NotFound();
         }
-
-        return new CatalogItemResponse(item);
+        return new CatalogItemResponse(item, _imgService.ImageHostLocation);
     }
 
     [HttpGet]
     //[Authorize(Policy = "HasReadScope")]
     public async Task<ActionResult<IEnumerable<CatalogItemResponse>>> GetByCriteria(
-        string? productId = null, string? sellerId = null,
-        string? nameSubstring = null, bool includeDeleted = false)
+        int? categoryId, string? sellerId, string? nameSubstring, bool includeDeleted)
     {
-        if (string.IsNullOrWhiteSpace(productId) &&
-            string.IsNullOrWhiteSpace(sellerId) &&
-            string.IsNullOrWhiteSpace(nameSubstring))
+        try
         {
-            return BadRequest(new
-            {
-                error = "At least one of the following arguments must be specified: " +
-                    "productId, sellerId, partOfName"
-            });
+            var spec = new CatalogItemsByDetailCriteriaSpec(categoryId, sellerId, nameSubstring, includeDeleted);
+            var items = await _catalogRepo.ListAsync(spec);
+            return items.Select(x => new CatalogItemResponse(x, _imgService.ImageHostLocation)).ToList();
         }
-        if (!string.IsNullOrWhiteSpace(productId) && !string.IsNullOrWhiteSpace(sellerId))
+        catch (ArgumentException ex)
         {
-            return BadRequest(new
-            {
-                error = "Only one of the following arguments can be specified: productId, sellerId."
-            });
+            return BadRequest(ex.Message);
         }
-        if (!string.IsNullOrWhiteSpace(productId) && !string.IsNullOrWhiteSpace(nameSubstring))
-        {
-            return BadRequest(new
-            {
-                error = "The productId and partOfName arguments cannot be combined."
-            });
-        }
-
-        var items = new List<CatalogItem>();
-        if (!string.IsNullOrWhiteSpace(productId))
-        {
-            var spec = new CatalogItemByProductIdSpec(productId, includeDeleted);
-            var item = await _catalogRepo.SingleOrDefaultAsync(spec);
-            if (item != null)
-            {
-                items.Add(item);
-            }
-        }
-        else
-        {
-            Specification<CatalogItem>? spec = null;
-            if (!string.IsNullOrWhiteSpace(sellerId))
-            {
-                spec = new CatalogItemsBySellerIdSpec(sellerId, includeDeleted);
-            }
-            if (!string.IsNullOrWhiteSpace(nameSubstring))
-            {
-                var nameSpec = new CatalogItemsByNameSubstringSpec(nameSubstring!, includeDeleted);
-                if (spec is not null)
-                {
-                    ((List<WhereExpressionInfo<CatalogItem>>)spec.WhereExpressions)
-                        .Add(nameSpec.WhereExpressions.First());
-                }
-                else
-                {
-                    spec = nameSpec;
-                }
-            }
-            items.AddRange(await _catalogRepo.ListAsync(spec!));
-        }
-        return items.Select(x => new CatalogItemResponse(x)).ToList();
     }
 
-    // Shopper only
+    [HttpGet("/api/catalog-by-department/{departmentId}")]
+    public async Task<ActionResult<IEnumerable<CatalogItemResponse>>> GetByMainDepartmentAndName(int departmentId, string? nameSubstring, bool includeDeleted)
+    {
+        var items = await _catalogRepo.ListAsync(
+            new CatalogItemsByMainDepartmentAndNameSpec(departmentId, nameSubstring, includeDeleted));
+        return items.Select(x => new CatalogItemResponse(x, _imgService.ImageHostLocation)).ToList();
+    }
+
+    [HttpGet("/api/catalog-by-subcategory/{subcategoryId}")]
+    public async Task<ActionResult<IEnumerable<CatalogItemResponse>>> GetBySubcategoryAndName(int subcategoryId, string? nameSubstring, bool includeDeleted)
+    {
+        var items = await _catalogRepo.ListAsync(
+            new CatalogItemsBySubcategoryAndNameSpec(subcategoryId, nameSubstring, includeDeleted));
+        return items.Select(x => new CatalogItemResponse(x, _imgService.ImageHostLocation)).ToList();
+    }
+
+    // Seller only
     [HttpPost]
-    [Authorize(Policy = "HasModifyScope")]
-    public async Task<ActionResult<CatalogItemResponse>> Create(CreateCatalogItemRequest command)
+    //[Authorize(Policy = "HasModifyScope")]
+    public async Task<ActionResult<CatalogItemResponse>> Create([FromForm] CreateCatalogItemRequest request)
     {
-        var createdItem = await _catalogRepo.AddAsync(command.ToNewCatalogItem());
-        return CreatedAtAction(nameof(GetById), new { createdItem.Id },
-            new CatalogItemResponse(createdItem));
+        var category = await _categoryRepo.SingleOrDefaultAsync(
+            new ProductCategoryByIdSpec(request.SubcategoryId));
+        if (category is null)
+        {
+            return NotFound("Product category not found.");
+        }
+
+        Image? image;
+        try
+        {
+            image = await Image.LoadAsync(request.Image.OpenReadStream());
+        }
+        catch (UnknownImageFormatException)
+        {
+            return BadRequest("Product image is not valid format.");
+        }
+        catch (InvalidImageContentException)
+        {
+            return BadRequest("Product image content is invalid.");
+        }
+        var catalogItem = new CatalogItem(request.Name, request.Description, request.Price, request.AvailableStock, category,
+            request.ProductLength, request.ProductWidth, request.ProductHeight, request.SellerId, request.FulfillmentMethod);
+        await _catalogRepo.AddAsync(catalogItem);
+
+        var imageUri = await _imgService.SaveImageForProduct(catalogItem.ProductId, image);
+        if (imageUri is not null)
+        {
+            catalogItem.ChangeProductDetails(imageFilename: imageUri);
+            await _catalogRepo.UpdateAsync(catalogItem);
+        }
+        _eventBus.Publish(new CatalogItemCreatedIntegrationEvent(catalogItem));
+        return CreatedAtAction(nameof(GetByProductId), new { productId = catalogItem.ProductId },
+            new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation));
     }
 
-    // Shopper only
+    // Seller only
     [HttpPatch("{productId}")]
-    [Authorize(Policy = "HasModifyScope")]
-    public async Task<ActionResult<CatalogItemResponse>> UpdateProductDetails(string productId,
-        UpdateProductDetailsRequest request)
+    public async Task<ActionResult<CatalogItemResponse>> UpdateProductInfo(string productId, UpdateProductInfoRequest request)
     {
         var spec = new CatalogItemByProductIdSpec(productId);
         var catalogItem = await _catalogRepo.FirstOrDefaultAsync(spec);
         if (catalogItem == null)
         {
-            return NotFound();
+            return NotFound("Catalog item not found.");
         }
 
-        catalogItem.ChangeProductDetails(
-            request.Name, request.Description, request.Price);
+        catalogItem.ChangeProductDetails(request.Name, request.Description, request.Price, request.ImageUrl);
+        if (request.Dimensions is not null)
+        {
+            catalogItem.ChangeProductDimensions(request.Dimensions.LengthInCm, request.Dimensions.WidthInCm, request.Dimensions.HeightInCm);
+        }
         await _catalogRepo.UpdateAsync(catalogItem);
-        return new CatalogItemResponse(catalogItem);
+        return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
     }
 
     // Shopper only
@@ -137,7 +141,7 @@ public class CatalogController : ControllerBase
             return NotFound();
         }
 
-        // This bit of business logic unfortunately can only be here
+        // This bit of business logic being here is fine for the moment
         if (catalogItem.IsFbb)
         {
             return Conflict(new
@@ -164,17 +168,18 @@ public class CatalogController : ControllerBase
         }
 
         await _catalogRepo.UpdateAsync(catalogItem);
-        return new CatalogItemResponse(catalogItem);
+        return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
     }
 
-    // Shopper only
+    // Seller only
     [HttpPatch("{productId}/listing")]
     public async Task<IActionResult> ChangeListingStatus(string productId, ChangeListingStatusRequest request)
     {
         var result = request.Status switch
         {
-            ListingCloseStatus.Listed => await _listingService.Relist(productId),
-            ListingCloseStatus.Closed => await _listingService.CloseListing(productId),
+            RequestedListingStatus.Listed => await _listingService.Relist(productId),
+            RequestedListingStatus.Closed => await _listingService.CloseListing(productId),
+            RequestedListingStatus.Deleted => await _listingService.DeleteListing(productId),
             _ => Result.Invalid(new ValidationError
             {
                 Identifier = nameof(request.Status),
@@ -184,21 +189,21 @@ public class CatalogController : ControllerBase
         return result.ToActionResult(this);
     }
 
-    // Shopper only
-    [HttpDelete("{productId}")]
-    public async Task<IActionResult> SoftDelete(string productId)
+    [HttpPatch("{productId}/category")]
+    public async Task<ActionResult<CatalogItemResponse>> ChangeSubcategory(string productId, ChangeProductSubcategoryRequest request)
     {
-        try
+        var catalogItem = await _catalogRepo.SingleOrDefaultAsync(new CatalogItemByProductIdSpec(productId));
+        if (catalogItem is null)
         {
-            await _deleteService.SoftDeleteByProductId(productId);
+            return NotFound("Catalog item not found.");
         }
-        catch (Exception ex) when
-            (ex is DeleteProductWithOrdersInProgressException
-            || ex is DeleteFbbProductWhenFbbInventoryNotEmptyException)
+        var category = await _categoryRepo.SingleOrDefaultAsync(new ProductCategoryByIdSpec(request.SubcategoryId));
+        if (category is null)
         {
-            return Conflict(new { error = ex.Message });
+            return NotFound("Product category not found.");
         }
-
-        return NoContent();
+        catalogItem.ChangeSubcategory(category);
+        await _catalogRepo.UpdateAsync(catalogItem);
+        return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
     }
 }

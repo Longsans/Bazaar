@@ -24,22 +24,16 @@ public class CatalogItemUnitTests
     {
         InitializeTestData();
 
-        switch (status)
+        if (!Enum.IsDefined(status))
         {
-            case ListingStatus.Active:
-                return;
-            case ListingStatus.InactiveOutOfStock:
-                _testCatalogItem.ReduceStock(_testCatalogItem.AvailableStock);
-                break;
-            case ListingStatus.InactiveClosedListing:
-                _testCatalogItem.CloseListing();
-                break;
-            case ListingStatus.Deleted:
-                _testCatalogItem.Delete();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(status));
+            throw new ArgumentOutOfRangeException(nameof(status));
         }
+        if (status == _testCatalogItem.ListingStatus)
+        {
+            return;
+        }
+        typeof(CatalogItem).GetProperty(nameof(CatalogItem.ListingStatus))!
+            .SetValue(_testCatalogItem, status);
     }
 
     private void InitializeTestDataInStatusAndFulfillmentMethod(
@@ -116,7 +110,7 @@ public class CatalogItemUnitTests
     public void ChangeProductDetails_ThrowsInvalidOpException_WhenItemIsDeleted()
     {
         InitializeTestData();
-        _testCatalogItem.Delete();
+        _testCatalogItem.DeleteListing();
         var newProductName = "Test 2";
         var newProductDescription = "Test description 2";
         var newPrice = 9.99m;
@@ -192,7 +186,7 @@ public class CatalogItemUnitTests
     public void ReduceStock_ThrowsInvalidOpException_WhenItemIsDeleted()
     {
         InitializeTestData();
-        _testCatalogItem.Delete();
+        _testCatalogItem.DeleteListing();
         uint unitsToReduce = 2;
 
         Assert.Throws<InvalidOperationException>(() =>
@@ -237,7 +231,7 @@ public class CatalogItemUnitTests
     public void Restock_ThrowsInvalidOpException_WhenItemIsDeleted()
     {
         InitializeTestData();
-        _testCatalogItem.Delete();
+        _testCatalogItem.DeleteListing();
         uint unitsToRestock = 2;
 
         Assert.Throws<InvalidOperationException>(() =>
@@ -288,6 +282,53 @@ public class CatalogItemUnitTests
         _testCatalogItem.Relist();
 
         Assert.True(_testCatalogItem.IsListingActive);
+    }
+
+    [Theory]
+    [InlineData(FulfillmentMethod.Merchant, 0u)]
+    [InlineData(FulfillmentMethod.Fbb, 0u)]
+    [InlineData(FulfillmentMethod.Merchant, 1u)]
+    public void DeleteListing_Succeeds_WhenHasNoOrdersInProgressAndNoFbbStock(
+        FulfillmentMethod fulfillmentMethod, uint fbbStock)
+    {
+        InitializeTestDataInStatusAndFulfillmentMethod(
+            ListingStatus.Active, fulfillmentMethod);
+        typeof(CatalogItem).GetProperty(nameof(CatalogItem.AvailableStock))!
+            .SetValue(_testCatalogItem, fbbStock);
+
+        _testCatalogItem.DeleteListing();
+
+        Assert.True(_testCatalogItem.IsDeleted);
+    }
+
+    [Fact]
+    public void DeleteListing_Succeeds_WhenAlreadyDeleted()
+    {
+        InitializeTestDataInStatus(ListingStatus.Deleted);
+
+        _testCatalogItem.DeleteListing();
+
+        Assert.True(_testCatalogItem.IsDeleted);
+    }
+
+    [Fact]
+    public void DeleteListing_ThrowsProductHasOrdersInProgressException_WhenHasOrdersInProgress()
+    {
+        InitializeTestData();
+        _testCatalogItem.UpdateHasOrdersInProgress(true);
+
+        Assert.Throws<ProductHasOrdersInProgressException>(_testCatalogItem.DeleteListing);
+        Assert.False(_testCatalogItem.IsDeleted);
+    }
+
+    [Fact]
+    public void DeleteListing_ThrowsProductFbbInventoryNotEmptyException_WhenHasFbbStock()
+    {
+        InitializeTestDataInStatusAndFulfillmentMethod(
+            ListingStatus.Active, FulfillmentMethod.Fbb);
+
+        Assert.Throws<ProductFbbInventoryNotEmptyException>(_testCatalogItem.DeleteListing);
+        Assert.False(_testCatalogItem.IsDeleted);
     }
 
     [Theory]

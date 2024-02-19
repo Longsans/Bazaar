@@ -12,6 +12,12 @@ public class Lot
     public uint UnitsInRemoval { get; private set; }
     public ProductInventory ProductInventory { get; private set; }
     public int ProductInventoryId { get; private set; }
+    public float StorageSpaceUsedCm3
+    {
+        get => TotalUnits * ProductInventory.StorageSpacePerUnitCm3;
+        private set { } // empty private set because we need to map this into DB, while the actual value is calculated in app and need not be written to object by EF
+    }
+    public float StorageSpaceUsedM3 => ConvertUnits.FromCm3ToM3(StorageSpaceUsedCm3);
 
     public uint TotalUnits => UnitsInStock + UnitsInRemoval;
     public bool IsUnitsFulfillable => !IsUnitsStranded && !IsUnitsUnfulfillable;

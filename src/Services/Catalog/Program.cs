@@ -11,15 +11,16 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
     options.UseSqlServer(builder.Configuration["ConnectionString"]);
 });
 
-builder.Services.AddScoped<DeleteCatalogItemService>();
 builder.Services.AddScoped<FulfillmentMethodService>();
 builder.Services.AddScoped<ListingService>();
+builder.Services.AddTransient<IImageService, EventBasedImageService>();
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(sp => new JsonDataAdapter(builder.Configuration["SeedDataFilePath"]!));
 
 builder.Services.RegisterEventBus(builder.Configuration);
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthentication()
     .AddJwtBearer("Bearer", options =>
     {
@@ -58,6 +59,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseStaticFiles();
 
 // DISABLES IDENTITY
 IF_ENABLED_IDENTITY(() =>
@@ -137,6 +140,7 @@ public static class EventBusExtensionMethods
         services.AddTransient<StockIssuedIntegrationEventHandler>();
         services.AddTransient<StockReceivedIntegrationEventHandler>();
         services.AddTransient<StockAdjustedIntegrationEventHandler>();
+        services.AddTransient<ProductImageSavedIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -160,6 +164,9 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             StockAdjustedIntegrationEvent,
             StockAdjustedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductImageSavedIntegrationEvent,
+            ProductImageSavedIntegrationEventHandler>();
     }
 }
 

@@ -2,17 +2,17 @@
 
 public class StockTransactionService
 {
-    private readonly IQualityInspectionService _qualityInspectionService;
-    private readonly IRepository<ProductInventory> _productInvenRepo;
+    private readonly IStockInspectionService _qualityInspectionService;
+    private readonly IRepository<ProductInventory> _productInventories;
     private readonly IEventBus _eventBus;
 
     public StockTransactionService(
-        IQualityInspectionService qualityInspectionService,
+        IStockInspectionService qualityInspectionService,
         IRepository<ProductInventory> productInvenRepo,
         IEventBus eventBus)
     {
         _qualityInspectionService = qualityInspectionService;
-        _productInvenRepo = productInvenRepo;
+        _productInventories = productInvenRepo;
         _eventBus = eventBus;
     }
 
@@ -28,7 +28,7 @@ public class StockTransactionService
             });
         }
 
-        var inspectionReport = _qualityInspectionService.ConductInspection(receiptQuantities);
+        var inspectionReport = await _qualityInspectionService.ConductInspection(receiptQuantities);
         var receiptItems = inspectionReport.Items.Select(x => new StockReceiptItem(
             x.ProductId, x.GoodQuantity, x.DefectiveQuantity, x.WarehouseDamagedQuantity));
         var receipt = new StockReceipt(receiptItems);
@@ -36,7 +36,7 @@ public class StockTransactionService
         var updatedInventories = new List<ProductInventory>();
         foreach (var receiptItem in receiptItems)
         {
-            var inventory = await _productInvenRepo.SingleOrDefaultAsync(
+            var inventory = await _productInventories.SingleOrDefaultAsync(
                 new ProductInventoryWithLotsAndSellerSpec(receiptItem.ProductId));
             if (inventory == null)
             {
@@ -66,7 +66,7 @@ public class StockTransactionService
             }
             updatedInventories.Add(inventory);
         }
-        await _productInvenRepo.UpdateRangeAsync(updatedInventories);
+        await _productInventories.UpdateRangeAsync(updatedInventories);
 
         var receivedStockItems = receiptItems.Select(x => new ReceivedStockEventItem(
             x.ProductId, x.GoodQuantity, x.DefectiveQuantity, x.WarehouseDamagedQuantity));
@@ -101,7 +101,7 @@ public class StockTransactionService
         {
             foreach (var issueQuantity in issueQuantities)
             {
-                var inventory = await _productInvenRepo.SingleOrDefaultAsync(
+                var inventory = await _productInventories.SingleOrDefaultAsync(
                     new ProductInventoryWithLotsAndSellerSpec(issueQuantity.ProductId));
                 if (inventory == null)
                 {
@@ -133,7 +133,7 @@ public class StockTransactionService
             return Result.Conflict(ex.Message);
         }
 
-        await _productInvenRepo.UpdateRangeAsync(updatedInventories);
+        await _productInventories.UpdateRangeAsync(updatedInventories);
         var issue = new StockIssue(issueItems, issueReason);
         var issueEventItems = issueQuantities.Select(x =>
             new IssuedStockEventItem(x.ProductId, x.GoodQuantity, x.UnfulfillableQuantity));
@@ -141,6 +141,37 @@ public class StockTransactionService
             DateTime.Now.Date, issueReason, issueEventItems);
         _eventBus.Publish(stockIssuedEvent);
         return Result.Success(issue);
+    }
+
+    public async Task<Result<StockCheckReport>> CheckStockForIssuance(IEnumerable<OutboundStockQuantity> quantities)
+    {
+        if (!quantities.Any())
+        {
+            return Result.Invalid(new ValidationError
+            {
+                Identifier = nameof(quantities),
+                ErrorMessage = "Quantities empty."
+            });
+        }
+        if (quantities.GroupBy(x => x.ProductId).Any(g => g.Count() > 1))
+        {
+            return Result.Invalid(new ValidationError
+            {
+                Identifier = nameof(quantities),
+                ErrorMessage = "Quantities cannot contain duplicate products."
+            });
+        }
+
+        var reportItems = await Task.WhenAll(quantities.Select(async quantity =>
+        {
+            var inventory = await _productInventories.SingleOrDefaultAsync(
+                new ProductInventoryWithLotsAndSellerSpec(quantity.ProductId));
+            return inventory is null
+                ? StockCheckReportItem.UnlistedItem(quantity.ProductId)
+                : new StockCheckReportItem(inventory.ProductId, quantity.GoodQuantity, quantity.UnfulfillableQuantity,
+                    inventory.FulfillableUnits + inventory.StrandedUnits, inventory.UnfulfillableUnits);
+        }));
+        return new StockCheckReport(reportItems);
     }
 
     private static StockIssue IssueStockFromLots(

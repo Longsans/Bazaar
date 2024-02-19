@@ -63,6 +63,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScheduledTasks", "Services\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Disposal", "Services\Disposal\Disposal.csproj", "{33EF292B-293F-4C4D-BFF1-96CB4FCA78A3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediaServer", "Services\MediaServer\MediaServer.csproj", "{2C9937B4-45CF-4658-9048-AD4A4C3632AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -173,6 +175,10 @@ Global
 		{33EF292B-293F-4C4D-BFF1-96CB4FCA78A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33EF292B-293F-4C4D-BFF1-96CB4FCA78A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33EF292B-293F-4C4D-BFF1-96CB4FCA78A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C9937B4-45CF-4658-9048-AD4A4C3632AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C9937B4-45CF-4658-9048-AD4A4C3632AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C9937B4-45CF-4658-9048-AD4A4C3632AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C9937B4-45CF-4658-9048-AD4A4C3632AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -203,6 +209,7 @@ Global
 		{A9CD163E-A461-42FC-9FF8-321C06DBBC7D} = {89B4D606-ADA8-4027-B5EF-31FF0EBE31DD}
 		{45CFD132-98D1-4E28-8980-6B2B23EBFC5A} = {57F2862E-88E4-4EC7-A252-04BAEC06F32C}
 		{33EF292B-293F-4C4D-BFF1-96CB4FCA78A3} = {57F2862E-88E4-4EC7-A252-04BAEC06F32C}
+		{2C9937B4-45CF-4658-9048-AD4A4C3632AD} = {57F2862E-88E4-4EC7-A252-04BAEC06F32C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CFCA1329-CEF7-4868-BBFE-33EC7ADB6C90}

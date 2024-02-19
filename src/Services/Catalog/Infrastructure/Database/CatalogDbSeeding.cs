@@ -9,10 +9,12 @@ public static class CatalogDbSeeding
         await context.Database.EnsureDeletedAsync();
         await context.Database.MigrateAsync();
 
-        if (context.CatalogItems.Any())
+        context.ProductCategories.Add(new("Books", null, new List<ProductCategory>
         {
-            return;
-        }
+            new("Fantasy books", null, Array.Empty<ProductCategory>()),
+            new("Finance books", null, Array.Empty<ProductCategory>()),
+        }));
+        context.SaveChanges();
 
         var adapter = sp.GetRequiredService<JsonDataAdapter>();
         context.CatalogItems.AddRange(

@@ -5,10 +5,24 @@
 public class SellerInventoriesController : ControllerBase
 {
     private readonly RemovalService _removalService;
+    private readonly IRepository<SellerInventory> _sellerInventories;
 
-    public SellerInventoriesController(RemovalService removalService)
+    public SellerInventoriesController(RemovalService removalService, IRepository<SellerInventory> sellerInventories)
     {
         _removalService = removalService;
+        _sellerInventories = sellerInventories;
+    }
+
+    [HttpGet("{sellerId}")]
+    public async Task<ActionResult<SellerInventoryResponse>> GetBySellerId(string sellerId)
+    {
+        var sellerInventory = await _sellerInventories.SingleOrDefaultAsync(
+            new SellerInventoryWithProductsAndLotsSpec(sellerId));
+        if (sellerInventory is null)
+        {
+            return NotFound();
+        }
+        return new SellerInventoryResponse(sellerInventory);
     }
 
     [HttpPost("{sellerId}/removed-stocks")]

@@ -55,7 +55,16 @@ public class OrderItem
     {
         Status = Status == OrderItemStatus.PendingStock
             ? OrderItemStatus.StockRejected
-            : throw new InvalidOperationException("Stock status has already been determined.");
+            : throw new InvalidOperationException(
+                "Stock status has already been determined.");
+    }
+
+    public void SetSellerConfirmed()
+    {
+        Status = Status == OrderItemStatus.StockConfirmed
+            ? OrderItemStatus.SellerConfirmed
+            : throw new InvalidOperationException(
+                "Stock needs to be confirmed before seller confirmation.");
     }
 }
 
@@ -63,5 +72,6 @@ public enum OrderItemStatus
 {
     PendingStock,
     StockConfirmed,
-    StockRejected
+    StockRejected,
+    SellerConfirmed
 }

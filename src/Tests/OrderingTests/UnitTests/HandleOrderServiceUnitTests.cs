@@ -19,7 +19,7 @@ public class HandleOrderServiceUnitTests
         });
         _orderRepoMock.Setup(x => x.GetById(It.IsAny<int>()))
             .Returns(_testOrder);
-        _orderRepoMock.Setup(x => x.GetByProductId(It.IsIn("PROD-1", "PROD-2")))
+        _orderRepoMock.Setup(x => x.GetContainsProduct(It.IsIn("PROD-1", "PROD-2")))
             .Returns(new List<Order>() { _testOrder });
     }
 

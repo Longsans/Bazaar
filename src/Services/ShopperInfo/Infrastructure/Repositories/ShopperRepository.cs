@@ -19,6 +19,11 @@ public class ShopperRepository : IShopperRepository
         return _context.Shoppers.SingleOrDefault(s => s.ExternalId == externalId);
     }
 
+    public Shopper? GetByEmailAddress(string emailAddress)
+    {
+        return _context.Shoppers.SingleOrDefault(x => x.EmailAddress == emailAddress);
+    }
+
     public Shopper Create(Shopper shopper)
     {
         _context.Shoppers.Add(shopper);

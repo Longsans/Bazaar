@@ -1,4 +1,0 @@
-﻿namespace Bazaar.Catalog.Application.IntegrationEvents;
-
-public record ProductsHaveFbbStocksIntegrationEvent(
-    IEnumerable<string> ProductIds, string SellerId) : IntegrationEvent;

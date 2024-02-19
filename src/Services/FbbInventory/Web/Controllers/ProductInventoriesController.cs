@@ -16,7 +16,7 @@ public class ProductInventoriesController : ControllerBase
     }
 
     [HttpGet("{productId}")]
-    public async Task<ActionResult<ProductInventoryResponse>> GetByProductId(string productId)
+    public async Task<ActionResult<ProductInventoryWithLotsResponse>> GetByProductId(string productId)
     {
         var productInventory = await _productInventoryRepo.SingleOrDefaultAsync(
             new ProductInventoryWithLotsAndSellerSpec(productId));
@@ -24,7 +24,7 @@ public class ProductInventoriesController : ControllerBase
         {
             return NotFound();
         }
-        return new ProductInventoryResponse(productInventory);
+        return new ProductInventoryWithLotsResponse(productInventory);
     }
 
     [HttpPost("/api/received-stocks")]

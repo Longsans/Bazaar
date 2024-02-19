@@ -48,6 +48,9 @@ namespace Inventory.Infrastructure.Migrations
                     b.Property<int>("ProductInventoryId")
                         .HasColumnType("int");
 
+                    b.Property<float>("StorageSpaceUsedCm3")
+                        .HasColumnType("real");
+
                     b.Property<int?>("UnfulfillableCategory")
                         .HasColumnType("int");
 
@@ -96,6 +99,18 @@ namespace Inventory.Infrastructure.Migrations
                     b.Property<int>("SellerInventoryId")
                         .HasColumnType("int");
 
+                    b.Property<float>("StorageHeightPerUnitCm")
+                        .HasColumnType("real");
+
+                    b.Property<float>("StorageLengthPerUnitCm")
+                        .HasColumnType("real");
+
+                    b.Property<float>("StorageWidthPerUnitCm")
+                        .HasColumnType("real");
+
+                    b.Property<float>("TotalStorageSpaceCm3")
+                        .HasColumnType("real");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId")
@@ -117,6 +132,9 @@ namespace Inventory.Infrastructure.Migrations
                     b.Property<string>("SellerId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<float>("TotalStorageSpaceUsedM3")
+                        .HasColumnType("real");
 
                     b.HasKey("Id");
 

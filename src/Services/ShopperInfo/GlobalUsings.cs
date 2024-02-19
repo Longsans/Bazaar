@@ -6,4 +6,8 @@ global using Bazaar.ShopperInfo.Infrastructure.Repositories;
 global using Bazaar.ShopperInfo.Web.Messages;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
+global using ShopperInfo.Domain.Exceptions;
+global using ShopperInfo.Domain.Services;
+global using ShopperInfo.Web.Messages;
 global using System.Text.Json.Serialization;
+
