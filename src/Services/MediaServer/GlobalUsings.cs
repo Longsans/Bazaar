@@ -5,6 +5,8 @@ global using Bazaar.BuildingBlocks.EventBusRabbitMQ;
 global using Bazaar.MediaServer.EventHandling;
 global using Bazaar.MediaServer.IntegrationEvents;
 global using Bazaar.MediaServer.Services;
+global using Flurl;
 global using RabbitMQ.Client;
 global using SixLabors.ImageSharp;
-
+global using System.Security.Cryptography;
+global using System.Text;

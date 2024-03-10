@@ -8,8 +8,17 @@ public class ProductImageUpdatedIntegrationEventHandler(OnDiskImageService image
 
     public async Task Handle(ProductImageUpdatedIntegrationEvent @event)
     {
-        var imageBytes = Convert.FromBase64String(@event.Base64EncodedImage);
-        var imageUrl = await _imageService.SaveImageForProduct(@event.ProductId, Image.Load(imageBytes));
-        _eventBus.Publish(new ProductImageSavedIntegrationEvent(@event.ProductId, imageUrl));
+        try
+        {
+            var bytes = Convert.FromBase64String(@event.Base64ImageString);
+            var image = Image.Load(bytes);
+            // We use the content of the image appended with its product ID to make the filename
+            var imageUrl = await _imageService.SaveImage(@event.Base64ImageString + @event.ProductId, image);
+            _eventBus.Publish(new ProductImageSavedIntegrationEvent(@event.ProductId, imageUrl));
+        }
+        catch (Exception ex)
+        {
+            _eventBus.Publish(new ProductImageFailedToSaveIntegrationEvent(@event.ProductId, ex.Message));
+        }
     }
 }

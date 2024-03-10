@@ -46,5 +46,4 @@ public class AddressService
 
     public string ContractsByPartnerId(string partnerId)
         => $"{CONTRACTING_API}/api/contracts?partnerId={partnerId}";
-
 }

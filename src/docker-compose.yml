@@ -72,6 +72,7 @@ services:
       - sqldata
       - internallb
       - rabbitmq
+      - media-server
     profiles:
       - catalog
       - all

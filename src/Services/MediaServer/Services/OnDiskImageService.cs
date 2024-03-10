@@ -1,6 +1,4 @@
-﻿using Flurl;
-
-namespace Bazaar.MediaServer.Services;
+﻿namespace Bazaar.MediaServer.Services;
 
 public class OnDiskImageService(IWebHostEnvironment hostEnv, IConfiguration config)
 {
@@ -8,20 +6,31 @@ public class OnDiskImageService(IWebHostEnvironment hostEnv, IConfiguration conf
     private readonly uint _httpsPort = uint.Parse(config["ExternalHttpsPort"]!);
     private readonly IWebHostEnvironment _hostEnv = hostEnv;
 
-    public async Task<string> SaveImageForProduct(string productId, Image image)
+    public async Task<string> SaveImage(string originalFileName, Image image)
     {
         var extension = image.Metadata.DecodedImageFormat!.FileExtensions.First();
-        var filename = $"{productId.ToLower().Replace('-', '_')}.{extension}";
-        var dirPath = Path.Combine(_hostEnv.WebRootPath, _directory);
-        var filePath = Path.Combine(dirPath, filename);
-        if (File.Exists(filePath))
+        var filename = $"{HashSha256(originalFileName)}.{extension}";
+        var pathToDirectory = Path.Combine(_hostEnv.WebRootPath, _directory);
+        var pathToFile = Path.Combine(pathToDirectory, filename);
+        if (File.Exists(pathToFile))
         {
-            File.Delete(filePath);
+            File.Delete(pathToFile);
         }
-        Directory.CreateDirectory(dirPath);
-        await image.SaveAsync(filePath);
+        Directory.CreateDirectory(pathToDirectory);
+        await image.SaveAsync(pathToFile);
 
         var url = Url.Combine($"https://localhost:{_httpsPort}", _directory, filename);
         return url;
+    }
+
+    private static string HashSha256(string input)
+    {
+        var builder = new StringBuilder();
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
+        foreach (var b in hashBytes)
+        {
+            builder.Append(b.ToString("x2"));
+        }
+        return builder.ToString();
     }
 }

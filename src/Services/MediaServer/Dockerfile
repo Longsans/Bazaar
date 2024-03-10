@@ -13,6 +13,8 @@ COPY ["Services/MediaServer/MediaServer.csproj", "Services/MediaServer/"]
 RUN dotnet restore "./Services/MediaServer/MediaServer.csproj"
 COPY . .
 WORKDIR "/src/Services/MediaServer"
+RUN rm -rf wwwroot/images/*
+COPY ["SeedData/images", "wwwroot/images/"]
 RUN dotnet build "./MediaServer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
