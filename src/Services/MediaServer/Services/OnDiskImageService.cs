@@ -6,12 +6,10 @@ public class OnDiskImageService(IWebHostEnvironment hostEnv, IConfiguration conf
     private readonly uint _httpsPort = uint.Parse(config["ExternalHttpsPort"]!);
     private readonly IWebHostEnvironment _hostEnv = hostEnv;
 
-    public async Task<string> SaveImage(string productId, Image image)
+    public async Task<string> SaveImage(string originalFileName, Image image)
     {
-        var currentMilliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-        var baseName = HashSha256(currentMilliseconds.ToString() + productId);
         var extension = image.Metadata.DecodedImageFormat!.FileExtensions.First();
-        var filename = $"{baseName}.{extension}";
+        var filename = $"{HashSha256(originalFileName)}.{extension}";
         var pathToDirectory = Path.Combine(_hostEnv.WebRootPath, _directory);
         var pathToFile = Path.Combine(pathToDirectory, filename);
         if (File.Exists(pathToFile))

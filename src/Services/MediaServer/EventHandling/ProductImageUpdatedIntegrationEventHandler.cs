@@ -12,7 +12,8 @@ public class ProductImageUpdatedIntegrationEventHandler(OnDiskImageService image
         {
             var bytes = Convert.FromBase64String(@event.Base64ImageString);
             var image = Image.Load(bytes);
-            var imageUrl = await _imageService.SaveImage(@event.ProductId, image);
+            // We use the content of the image appended with its product ID to make the filename
+            var imageUrl = await _imageService.SaveImage(@event.Base64ImageString + @event.ProductId, image);
             _eventBus.Publish(new ProductImageSavedIntegrationEvent(@event.ProductId, imageUrl));
         }
         catch (Exception ex)

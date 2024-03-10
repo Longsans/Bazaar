@@ -4,7 +4,7 @@
       "ProductName": "The Winds of Winter",
       "ProductDescription": "Book 6 of ASOIAF",
       "Price": 34.99,
-      "ImageUri": "prod_1.jpg",
+      "ImageUri": "664926e0642ef00b5440c4606bc7349b5280841b59a4e4aad24d8056609f81d1.jpg",
       "AvailableStock": 100,
       "MainDepartmentId": 1,
       "SubcategoryId": 2,
@@ -19,7 +19,7 @@
       "ProductName": "A Dream of Spring",
       "ProductDescription": "Last book in ASOIAF",
       "Price": 45.99,
-      "ImageUri": "prod_2.jpg",
+      "ImageUri": "3f68a8878e51bc7df20e3aaeab07f896425e32bc3e6278d122927ab9a74534ee.jpg",
       "AvailableStock": 100,
       "MainDepartmentId": 1,
       "SubcategoryId": 2,
@@ -34,7 +34,7 @@
       "ProductName": "The Intelligent Investor",
       "ProductDescription": "The greatest investment advisor of the twentieth century, Benjamin Graham, taught and inspired people worldwide. Graham's philosophy of \"value investing\" -- which shields investors from substantial error and teaches them to develop long-term strategies -- has made The Intelligent Investor the stock market bible ever since its original publication in 1949.",
       "Price": 16.54,
-      "ImageUri": "prod_3.jpg",
+      "ImageUri": "f031d06addc27e1246695b74dbf599c205034ea545e183aeb38ff0cfa98c38e4.jpg",
       "AvailableStock": 100,
       "MainDepartmentId": 1,
       "SubcategoryId": 3,
@@ -49,7 +49,7 @@
       "ProductName": "Security Analysis",
       "ProductDescription": "First published in 1934, Security Analysis is one of the most influential financial books ever written. With more than million copies sold, it has provided generations of investors with the timeless value investing philosophy and techniques of the legendary Benjamin Graham and David L. Dodd. The successful value investor must constantly be in the process of reinvention, of raising his or her game to navigate the terrain of new eras, novel securities, nascent businesses, emerging industries, shifting standards, and evolving market conditions. With the diverse perspectives of experienced contributors, this new edition of Security Analysis is a rich and varied tapestry of highly informed investment thinking that will be a worthy and long-lived successor to the preceding editions.",
       "Price": 62.47,
-      "ImageUri": "prod_4.jpg",
+      "ImageUri": "884a00e32509dc71d0079f187da6ae877fe3abd73461c2f357a2bb445d650b0b.jpg",
       "AvailableStock": 100,
       "MainDepartmentId": 1,
       "SubcategoryId": 3,
@@ -135,22 +135,7 @@
   "baskets": [
     {
       "BuyerId": "SPER-1",
-      "Items": [
-        {
-          "ProductId": "PROD-1",
-          "ProductName": "The Winds of Winter",
-          "ProductUnitPrice": 34.99,
-          "Quantity": 2,
-          "ImageUrl": "https://imageserver.com/published2035?"
-        },
-        {
-          "ProductId": "PROD-2",
-          "ProductName": "A Dream of Spring",
-          "ProductUnitPrice": 45.99,
-          "Quantity": 1,
-          "ImageUrl": "https://imageserver.com/lolnothappening"
-        }
-      ]
+      "Items": []
     }
   ]
 }
