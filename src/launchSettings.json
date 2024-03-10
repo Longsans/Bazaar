@@ -5,10 +5,7 @@
       "commandVersion": "1.0",
       "composeProfile": {
         "includes": [
-          "catalog",
-          "fbbinventory",
-          "ordering",
-          "basket"
+          "catalog"
         ]
       }
     }

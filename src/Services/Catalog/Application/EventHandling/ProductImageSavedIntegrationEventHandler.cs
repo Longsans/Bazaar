@@ -23,6 +23,7 @@ public class ProductImageSavedIntegrationEventHandler : IIntegrationEventHandler
         }
         var imageFilename = Path.GetFileName(new Uri(@event.ImageUrl).LocalPath);
         catalogItem.ChangeProductDetails(imageFilename: imageFilename);
+        _logger.LogCritical("Success handling image saved event {eventId} for product {productId}. Image URL updated.", @event.Id, @event.ProductId);
         await _catalogRepo.UpdateAsync(catalogItem);
     }
 }

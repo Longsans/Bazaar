@@ -141,6 +141,7 @@ public static class EventBusExtensionMethods
         services.AddTransient<StockReceivedIntegrationEventHandler>();
         services.AddTransient<StockAdjustedIntegrationEventHandler>();
         services.AddTransient<ProductImageSavedIntegrationEventHandler>();
+        services.AddTransient<ProductImageFailedToSaveIntegrationEventHandler>();
     }
 
     public static void ConfigureEventBus(this IApplicationBuilder app)
@@ -167,6 +168,9 @@ public static class EventBusExtensionMethods
         eventBus.Subscribe<
             ProductImageSavedIntegrationEvent,
             ProductImageSavedIntegrationEventHandler>();
+        eventBus.Subscribe<
+            ProductImageFailedToSaveIntegrationEvent,
+            ProductImageFailedToSaveIntegrationEventHandler>();
     }
 }
 

@@ -1,5 +1,4 @@
 ﻿using SixLabors.ImageSharp.Formats.Png;
-
 namespace Bazaar.Catalog.Application.Services;
 
 public class EventBasedImageService : IImageService
@@ -23,8 +22,8 @@ public class EventBasedImageService : IImageService
         {
             throw new ArgumentException("Image content is empty.");
         }
-        var base64Image = dataUri[contentStart..];
-        _eventBus.Publish(new ProductImageUpdatedIntegrationEvent(productId, base64Image));
+        var base64String = dataUri[contentStart..];
+        _eventBus.Publish(new ProductImageUpdatedIntegrationEvent(productId, base64String));
         return await Task.FromResult(null as string);
     }
 }
