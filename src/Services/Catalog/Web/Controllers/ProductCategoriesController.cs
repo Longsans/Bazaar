@@ -1,6 +1,6 @@
 ﻿namespace Bazaar.Catalog.Web.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/product-categories")]
 [ApiController]
 public class ProductCategoriesController : ControllerBase
 {

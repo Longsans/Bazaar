@@ -44,6 +44,12 @@ builder.Services.AddAuthorization(options =>
             .RequireClaim("scope", "catalog.modify");
     });
 });
+
+builder.Services.AddCors(options =>
+{
+    var allowedOrigins = builder.Configuration["AllowedOrigins"]!.Split(',');
+    options.AddDefaultPolicy(policy => policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader());
+});
 #endregion
 
 builder.Services.AddControllers()
@@ -70,6 +76,7 @@ IF_ENABLED_IDENTITY(() =>
 });
 
 app.MapControllers();
+app.UseCors();
 
 using (var scope = app.Services.CreateScope())
 {

@@ -79,6 +79,7 @@ services:
       - IdentityApi=http://identity-api
       - MediaServerUrl=https://localhost:${MEDIA_SERVER_HTTPS_PORT}
       - DisableIdentity=true
+      - AllowedOrigins=http://localhost:3000
     volumes:
       - ./SeedData:/root/SeedData
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro

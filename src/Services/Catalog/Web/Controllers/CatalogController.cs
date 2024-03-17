@@ -172,7 +172,7 @@ public class CatalogController : ControllerBase
     }
 
     // Seller only
-    [HttpPatch("{productId}/listing")]
+    [HttpPatch("{productId}/listing-status")]
     public async Task<IActionResult> ChangeListingStatus(string productId, ChangeListingStatusRequest request)
     {
         var result = request.Status switch
