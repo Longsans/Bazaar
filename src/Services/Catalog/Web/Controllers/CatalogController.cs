@@ -1,4 +1,5 @@
 namespace Bazaar.Catalog.Web.Controllers;
+using System;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -70,7 +71,51 @@ public class CatalogController : ControllerBase
         return items.Select(x => new CatalogItemResponse(x, _imgService.ImageHostLocation)).ToList();
     }
 
-    // Seller only
+    [HttpPatch("stock")]
+    public async Task<ActionResult<IEnumerable<CatalogItemResponse>>> BulkUpdateProductStock(IEnumerable<UpdateStockRequest> request)
+    {
+        var allItemsUnique = request.Select(x => x.ProductId)
+            .GroupBy(x => x)
+            .Select(g => g.Count())
+            .All(c => c == 1);
+        if (!allItemsUnique)
+            return BadRequest(new
+            {
+                error = "Bulk update request contains duplicate product listings."
+            });
+
+        var requestedIds = request.Select(x => x.ProductId);
+        var items = await _catalogRepo.ListAsync(new CatalogItemsByProductIdSpec(requestedIds));
+        var retrievedIds = items.Select(x => x.ProductId);
+        var notFoundIds = requestedIds.Except(retrievedIds);
+        if (notFoundIds.Any())
+        {
+            return NotFound(new
+            {
+                error = $"Bulk update request contains items with the following IDs, of which the corresponding items were not found: {string.Join(", ", notFoundIds)}"
+            });
+        }
+
+        foreach ((var item, var update) in items.Zip(request))
+        {
+            try
+            {
+                item.UpdateStock(update.Units);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
+            }
+            catch (ManualFbbStockManagementNotSupportedException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+        await _catalogRepo.UpdateRangeAsync(items);
+        return items.Select(x => new CatalogItemResponse(x, _imgService.ImageHostLocation)).ToList();
+    }
+
+    #region Seller only endpoints
     [HttpPost]
     //[Authorize(Policy = "HasModifyScope")]
     public async Task<ActionResult<CatalogItemResponse>> Create([FromForm] CreateCatalogItemRequest request)
@@ -110,9 +155,8 @@ public class CatalogController : ControllerBase
             new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation));
     }
 
-    // Seller only
     [HttpPatch("{productId}")]
-    public async Task<ActionResult<CatalogItemResponse>> UpdateProductInfo(string productId, UpdateProductInfoRequest request)
+    public async Task<ActionResult<CatalogItemResponse>> UpdateProductListing(string productId, UpdateProductListingRequest request)
     {
         var spec = new CatalogItemByProductIdSpec(productId);
         var catalogItem = await _catalogRepo.FirstOrDefaultAsync(spec);
@@ -121,57 +165,73 @@ public class CatalogController : ControllerBase
             return NotFound("Catalog item not found.");
         }
 
-        catalogItem.ChangeProductDetails(request.Name, request.Description, request.Price, request.ImageUrl);
-        if (request.Dimensions is not null)
+        try
         {
-            catalogItem.ChangeProductDimensions(request.Dimensions.LengthInCm, request.Dimensions.WidthInCm, request.Dimensions.HeightInCm);
+            catalogItem.ChangeProductDetails(request.Name, request.Description, request.Price, request.ImageUrl);
+            if (request.Dimensions is not null)
+            {
+                catalogItem.ChangeProductDimensions(request.Dimensions.LengthInCm, request.Dimensions.WidthInCm, request.Dimensions.HeightInCm);
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(new {error = ex.Message});
         }
         await _catalogRepo.UpdateAsync(catalogItem);
         return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
     }
 
-    // Shopper only
-    [HttpPatch("{productId}/stock")]
-    public async Task<ActionResult<CatalogItemResponse>> ChangeStock(string productId, ChangeStockRequest request)
+    [HttpPatch]
+    public async Task<ActionResult<IEnumerable<CatalogItemResponse>>> BulkUpdateProductListings(IEnumerable<UpdateProductListingRequest> request)
     {
-        var spec = new CatalogItemByProductIdSpec(productId);
-        var catalogItem = await _catalogRepo.SingleOrDefaultAsync(spec);
-        if (catalogItem == null)
-        {
-            return NotFound();
-        }
-
-        // This bit of business logic being here is fine for the moment
-        if (catalogItem.IsFbb)
-        {
-            return Conflict(new
+        var allItemsUnique = request.Select(x => x.ProductId)
+            .GroupBy(x => x)
+            .Select(g => g.Count())
+            .All(c => c == 1);
+        if (!allItemsUnique)
+            return BadRequest(new
             {
-                error = "Cannot change FBB products' stocks directly. " +
-                    "FBB stocks are updated by Bazaar."
+                error = "Bulk update request contains duplicate product listings."
+            });
+
+        var requestedIds = request.Select(x => x.ProductId);
+        var items = await _catalogRepo.ListAsync(new CatalogItemsByProductIdSpec(requestedIds));
+        var retrievedIds = items.Select(x => x.ProductId);
+        var notFoundItems = requestedIds.Except(retrievedIds);
+        if (notFoundItems.Any())
+        {
+            return NotFound(new
+            {
+                error = $"Bulk update request contains items with the following IDs, of which the corresponding items were not found: {string.Join(", ", notFoundItems)}"
             });
         }
 
         try
         {
-            if (request.ChangeType == StockChangeType.Reduce)
-                catalogItem.ReduceStock(request.Units);
-            else if (request.ChangeType == StockChangeType.Restock)
-                catalogItem.Restock(request.Units);
-            else throw new ArgumentException("Change type can only be Reduce or Restock.");
+            foreach ((var item, var update) in items.Zip(request))
+            {
+                item.ChangeProductDetails(update.Name, update.Description, update.Price, update.ImageUrl);
+                var dimensions = update.Dimensions;
+                if (dimensions is not null)
+                    item.ChangeProductDimensions(dimensions.LengthInCm, dimensions.WidthInCm, dimensions.HeightInCm);
+            }
         }
-        catch (Exception ex) when (
-            ex is ArgumentException
-            || ex is NotEnoughStockException
-            || ex is ExceedingMaxStockThresholdException)
+        catch (InvalidOperationException ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return Conflict(new { error = ex.Message });
         }
-
-        await _catalogRepo.UpdateAsync(catalogItem);
-        return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(new {error = ex.Message});
+        }
+        await _catalogRepo.UpdateRangeAsync(items);
+        return items.Select(x => new CatalogItemResponse(x, _imgService.ImageHostLocation)).ToList();
     }
 
-    // Seller only
     [HttpPatch("{productId}/listing-status")]
     public async Task<IActionResult> ChangeListingStatus(string productId, ChangeListingStatusRequest request)
     {
@@ -206,4 +266,5 @@ public class CatalogController : ControllerBase
         await _catalogRepo.UpdateAsync(catalogItem);
         return new CatalogItemResponse(catalogItem, _imgService.ImageHostLocation);
     }
+    #endregion
 }

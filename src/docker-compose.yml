@@ -4,8 +4,8 @@ services:
   webapigw:
     image: envoyproxy/envoy:v1.26-latest
 
-  internallb:
-    image: envoyproxy/envoy:v1.26-latest
+  # internallb:
+  #   image: envoyproxy/envoy:v1.26-latest
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -40,7 +40,7 @@ services:
       dockerfile: Services/Identity/Dockerfile
     depends_on:
       - sqldata
-      - internallb
+      # - internallb
     profiles:
       - id
       - all
@@ -70,7 +70,7 @@ services:
       dockerfile: Services/Catalog/Dockerfile
     depends_on:
       - sqldata
-      - internallb
+      # - internallb
       - rabbitmq
       - media-server
     profiles:
@@ -119,7 +119,7 @@ services:
       context: .
       dockerfile: Services/ShopperInfo/Dockerfile
     depends_on:
-      - internallb
+      # - internallb
       - sqldata
     profiles:
       - shopper-info
@@ -131,7 +131,7 @@ services:
       context: .
       dockerfile: Services/Contracting/Dockerfile
     depends_on:
-      - internallb
+      # - internallb
       - sqldata
       - rabbitmq
     profiles:
@@ -144,7 +144,7 @@ services:
       context: .
       dockerfile: Services/Basket/Dockerfile
     depends_on:
-      - internallb
+      # - internallb
       - sqldata
     profiles:
       - basket
@@ -157,7 +157,7 @@ services:
       dockerfile: Services/Ordering/Dockerfile
     depends_on:
       - rabbitmq
-      - internallb
+      # - internallb
       - sqldata
     profiles:
       - ordering

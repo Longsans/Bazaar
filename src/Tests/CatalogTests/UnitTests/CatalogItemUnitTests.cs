@@ -83,7 +83,7 @@ public class CatalogItemUnitTests
     [InlineData(100)]
     public void Constructor_ThrowsManualInsertOfFbbStockNotSupportedException_WhenIsFbbAndStockNotZero(uint stock)
     {
-        Assert.Throws<ManualInsertOfFbbStockNotSupportedException>(() =>
+        Assert.Throws<ManualFbbStockManagementNotSupportedException>(() =>
         {
             _testCatalogItem = new CatalogItem(
                 _productName, _productDescription,

@@ -42,7 +42,7 @@ public class CatalogItem
                 nameof(price), "Product price cannot be 0 or negative.");
 
         if (availableStock > 0 && fulfillmentMethod == FulfillmentMethod.Fbb)
-            throw new ManualInsertOfFbbStockNotSupportedException();
+            throw new ManualFbbStockManagementNotSupportedException();
         if (subcategory is null)
             throw new ArgumentNullException(nameof(subcategory));
 
@@ -108,8 +108,7 @@ public class CatalogItem
             throw new InvalidOperationException("Item deleted.");
 
         if (price <= 0m)
-            throw new ArgumentOutOfRangeException(
-                nameof(price), "Product price cannot be 0 or negative.");
+            throw new ArgumentOutOfRangeException(nameof(price), "Product price cannot be 0 or negative.");
 
         ProductName = productName ?? ProductName;
         ProductDescription = productDescription ?? ProductDescription;
@@ -119,16 +118,33 @@ public class CatalogItem
 
     public void ChangeProductDimensions(float length, float width, float height)
     {
+        if (IsDeleted)
+            throw new InvalidOperationException("Item deleted.");
+
         var invalidArgName = length <= 0f ? nameof(length)
             : width <= 0f ? nameof(width)
             : height <= 0f ? nameof(height) : null;
         if (invalidArgName is not null)
         {
-            throw new ArgumentOutOfRangeException(invalidArgName);
+            throw new ArgumentOutOfRangeException(invalidArgName, $"Invalid value for argument: {invalidArgName}");
         }
         ProductLengthCm = length;
         ProductWidthCm = width;
         ProductHeightCm = height;
+    }
+
+    public void UpdateStock(uint units)
+    {
+        if (IsDeleted)
+            throw new InvalidOperationException("Item deleted.");
+        if (IsFbb)
+            throw new ManualFbbStockManagementNotSupportedException();
+
+        AvailableStock = units;
+        if (AvailableStock == 0 && IsListingActive)
+            ListingStatus = ListingStatus.InactiveOutOfStock;
+        else if (IsOutOfStock && AvailableStock > 0)
+            ListingStatus = ListingStatus.Active;
     }
 
     public void ReduceStock(uint units)
@@ -171,9 +187,9 @@ public class CatalogItem
 
     public void Relist()
     {
-        ListingStatus = IsListingClosed
-            ? ListingStatus.Active
-            : throw new InvalidOperationException();
+        if (!IsListingClosed)
+            throw new InvalidOperationException();
+        ListingStatus = AvailableStock > 0 ? ListingStatus.Active : ListingStatus.InactiveOutOfStock;
     }
 
     public void DeleteListing()

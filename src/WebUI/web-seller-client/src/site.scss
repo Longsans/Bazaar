@@ -1,0 +1,37 @@
+@import "../node_modules/bootstrap/scss/functions";
+@import "../node_modules/bootstrap/scss/variables";
+@import "../node_modules/bootstrap/scss/variables-dark";
+@import "../node_modules/bootstrap/scss/maps";
+@import "../node_modules/bootstrap/scss/mixins";
+@import "../node_modules/bootstrap/scss/root";
+
+$interactive-control-color: #f0f2f2;
+$interactive-control-hover-color: #e3e6e6;
+$bz-input-focus-border-color: #85b7d9;
+
+.bz-i-control {
+  background-color: $interactive-control-color !important;
+  border: 1px solid !important;
+  border-color: rgba(var(--bs-secondary-rgb), 0.85) !important;
+}
+
+.bz-i-control:hover {
+  background-color: $interactive-control-hover-color !important;
+}
+
+.bz-input {
+  background-color: white;
+  border: 1px solid !important;
+  border-color: rgba(var(--bs-secondary-rgb), 0.85) !important;
+}
+
+.bz-input:focus {
+  border-color: $bz-input-focus-border-color !important;
+}
+
+.bz-label-left {
+  background-color: white;
+  border: 1px solid !important;
+  border-right: 0 !important;
+  border-color: rgba(var(--bs-secondary-rgb), 0.85) !important;
+}

@@ -1,7 +1,8 @@
 ﻿namespace Bazaar.Catalog.Web.Messages;
 
-public record UpdateProductInfoRequest
+public record UpdateProductListingRequest
 {
+    public string ProductId { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
     public decimal? Price { get; set; }

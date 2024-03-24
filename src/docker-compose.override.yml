@@ -7,12 +7,12 @@ services:
     ports:
       - "5200:80"
       - "15200:8001"
-  internallb:
-    volumes:
-      - ./ApiGateways/Envoy/web:/etc/envoy
-    ports:
-      - "5201:80"
-      - "15201:8001"
+  # internallb:
+  #   volumes:
+  #     - ./ApiGateways/Envoy/web:/etc/envoy
+  #   ports:
+  #     - "5201:80"
+  #     - "15201:8001"
   rabbitmq:
     ports:
       - "15672:15672"
@@ -63,7 +63,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - HangfireConnection=Server=sqldata;Database=Hangfire;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
       - DbServerConnection=Server=sqldata;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
-      - FbbInventoryApi=http://internallb/fbb
+      - FbbInventoryApi=http://fbbinventory-api
     ports:
       - "5500:80"
   
@@ -75,9 +75,8 @@ services:
       - EventBusConnection=rabbitmq
       - SeedDataFilePath=/root/SeedData/seed_data.json
       - ConnectionString=Server=sqldata;Database=BazaarCatalog;User Id=sa;Password=P@ssw0rd;TrustServerCertificate=true
-      - OrderingApi=http://internallb/o
       - IdentityApi=http://identity-api
-      - MediaServerUrl=https://localhost:${MEDIA_SERVER_HTTPS_PORT}
+      - MediaServerUrl=${MEDIA_SERVER_URL}
       - DisableIdentity=true
       - AllowedOrigins=http://localhost:3000
     volumes:
@@ -211,17 +210,17 @@ services:
     ports:
       - "5002:80"
 
-  webseller:
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
-      - REACT_APP_HTTPS_PORT=5004
-      - IdentityApi=http://identity-api
-      - IdentityRewriteUrl=http://localhost:5555
-      - ClientId=webseller
-      - ClientSecret=websellersecret
-      - CatalogApi=http://catalog-api
-      - OrderingApi=http://ordering-api
-      - ContractingApi=http://contracting-api
-    ports:
-      - "5004:80"
+  # webseller:
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ASPNETCORE_URLS=http://+:80
+  #     - REACT_APP_HTTPS_PORT=5004
+  #     - IdentityApi=http://identity-api
+  #     - IdentityRewriteUrl=http://localhost:5555
+  #     - ClientId=webseller
+  #     - ClientSecret=websellersecret
+  #     - CatalogApi=http://catalog-api
+  #     - OrderingApi=http://ordering-api
+  #     - ContractingApi=http://contracting-api
+  #   ports:
+  #     - "5004:80"

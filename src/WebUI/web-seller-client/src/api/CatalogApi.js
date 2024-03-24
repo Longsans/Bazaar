@@ -74,9 +74,21 @@ export default class CatalogApi {
     );
   }
 
+  static async bulkUpdateListings(listings) {
+    return await this.sendPatchRequest(this.endpointUris.catalog, listings);
+  }
+
+  static async bulkUpdateStock(productStocks) {
+    return await this.sendPatchRequest(
+      this.endpointUris.allListingStocks,
+      productStocks
+    );
+  }
+
   // endpoint addresses
   static endpointUris = {
     catalog: `catalog`,
+    allListingStocks: `catalog/stock`,
     catalogByCriteria(criteria = {}) {
       let endpoint = this.catalog;
       let queryStarted = false;
